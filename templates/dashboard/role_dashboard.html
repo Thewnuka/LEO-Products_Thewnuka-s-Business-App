@@ -1,7 +1,8 @@
 {% extends "layouts/staff.html" %}
+{% load catalog_tags %}
 {% comment %}
-  Placeholder dashboard shared by all staff roles (content comes from the
-  view). No figures are shown until the modules that produce them exist.
+  Dashboard shared by all staff roles (content comes from the view). Figures are
+  shown only for modules that exist (today: the point of sale), never invented.
 {% endcomment %}
 
 {% block title %}{{ dashboard_title }} — {{ brand.name }}{% endblock %}
@@ -22,6 +23,21 @@
   </div>
 </article>
 
+{% if pos_today %}
+<section class="mb-4" aria-labelledby="posTodayTitle">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h2 class="h5 mb-0" id="posTodayTitle"><i class="bi bi-shop-window me-2" aria-hidden="true"></i>Point of sale today</h2>
+    {% if can.PROCESS_SALES %}<a href="{% url 'pos:terminal' %}" class="btn btn-leo-gold btn-sm"><i class="bi bi-shop-window" aria-hidden="true"></i>{% if my_shift %}Open till ({{ my_shift.code }}){% else %}Open shift{% endif %}</a>{% endif %}
+  </div>
+  {% include "pos/partials/_today.html" with today=pos_today %}
+  {% if pos_today.open_shifts and pos_today.all_tills %}
+  <ul class="list-unstyled leo-mini-list mt-2 mb-0 small">
+    {% for s, summary in pos_today.open_shifts %}<li><span><a href="{% url 'pos:shift_detail' s.pk %}">{{ s.code }}</a> · {{ s.cashier.get_full_name|default:s.cashier.username }} · since {{ s.opened_at|date:"H:i" }}</span><span>drawer {{ summary.expected_cash|money }}</span></li>{% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
 <div class="row g-4">
   <div class="col-12 col-lg-6">
     <article class="leo-card">
@@ -39,6 +55,12 @@
       <div class="leo-card__body">
         <h2 class="h5"><i class="bi bi-lightning-charge me-2" aria-hidden="true"></i>Available now</h2>
         <div class="d-grid gap-2 mt-3">
+          {% if can.VIEW_POS_SALES or can.VIEW_OWN_TRANSACTIONS %}
+            <a href="{% url 'pos:sales' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-receipt" aria-hidden="true"></i>{% if can.VIEW_POS_SALES %}POS sales &amp; receipts{% else %}My sales &amp; receipts{% endif %}</a>
+          {% endif %}
+          {% if can.MANAGE_SHIFTS or can.PROCESS_SALES %}
+            <a href="{% url 'pos:shifts' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-cash-stack" aria-hidden="true"></i>{% if can.MANAGE_SHIFTS %}Cashier shifts{% else %}My shifts{% endif %}</a>
+          {% endif %}
           {% if can.VIEW_ORDERS %}
             <a href="{% url 'orders:staff_list' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-bag-check" aria-hidden="true"></i>Customer orders &amp; payments</a>
           {% endif %}
@@ -64,6 +86,7 @@
     </article>
   </div>
 
+  {% if upcoming %}
   <div class="col-12">
     <article class="leo-card leo-card--auto">
       <div class="leo-card__body">
@@ -71,11 +94,12 @@
         <p class="text-body-secondary small">These modules are not available yet. They will appear on this dashboard when they are built.</p>
         <ul class="leo-upcoming">
           {% for module, phase in upcoming %}
-            <li><span>{{ module }}</span><span class="leo-badge leo-badge--gold">Phase {{ phase }}</span></li>
+            <li><span>{{ module }}</span><span class="leo-badge leo-badge--gold">Planned</span></li>
           {% endfor %}
         </ul>
       </div>
     </article>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

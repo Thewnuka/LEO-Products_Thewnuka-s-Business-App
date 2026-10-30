@@ -1,0 +1,70 @@
+{% load static catalog_tags %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Receipt {{ order.number }} — {{ brand.name }}</title>
+  <link rel="icon" type="image/png" href="{% static brand.logo %}">
+  <link rel="stylesheet" href="{% static 'css/receipt.css' %}">
+</head>
+<body class="receipt-page receipt-page--{{ size }}">
+  <div class="receipt-tools">
+    {% if just_sold %}<span class="receipt-tools__ok">✓ Sale {{ order.number }} saved</span>{% endif %}
+    <button type="button" class="receipt-btn receipt-btn--primary" id="printReceipt">Print</button>
+    <a class="receipt-btn" href="?size={% if size == 'a4' %}thermal{% else %}a4{% endif %}{% if just_sold %}&amp;new=1{% endif %}">{% if size == 'a4' %}Till printer size{% else %}A4 size{% endif %}</a>
+    {% if can.PROCESS_SALES %}<a class="receipt-btn receipt-btn--gold" href="{% url 'pos:terminal' %}">New sale</a>{% endif %}
+    <a class="receipt-btn" href="{% url 'pos:sale_detail' order.number %}">Sale details</a>
+  </div>
+
+  <main class="receipt">
+    <header class="receipt__head">
+      {% include "partials/_logo.html" with size="md" show_text=False link=False %}
+      <div class="receipt__brand">{{ brand.name }}</div>
+      <div class="receipt__tagline">{{ brand.tagline }}</div>
+      {% if config.business_address %}<div>{{ config.business_address|linebreaksbr }}</div>{% endif %}
+      {% if config.business_phone %}<div>Tel: {{ config.business_phone }}</div>{% endif %}
+    </header>
+
+    {% if not original %}<div class="receipt__flag">COPY{% if reprints %} · reprint {{ reprints }}{% endif %}</div>{% endif %}
+    {% if order.status == "CANCELLED" %}<div class="receipt__flag receipt__flag--void">VOIDED{% if order.payment_status == "REFUNDED" %} · REFUNDED{% endif %}</div>{% endif %}
+
+    <table class="receipt__meta">
+      <tr><th>Receipt</th><td>{{ order.number }}</td></tr>
+      <tr><th>Date</th><td>{{ order.created_at|date:"j M Y, H:i" }}</td></tr>
+      <tr><th>Cashier</th><td>{{ order.cashier.get_full_name|default:order.cashier.username }}</td></tr>
+      {% if order.full_name != "Walk-in customer" %}<tr><th>Customer</th><td>{{ order.full_name }}{% if order.phone %} · {{ order.phone }}{% endif %}</td></tr>{% endif %}
+    </table>
+
+    <table class="receipt__items">
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+        <tr><td>{{ item.product_name }}<span class="receipt__size">{{ item.variation_name }}</span></td>
+          <td class="num">{{ item.quantity }}</td><td class="num">{{ item.unit_price|floatformat:"2g" }}</td><td class="num">{{ item.line_total|floatformat:"2g" }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table class="receipt__totals">
+      <tr><th>Subtotal</th><td>{{ order.subtotal|money }}</td></tr>
+      {% if order.discount_amount %}<tr><th>Discount{% if order.discount_type == "PERCENT" %} ({{ order.discount_value|floatformat:"-2" }}%){% endif %}</th><td>− {{ order.discount_amount|money }}</td></tr>{% endif %}
+      <tr class="receipt__grand"><th>TOTAL</th><td>{{ order.total|money }}</td></tr>
+      <tr><th>Payment</th><td>{{ order.get_payment_method_display }}</td></tr>
+      {% if payment.cash_tendered is not None %}
+      <tr><th>Cash received</th><td>{{ payment.cash_tendered|money }}</td></tr>
+      <tr><th>Change</th><td>{{ payment.change_given|money }}</td></tr>
+      {% endif %}
+      {% if payment.bank_reference %}<tr><th>Transfer ref.</th><td>{{ payment.bank_reference }}</td></tr>{% endif %}
+    </table>
+    {% if order.payment_method == "BANK_TRANSFER" and order.payment_status != "PAID" and order.status != "CANCELLED" %}
+      <p class="receipt__note">Bank transfer not yet confirmed. This sale is complete only after we verify the payment.</p>
+    {% endif %}
+
+    <footer class="receipt__foot">
+      {% if config.receipt_footer %}<p>{{ config.receipt_footer }}</p>{% endif %}
+      <p class="receipt__small">Items: {{ order.item_count }} · {{ order.number }}</p>
+    </footer>
+  </main>
+  <script src="{% static 'js/receipt.js' %}"></script>
+</body>
+</html>

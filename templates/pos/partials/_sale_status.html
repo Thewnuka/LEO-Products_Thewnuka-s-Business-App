@@ -1,0 +1,5 @@
+{% comment %}Status of a POS sale in plain words.{% endcomment %}
+{% if order.status == "CANCELLED" %}<span class="leo-badge leo-ostatus--cancelled">{% if order.payment_status == "REFUNDED" %}Refunded{% else %}Voided{% endif %}</span>
+{% elif order.payment_status == "PENDING_VERIFICATION" %}<span class="leo-badge leo-paystatus--pending_verification">Transfer to check</span>
+{% elif order.status == "PENDING" %}<span class="leo-badge leo-paystatus--rejected">Transfer not confirmed</span>
+{% else %}<span class="leo-badge leo-paystatus--paid">Paid</span>{% endif %}

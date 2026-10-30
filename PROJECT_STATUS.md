@@ -1,7 +1,95 @@
 # LEO PRODUCTS: Project Status
 
 **Last updated:** 2026-10-31
-**Current phase:** Phase 06 (Orders & Payments): **COMPLETE**. Waiting for approval before Phase 07.
+**Current phase:** Phase 07 (POS & Cashier Management): **COMPLETE**. Waiting for approval before Phase 08.
+
+---
+
+## Phase 07: POS (Point of Sale) & Cashier Management ✅
+
+### Delivered
+
+- [x] **Built on Phase 06, not beside it:** a POS sale is an `Order` with `channel = POS` (number `POS-YYYY-NNNNN`,
+      fulfilment "In-store sale", no customer account needed). It reuses order lines (prices copied), the stock ledger
+      (one "Sale (order)" movement per line, never below zero), `Payment`, cancellation/restock and refund services.
+      The shared line-and-stock code was moved into `orders.services.add_items_and_deduct_stock` and is used by both
+- [x] New `pos` app only for what didn't exist: `PosSettings`, `CashierShift`, `CashMovement`, `ReceiptPrint`
+- [x] **Till** `/staff/pos/`: full-width workspace (staff top bar and logo kept), category chips, search by name or
+      SKU, Enter/scanner adds an exact SKU, product tiles with price and stock, cart with +/−, quantity and remove,
+      subtotal, discount and total in LKR, cash received with Exact/rounded buttons and change, bank transfer reference,
+      optional customer name and phone, loading state, error messages, empty states, confirm before clearing
+- [x] **Sales are one transaction:** shift checked, prices/stock re-read from the database, discount and total
+      recalculated, payment validated, stock deducted, payment recorded. The browser's token makes a sale idempotent
+      (double click or network retry returns the first sale); the total the cashier saw must match
+- [x] **Cash:** must cover the total; tendered amount and change stored on the payment; sale Completed and Paid
+- [x] **Bank transfer at the till:** reference required; payment stays **Pending verification** and the sale Pending
+      until a Manager/Owner approves it (then Completed); never marked paid at the till
+- [x] **Discounts:** fixed LKR or %, reason required, never above the sale or 100%; per-role limits in POS settings
+      (Cashier 5%, Manager 20%, Owner unlimited by default); above the limit a Manager/Owner approves on the till with
+      their sign-in (shared brute-force lock); applied-by and approved-by recorded on the sale
+- [x] **Receipts:** printable page with the official logo, name, tagline, optional address/phone/footer from settings
+      (no invented tax or registration details), receipt number, date/time, cashier, items, quantities, prices,
+      discount, total, payment method, cash received and change, transfer note; 80 mm till layout and A4; prints
+      automatically after a sale; reprints logged (who/when) and marked "COPY"; voided sales marked "VOIDED"
+- [x] **Cashier shifts:** open with counted cash; one open shift per cashier (database constraint); sales only in an
+      open shift; cash in/out with reasons (cash out limited to the drawer); expected cash = opening + cash sales +
+      cash in − cash out − cash refunds; close with counted cash, difference calculated and fixed, note required when
+      different; closed shifts can't be changed; Managers/Owner review all shifts and can close a forgotten one
+- [x] **Sales history** `/staff/pos/sales/`: today's figures, search by receipt number, filter by date, cashier,
+      payment method and status; sale details with items, stock movements, payment, discount, reprints, history
+- [x] **Refunds / voids** (Manager, Owner): reason required; stock restored once (existing cancel service), paid payment
+      marked refunded once (existing refund service), cash refund recorded against the open till that paid it (one per
+      sale, database constraint); unverified transfers simply closed. Nothing is deleted
+- [x] **Dashboards:** Owner, Manager and Cashier dashboards show today's POS sales, transactions, cash sales, bank-transfer
+      sales (verified, plus awaiting check), open shifts and expected drawer cash; cashiers see their own figures only;
+      sidebar "Point of sale" section and dashboard links
+- [x] **Roles (enforced in views and services):** Cashier: till, own shift, own sales and reprints. Manager: all sales,
+      discount approval, transfer verification, refunds, shift review; no selling. Owner: everything incl. POS settings.
+      IT Admin and customers: no POS access
+- [x] Online order screens list online orders only; opening a POS sale there goes to the POS page
+- [x] Docs: DEVELOPMENT_GUIDE §11 (setup, a cashier's day, managers, permissions, printing), test table, this file
+- [x] Development database backed up to `backup-before-phase07.sqlite3` before migrating
+
+### Database changes
+
+| Migration | Change |
+|---|---|
+| `orders.0002`, `orders.0003` | `Order`: `channel`, optional `customer`, `cashier`, `shift`, discount fields (type, value, amount, reason, applied by, approved by); fulfilment "In-store sale"; constraints: discount within subtotal, online orders must have a customer, pickup/in-store have no delivery fee |
+| `payments.0002` | `Payment`: `cash_tendered`, `change_given` (non-negative) |
+| `inventory.0003` | Sale movement label "Online order" → "Sale (order)" (used by both channels) |
+| `pos.0001` | `PosSettings`, `CashierShift` (one open per cashier, closed shifts must have a count), `CashMovement` (one cash refund per sale), `ReceiptPrint` |
+
+### Verification performed (2026-10-31)
+
+| Check | Result |
+|---|---|
+| `python manage.py test` | **447 tests, all passed** (64 new POS tests + all Phase 01–06 tests) |
+| `check`, `makemigrations --check` | Clean; new migrations applied to the dev DB |
+| Horizontal overflow (headless Edge), cashier, manager and owner, 15 POS pages × 5 widths (320–1366px) | 75/75 OK, all HTTP 200 |
+| Browser walkthrough of the till | Tap products, scan SKU, discount over the limit refused then approved by the Manager's sign-in, change shown, triple click sent one request and recorded one sale, receipt shown |
+
+**Issues found and fixed during Phase 07:**
+- Approver passwords would have had a second, separate throttle; approval now uses the existing sign-in lock (which
+  Django reports as a failed sign-in, so the lock is checked first to give a clear message)
+- The receipt's automatic print dialog blocked the headless browser test; the test now skips it (real browsers show it)
+
+### Known limitations (Phase 07)
+
+- **No barcode field exists** in the catalogue, so scanning works when the barcode printed on packs is the product's
+  **SKU** (a scanner types it and presses Enter). Real EAN barcodes would need a barcode field (not added).
+- No card terminal or online payment at the till; no split payments (part cash, part transfer).
+- A rejected till bank transfer leaves the sale unpaid; the fix is to void it and sell again with another payment.
+- Refunds are whole-sale voids; partial refunds/returns of single items are not supported.
+- Shifts are per cashier, not per physical drawer; two cashiers sharing one drawer would need one shift between them.
+- The till loads all sellable products into the page (fine for a small catalogue; a large one would need searching
+  on the server).
+- Concurrency is tested by simulating two tills that both saw the same stock; real parallel requests could not be
+  run on the SQLite test database. The protection is the stock ledger's conditional update, as in Phase 06.
+- Receipt printing uses the browser's print dialog; direct printing to a thermal printer without a dialog is not possible
+  from a web page.
+- A cashier who reloads the receipt within 15 minutes before any reprint still sees it without "COPY".
+- No POS figures in finance or accounting reports yet (later phase).
+- Responsive checks used headless Microsoft Edge; real tablets, phones and receipt printers were not tested.
 
 ---
 
@@ -463,11 +551,11 @@ meta, mobile menu and responsive CSS present. No changes required.
 | 04 | Inventory, stock, suppliers and purchases | ✅ Complete |
 | 05 | Customer storefront and shopping cart | ✅ Complete |
 | 06 | Checkout, orders and payments (cash, bank transfer, online gateway) | ✅ Complete |
-| 06b | Point of sale (POS) | Planned |
-| 07 | Finance, reports and dashboard charts (Chart.js) | Planned |
-| 08 | Notifications, Business Settings (logo upload), technical settings, security log viewer | Planned |
-| 09 | PWA (manifest, service worker, icons) | Planned |
-| 10 | Tauri Windows desktop app and production deployment | Planned |
+| 07 | Point of sale (POS) and cashier shift management | ✅ Complete |
+| 08+ | Finance, reports and dashboard charts (Chart.js) | Planned |
+| 08+ | Notifications, Business Settings (logo upload), technical settings, security log viewer | Planned |
+| 08+ | PWA (manifest, service worker, icons) | Planned |
+| 08+ | Tauri Windows desktop app and production deployment | Planned |
 
-The roadmap is a proposal and can be reordered. The home page shows a simplified version
+The roadmap is a proposal and can be reordered; phases after 07 will be numbered as they are approved. The home page shows a simplified version
 (`templates/core/home.html`).

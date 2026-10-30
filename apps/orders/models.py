@@ -4,8 +4,9 @@ Orders.
   CheckoutSettings   one row: which delivery/pickup and payment options are offered,
                      pickup details and the business bank account shown to customers
   DeliveryZone       delivery areas with their fee (and optional free-delivery amount)
-  Order              one customer order (number LEO-YYYY-NNNNN), with delivery/pickup
-                     details and totals fixed at the time of ordering
+  Order              one sale: an online order (number LEO-YYYY-NNNNN, channel ONLINE) or
+                     an in-store POS sale (POS-YYYY-NNNNN, channel POS), with details,
+                     discount and totals fixed at the time of ordering
   OrderItem          what was ordered: product/variation names, SKU and unit price are
                      COPIED so later catalogue changes never alter past orders
   OrderStatusEvent   history of every status change (who, when, why)
@@ -107,6 +108,15 @@ class Order(TimeStampedModel):
     class Fulfilment(models.TextChoices):
         DELIVERY = "DELIVERY", "Home delivery"
         PICKUP = "PICKUP", "Store pickup"
+        IN_STORE = "IN_STORE", "In-store sale"
+
+    class Channel(models.TextChoices):
+        ONLINE = "ONLINE", "Online shop"
+        POS = "POS", "Point of sale"
+
+    class DiscountType(models.TextChoices):
+        FIXED = "FIXED", "Fixed amount (LKR)"
+        PERCENT = "PERCENT", "Percentage"
 
     class PaymentMethod(models.TextChoices):
         CASH = "CASH", "Cash"
@@ -122,7 +132,14 @@ class Order(TimeStampedModel):
         REFUNDED = "REFUNDED", "Refunded"
 
     number = models.CharField(max_length=20, unique=True, editable=False)
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders")
+    channel = models.CharField(max_length=10, choices=Channel.choices, default=Channel.ONLINE, db_index=True)
+    # Online orders always have a customer account; walk-in POS sales usually don't.
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
+                                 related_name="orders")
+    # POS sales: who sold it, in which cashier shift
+    cashier = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
+                                related_name="pos_sales")
+    shift = models.ForeignKey("pos.CashierShift", null=True, blank=True, on_delete=models.PROTECT, related_name="sales")
     checkout_token = models.UUIDField(unique=True, editable=False,
                                       help_text="One per checkout; stops a double-clicked order being placed twice.")
 
@@ -140,6 +157,16 @@ class Order(TimeStampedModel):
 
     # Money (calculated on the server; never taken from the browser)
     subtotal = models.DecimalField(**MONEY, validators=[NON_NEGATIVE])
+    # Discount (POS): total = subtotal - discount_amount + delivery_fee
+    discount_type = models.CharField(max_length=10, choices=DiscountType.choices, blank=True)
+    discount_value = models.DecimalField(**MONEY, default=Decimal("0.00"), validators=[NON_NEGATIVE],
+                                         help_text="LKR amount or percentage, as entered.")
+    discount_amount = models.DecimalField(**MONEY, default=Decimal("0.00"), validators=[NON_NEGATIVE])
+    discount_reason = models.CharField(max_length=200, blank=True)
+    discount_applied_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                            related_name="+")
+    discount_approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                             related_name="+")
     delivery_fee = models.DecimalField(**MONEY, default=Decimal("0.00"), validators=[NON_NEGATIVE])
     total = models.DecimalField(**MONEY, validators=[NON_NEGATIVE])
 
@@ -164,8 +191,12 @@ class Order(TimeStampedModel):
         constraints = [
             models.CheckConstraint(condition=Q(total__gte=0) & Q(subtotal__gte=0) & Q(delivery_fee__gte=0),
                                    name="orders_order_amounts_non_negative"),
-            models.CheckConstraint(condition=Q(fulfilment="PICKUP", delivery_fee=0) | Q(fulfilment="DELIVERY"),
+            models.CheckConstraint(condition=Q(fulfilment__in=["PICKUP", "IN_STORE"], delivery_fee=0) | Q(fulfilment="DELIVERY"),
                                    name="orders_pickup_has_no_delivery_fee"),
+            models.CheckConstraint(condition=Q(discount_amount__gte=0) & Q(discount_amount__lte=models.F("subtotal")),
+                                   name="orders_discount_within_subtotal"),
+            models.CheckConstraint(condition=Q(channel="POS") | Q(customer__isnull=False),
+                                   name="orders_online_order_has_customer"),
         ]
 
     def __str__(self):
@@ -173,6 +204,15 @@ class Order(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("orders:detail", args=[self.number])
+
+    def get_staff_url(self):
+        if self.channel == self.Channel.POS:
+            return reverse("pos:sale_detail", args=[self.number])
+        return reverse("orders:staff_detail", args=[self.number])
+
+    @property
+    def is_pos(self):
+        return self.channel == self.Channel.POS
 
     @property
     def is_delivery(self):

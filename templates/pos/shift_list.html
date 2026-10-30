@@ -1,0 +1,36 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Shifts — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if all_shifts %}Cashier shifts{% else %}My shifts{% endif %}{% endblock %}
+{% block page_actions %}
+  {% if can.PROCESS_SALES %}<a href="{% url 'pos:terminal' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-shop-window" aria-hidden="true"></i>{% if my_open %}Till{% else %}Open shift{% endif %}</a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<nav class="leo-tabs mb-3" aria-label="Filter shifts">
+  <a class="leo-tabs__link{% if not status %} active{% endif %}" href="?">All</a>
+  <a class="leo-tabs__link{% if status == 'OPEN' %} active{% endif %}" href="?status=OPEN">Open</a>
+  <a class="leo-tabs__link{% if status == 'CLOSED' %} active{% endif %}" href="?status=CLOSED">Closed</a>
+</nav>
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Shift</th>{% if all_shifts %}<th scope="col">Cashier</th>{% endif %}<th scope="col">Opened</th><th scope="col">Closed</th><th scope="col" class="text-end">Expected cash</th><th scope="col" class="text-end">Difference</th></tr></thead>
+    <tbody>{% for s, summary in rows %}
+      <tr>
+        <td data-label="Shift"><a href="{% url 'pos:shift_detail' s.pk %}" class="fw-semibold">{{ s.code }}</a> {% if s.is_open %}<span class="leo-badge leo-badge--gold">Open</span>{% endif %}</td>
+        {% if all_shifts %}<td data-label="Cashier">{{ s.cashier.get_full_name|default:s.cashier.username }}</td>{% endif %}
+        <td data-label="Opened">{{ s.opened_at|date:"j M Y, H:i" }}</td>
+        <td data-label="Closed">{{ s.closed_at|date:"j M Y, H:i"|default:"—" }}</td>
+        <td data-label="Expected cash" class="text-end">{% if s.is_open %}{{ summary.expected_cash|money }}{% else %}{{ s.expected_cash|money }}{% endif %}</td>
+        <td data-label="Difference" class="text-end {% if s.difference < 0 %}leo-qty--out{% elif s.difference > 0 %}leo-qty--in{% endif %}">{% if s.is_open %}—{% else %}{{ s.difference|money }}{% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No shifts yet.</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

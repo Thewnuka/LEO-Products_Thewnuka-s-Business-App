@@ -1,0 +1,50 @@
+/* LEO PRODUCTS — printable POS receipt (till printer 80 mm and A4). */
+:root { --green: #123d28; --gold: #c9a227; --muted: #555; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f4f1ea; color: #111; font: 13px/1.4 "Segoe UI", Arial, sans-serif; }
+
+.receipt-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; padding: 12px; background: var(--green); }
+.receipt-tools__ok { color: #fff; font-weight: 600; margin-right: 8px; }
+.receipt-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #fff; border-radius: 6px;
+  background: transparent; color: #fff; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.receipt-btn--primary { background: #fff; color: var(--green); }
+.receipt-btn--gold { background: var(--gold); border-color: var(--gold); color: #1d1d1d; }
+.receipt-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+.receipt { background: #fff; margin: 16px auto; padding: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, .12); }
+.receipt-page--thermal .receipt { width: 80mm; max-width: 100%; font-size: 12px; }
+.receipt-page--a4 .receipt { width: 210mm; max-width: 100%; padding: 24mm 20mm; font-size: 14px; }
+
+.receipt__head { text-align: center; border-bottom: 1px dashed #999; padding-bottom: 8px; margin-bottom: 8px; }
+.receipt__head .leo-logo { display: inline-block; }
+.receipt__head .leo-logo__img { width: 64px; height: 64px; object-fit: contain; display: block; margin: 0 auto 4px; }
+.receipt-page--a4 .receipt__head .leo-logo__img { width: 96px; height: 96px; }
+.receipt__brand { font-weight: 700; font-size: 1.3em; letter-spacing: .04em; color: var(--green); }
+.receipt__tagline { font-style: italic; color: var(--muted); margin-bottom: 4px; }
+
+.receipt__flag { text-align: center; font-weight: 700; border: 1px solid #111; padding: 2px; margin: 6px 0; letter-spacing: .1em; }
+.receipt__flag--void { border-width: 2px; }
+
+.receipt table { width: 100%; border-collapse: collapse; }
+.receipt th, .receipt td { padding: 2px 0; vertical-align: top; text-align: left; }
+.receipt .num, .receipt__totals td { text-align: right; white-space: nowrap; }
+.receipt__meta th { font-weight: 600; width: 34%; }
+.receipt__items { margin: 8px 0; border-top: 1px dashed #999; border-bottom: 1px dashed #999; }
+.receipt__items thead th { border-bottom: 1px solid #ccc; font-weight: 600; }
+.receipt__items td + td, .receipt__items th + th { padding-left: 6px; }
+.receipt__size { display: block; font-size: .9em; color: var(--muted); }
+.receipt__totals th { font-weight: 500; }
+.receipt__grand th, .receipt__grand td { font-weight: 700; font-size: 1.2em; border-top: 1px solid #111; padding-top: 4px; }
+.receipt__note { border: 1px solid #111; padding: 4px; margin: 8px 0 0; font-weight: 600; }
+.receipt__foot { text-align: center; border-top: 1px dashed #999; margin-top: 8px; padding-top: 8px; }
+.receipt__foot p { margin: 0 0 4px; }
+.receipt__small { font-size: .85em; color: var(--muted); }
+
+@media print {
+  body { background: #fff; }
+  .receipt-tools { display: none; }
+  .receipt { box-shadow: none; margin: 0; }
+  .receipt-page--thermal .receipt { width: 72mm; padding: 0; }
+  .receipt-page--a4 .receipt { width: auto; padding: 0; }
+}
+@page { margin: 4mm; }

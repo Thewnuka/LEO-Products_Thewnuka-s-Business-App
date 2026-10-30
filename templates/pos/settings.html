@@ -1,0 +1,27 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}POS settings — {{ brand.name }}{% endblock %}
+{% block page_title %}POS settings{% endblock %}
+
+{% block page_content %}
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    <fieldset class="leo-fieldset"><legend>Receipt</legend>
+      <p class="small text-body-secondary">Printed under the logo. Only enter real details; leave a field empty to leave it off the receipt.</p>
+      {% include "partials/_form_field.html" with field=form.business_address %}
+      {% include "partials/_form_field.html" with field=form.business_phone %}
+      {% include "partials/_form_field.html" with field=form.receipt_footer %}
+    </fieldset>
+    <fieldset class="leo-fieldset"><legend>Discount limits</legend>
+      <div class="row g-0 gx-2 gx-md-3">
+        <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.cashier_discount_limit %}</div>
+        <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.manager_discount_limit %}</div>
+      </div>
+      <p class="small text-body-secondary mb-0">A larger discount needs a Manager (up to their limit) or the Owner to approve it at the till with their sign-in.</p>
+    </fieldset>
+    <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save settings</button>
+  </div>
+</form>
+{% endblock %}

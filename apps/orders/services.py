@@ -5,7 +5,7 @@ STOCK POLICY
 ------------
 Stock is DEDUCTED WHEN THE ORDER IS PLACED, inside the same database
 transaction that creates the order. Each line goes through
-inventory.services.record_movement (movement type "Online order"), which
+inventory.services.record_movement (movement type "Sale (order)"), which
 refuses to go below zero with a conditional UPDATE, so two customers buying
 the last packet at the same moment can't both succeed: one order is placed,
 the other gets "not enough stock" and nothing is saved for it.
@@ -88,8 +88,9 @@ def quote(cart, fulfilment, zone=None):
 # ---------------------------------------------------------------------------
 # Placing an order
 # ---------------------------------------------------------------------------
-def next_order_number():
-    prefix = f"LEO-{timezone.localdate():%Y}-"
+def next_order_number(series="LEO"):
+    """Next number in a yearly series: LEO-2026-00001 (online) or POS-2026-00001 (in-store)."""
+    prefix = f"{series}-{timezone.localdate():%Y}-"
     last = Order.objects.filter(number__startswith=prefix).order_by("-number").values_list("number", flat=True).first()
     return f"{prefix}{(int(last.rsplit('-', 1)[1]) + 1 if last else 1):05d}"
 
@@ -151,25 +152,33 @@ def _place_order(customer, details, checkout_token, expected_total):
         city=details.get("city", "") if zone else "", delivery_instructions=details.get("delivery_instructions", ""),
         subtotal=q.subtotal, delivery_fee=q.delivery_fee, total=q.total, payment_method=method,
     )
-    # Lock stock rows in a fixed order (by stock record id) to avoid deadlocks between simultaneous orders.
-    for line in sorted(q.lines, key=lambda cart_line: cart_line.item.variation.inventory_item.pk):
-        v = line.item.variation
-        item = OrderItem.objects.create(
-            order=order, variation=v, product_name=v.product.name, variation_name=v.display_name, sku=v.sku,
-            unit_price=line.unit_price, quantity=line.item.quantity, line_total=line.unit_price * line.item.quantity)
-        try:
-            record_movement(v.inventory_item, StockMovement.Type.SALE, line.item.quantity, customer,
-                            reason=f"Online order {order.number}", order_item=item)
-        except ValidationError:
-            v.inventory_item.refresh_from_db()  # the cart's copy is stale: report what is really left
-            available = shop.available_stock(v)
-            raise OrderError(f"Sorry, only {available} of {v.product.name} ({v.display_name}) left. "
-                             "Please update your cart.")
+    add_items_and_deduct_stock(order, [(line.item.variation, line.item.quantity, line.unit_price) for line in q.lines],
+                               customer, reason=f"Online order {order.number}", hint="Please update your cart.")
     create_payment(order)
     OrderStatusEvent.objects.create(order=order, to_status=St.PENDING, created_by=customer, note="Order placed")
     cart.items.all().delete()
     _notify_on_commit(order, "placed")
     return order
+
+
+def add_items_and_deduct_stock(order, lines, user, *, reason, hint=""):
+    """
+    Create the order lines (name, size, SKU and price copied) and deduct each from stock
+    with one SALE ledger movement. `lines`: (variation, quantity, unit_price).
+    Must run inside the caller's transaction; a stock shortage raises OrderError and
+    the whole order is rolled back. Shared by online checkout and the POS.
+    """
+    # Lock stock rows in a fixed order (by stock record id) to avoid deadlocks between simultaneous orders.
+    for v, quantity, unit_price in sorted(lines, key=lambda line: line[0].inventory_item.pk):
+        item = OrderItem.objects.create(
+            order=order, variation=v, product_name=v.product.name, variation_name=v.display_name, sku=v.sku,
+            unit_price=unit_price, quantity=quantity, line_total=unit_price * quantity)
+        try:
+            record_movement(v.inventory_item, StockMovement.Type.SALE, quantity, user, reason=reason, order_item=item)
+        except ValidationError:
+            v.inventory_item.refresh_from_db()  # the caller's copy may be stale: report what is really left
+            available = shop.available_stock(v)
+            raise OrderError(f"Sorry, only {available} of {v.product.name} ({v.display_name}) left. {hint}".strip())
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +255,9 @@ def cancel_order(order, user, reason, by_customer=False):
     order = Order.objects.select_for_update().get(pk=order.pk)
     if by_customer and not customer_can_cancel(order):
         raise OrderError("This order can no longer be cancelled online. Please contact us.")
-    if order.status not in STAFF_CANCELLABLE:
+    # An in-store sale is completed at the till; it can still be voided/refunded (POS refunds).
+    cancellable = STAFF_CANCELLABLE | {St.COMPLETED} if order.channel == Order.Channel.POS else STAFF_CANCELLABLE
+    if order.status not in cancellable:
         raise OrderError(f"An order that is {order.get_status_display().lower()} can't be cancelled.")
     old = order.status
     now = timezone.now()

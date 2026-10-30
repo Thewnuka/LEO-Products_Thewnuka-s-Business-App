@@ -541,10 +541,90 @@ Uploaded slips (JPG, PNG, WebP or PDF, up to 5 MB, checked to be real images or 
 
 ---
 
-## 11. Running the tests
+## 11. Point of sale (in-store sales)
+
+Staff portal → **Point of sale**. The **Till** is for Cashiers (and the Owner). Managers don't sell; they review
+sales and shifts, approve discounts and bank transfers, and handle refunds.
+
+### First-time setup (Owner)
+
+Staff portal → **Point of sale → POS settings** (<http://127.0.0.1:8000/staff/pos/settings/>):
+- **Receipt:** shop address, phone and a short footer message. Only enter real details; empty fields are left off.
+  The receipt always shows the official logo, name and tagline. No tax or registration numbers are printed.
+- **Discount limits:** the largest discount (as a % of the sale) a Cashier may give alone (default 5%) and that a
+  Manager may give or approve (default 20%). The Owner has no limit.
+
+Products appear on the till automatically when they can be sold online too: active product and category, active
+size, tracked in Inventory, at least 1 in stock (§9).
+
+### A cashier's day
+
+1. **Open shift:** Till → count the cash in the drawer → **Open shift**. You can't sell without an open shift,
+   and you can only have one open at a time.
+2. **Sell:** tap products (or type/scan the SKU and press Enter; a barcode scanner that types the SKU works),
+   adjust quantities, then:
+   - **Cash:** enter the cash received (or tap **Exact**/a rounded amount). The change is shown. **Complete sale**.
+   - **Bank transfer:** enter the customer's transfer reference. The sale is saved as **awaiting verification**;
+     it is not paid until a Manager or the Owner confirms the money arrived (see below).
+   - **Discount (optional):** % or LKR, with a reason. Above your limit, a Manager or the Owner types their
+     user name and password on the till to approve it. Wrong passwords count towards the normal sign-in lock
+     (5 failures lock that person's approvals and sign-ins from this computer for 15 minutes).
+3. The **receipt** opens and the print dialog appears (80 mm till printer layout; **A4 size** is one click away).
+   Press **New sale** for the next customer.
+4. **Cash in / cash out:** My shift → record float added or cash removed (e.g. bank deposit) with a reason.
+   You can't take out more than the drawer should hold.
+5. **Close shift:** My shift → **Close shift** → count the drawer → enter the total. The system shows the expected
+   amount and saves the difference; if they differ, a note is required. **A closed shift can't be changed.**
+
+Expected cash = opening cash + cash sales + cash added − cash taken out − cash refunds.
+Bank-transfer sales never count towards the drawer.
+
+Each sale is saved in one database transaction: prices come from the database, stock is checked and deducted
+(ledger entry "Sale (order)"), and the payment is recorded. Clicking **Complete sale** twice, or a network retry,
+never records the sale twice.
+
+### Managers and the Owner
+
+- **POS sales** (<http://127.0.0.1:8000/staff/pos/sales/>): today's totals, search by receipt number, filter by
+  date, cashier, payment method and status. Cashiers see only their own sales.
+- **Verify a till bank transfer:** open the sale (status "Transfer to check") → **Approve** when the money is in the
+  account (the sale becomes Completed and Paid) or **Reject** with a note. A rejected sale stays unpaid: collect
+  payment another way by voiding it and selling again.
+- **Void / refund:** open the sale → **Void / refund this sale** → reason (and, for cash, the open till the money is
+  paid from). Stock goes back once, the payment is marked refunded, and the cash refund is recorded in that till's
+  drawer. The sale stays in the history marked "Voided/Refunded". Cashiers can't refund.
+- **Cashier shifts:** see every shift's expected cash, count and difference; a Manager or the Owner can close a shift
+  a cashier forgot to close.
+- **Reprint receipts:** sale page → **Reprint**. Every reprint is logged (who and when) and printed with "COPY".
+  Cashiers may reprint their own sales.
+
+### Who can do what
+
+| | Owner | Manager | Cashier | IT Admin | Customer |
+|---|---|---|---|---|---|
+| Use the till, own shift, cash in/out | ✅ | ❌ | ✅ | ❌ | ❌ |
+| View sales and receipts | all | all | own | ❌ | ❌ |
+| Discount without approval | any | up to manager limit | up to cashier limit | ❌ | ❌ |
+| Approve discounts at the till | ✅ | ✅ (up to manager limit) | ❌ | ❌ | ❌ |
+| Verify till bank transfers | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Void / refund sales | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Review / close any shift | ✅ | ✅ | own only | ❌ | ❌ |
+| POS settings | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+The dashboards of the Owner, Manager and Cashier show today's POS sales, number of transactions, cash and bank-transfer
+sales, open shifts and what their drawers should hold (cashiers see their own figures only).
+
+### Printing tips
+
+Use the browser's print dialog: choose the receipt printer, paper 80 mm, margins "None", and turn off headers and
+footers. For A4, choose **A4 size** on the receipt page first.
+
+---
+
+## 12. Running the tests
 
 ```powershell
-python manage.py test                       # everything (about 4–6 minutes)
+python manage.py test                       # everything (about 8–10 minutes)
 python manage.py test apps.accounts         # accounts and permissions only
 python manage.py test apps.accounts.tests.test_permissions   # one file
 ```
@@ -574,13 +654,15 @@ The tests use a temporary database; your `db.sqlite3` is never touched. Test fil
 | `apps/orders/tests/test_checkout.py` | Placing orders: totals, delivery fees and free-delivery threshold, price snapshots, stock deduction, overselling and race conditions, double submit, changed totals, checkout pages, CSRF |
 | `apps/orders/tests/test_workflow.py` | Status rules, cancellation and restock (once), refund due, no deleting orders, customer privacy, staff pages and history, role permissions, settings and delivery areas |
 | `apps/payments/tests/test_payments.py` | Cash, bank transfer submit/approve/reject/resubmit, slip validation and privacy, refunds, online payment off without credentials, PayHere signing, signature/amount checks, duplicate notifications |
+| `apps/pos/tests/test_services.py` | Shifts (one open per cashier, expected cash, closing count and difference, closed shifts locked), cash in/out, cash and bank-transfer sales, change, stock deducted once, duplicate submissions, race for the last items, discounts and approval limits, refunds/voids, today's figures |
+| `apps/pos/tests/test_views.py` | Role access to every POS page, till product list, checkout endpoint (errors, double submit, CSRF, manager approval and throttling), receipts and logged reprints, sales history and filters, transfer verification, refunds, shift pages, dashboards, POS settings |
 | `apps/shop/tests/test_cart.py` | Add/update/remove, stock limits, invalid input, stock dropping later, guest vs customer carts, merge on sign-in and registration, cart privacy, staff blocked, CSRF, safe redirects |
 
 Tests take a while because password hashing is deliberately slow (that is what makes it secure).
 
 ---
 
-## 12. Databases
+## 13. Databases
 
 **Development:** SQLite. The database is the file `db.sqlite3`. It is not committed to Git.
 To start again from an empty database, stop the server, delete `db.sqlite3` and run `python manage.py migrate`.
@@ -592,7 +674,7 @@ To start again from an empty database, stop the server, delete `db.sqlite3` and 
 4. Run `python manage.py migrate` and `python manage.py collectstatic`.
 5. Run `python manage.py check --deploy` and fix anything it reports.
 
-## 13. Git and GitHub
+## 14. Git and GitHub
 
 ### First commit
 
@@ -645,7 +727,7 @@ Then open a Pull Request on GitHub and merge it into `main` when the phase is do
 - Run `python manage.py test` before committing.
 - Commit small, meaningful steps with clear messages.
 
-## 14. Troubleshooting
+## 15. Troubleshooting
 
 | Problem | Fix |
 |---|---|

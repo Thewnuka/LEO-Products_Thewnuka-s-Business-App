@@ -6,8 +6,8 @@ Business management system and e-commerce platform for LEO PRODUCTS, built with
 Django. One backend and one database will serve the website, a Windows desktop
 app (Tauri) and an installable mobile app (PWA).
 
-**Current status:** Phase 06 (checkout, orders and payments) is complete.
-Phases 01–05 (foundation, authentication and roles, product catalogue, inventory, storefront and cart) are done. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
+**Current status:** Phase 07 (point of sale and cashier shifts) is complete.
+Phases 01–06 (foundation, authentication and roles, product catalogue, inventory, storefront and cart, orders and payments) are done. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ---
 
@@ -57,6 +57,7 @@ Then open <http://127.0.0.1:8000/> in your browser.
 | <http://127.0.0.1:8000/cart/> | Shopping cart (guests and customers) |
 | <http://127.0.0.1:8000/account/orders/> | A customer's own orders |
 | <http://127.0.0.1:8000/staff/orders/> | **Customer orders**: status, payments, bank-transfer verification (Owner, Manager, Cashier) |
+| <http://127.0.0.1:8000/staff/pos/> | **Point of sale** till (Cashier, Owner); sales, shifts and POS settings under the same menu |
 | <http://127.0.0.1:8000/staff/orders/settings/> | Delivery areas and fees, pickup, cash and bank details (Owner) |
 | <http://127.0.0.1:8000/staff/login/> | **Staff portal** sign-in (Owner, IT Admin, Manager, Cashier) |
 | <http://127.0.0.1:8000/account/login/> | **Customer** sign-in |
@@ -93,10 +94,10 @@ under **Staff accounts**. Customers create their own accounts at `/account/regis
 
 | Role | Signs in at | Can do (now) | Will do (later phases) |
 |---|---|---|---|
-| **Owner** | Staff portal | Everything; manage all staff; product catalogue; inventory, suppliers and purchases (and may allow negative stock per item); Django admin; view every dashboard | Business settings, finance, all reports |
+| **Owner** | Staff portal | Everything; manage all staff; product catalogue; inventory, suppliers and purchases (and may allow negative stock per item); Django admin; view every dashboard; POS till, all sales, refunds, shifts and POS settings | Business settings, finance, all reports |
 | **IT Admin** | Staff portal | Manage Manager and Cashier accounts | Technical settings, maintenance, security log. **No finance** |
-| **Manager** | Staff portal | Product catalogue; inventory and stock adjustments; suppliers; purchases (create and receive); customer orders, order status, bank-transfer verification, cash | Customers, operational reports |
-| **Cashier** | Staff portal | View customer orders and record cash received (no catalogue or inventory access) | POS sales, receipts, own transactions |
+| **Manager** | Staff portal | Product catalogue; inventory and stock adjustments; suppliers; purchases (create and receive); customer orders, order status, bank-transfer verification, cash; POS sales, discount approval, refunds, shift review | Customers, operational reports |
+| **Cashier** | Staff portal | POS till, own shift and cash drawer, own sales and receipt reprints; view customer orders and record cash received | — |
 | **Customer** | Customer portal | Register, own profile; shop, keep a cart, check out, own orders and payments | Notifications, mobile app |
 
 Full details: [ARCHITECTURE.md §12](ARCHITECTURE.md#12-authentication-and-role-based-access-control).
@@ -125,7 +126,8 @@ LEO PRODUCTS SYSTEM/
 │   ├── inventory/           Stock items, stock movement ledger, adjustments, suppliers, purchases
 │   ├── shop/                Customer storefront and shopping cart
 │   ├── orders/              Checkout, orders, status workflow, delivery settings
-│   └── payments/            Payment records, cash, bank transfer, refunds, online gateway (PayHere)
+│   ├── payments/            Payment records, cash, bank transfer, refunds, online gateway (PayHere)
+│   └── pos/                 Point of sale: cashier shifts, cash drawer, receipts, POS settings
 ├── templates/
 │   ├── base.html            Master layout every page extends
 │   ├── layouts/             sidebar.html, staff.html (staff portal), auth.html (sign-in pages)

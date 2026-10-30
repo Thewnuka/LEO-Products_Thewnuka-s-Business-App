@@ -1,0 +1,20 @@
+{% load catalog_tags %}
+{% comment %}Cash drawer figures for one shift. Needs `summary` (and `shift`).{% endcomment %}
+<dl class="leo-cart-totals leo-drawer">
+  <dt>Opening cash</dt><dd>{{ summary.opening_cash|money }}</dd>
+  <dt>+ Cash sales</dt><dd>{{ summary.cash_sales|money }}</dd>
+  <dt>+ Cash added</dt><dd>{{ summary.cash_in|money }}</dd>
+  <dt>− Cash taken out</dt><dd>{{ summary.cash_out|money }}</dd>
+  <dt>− Cash refunds</dt><dd>{{ summary.cash_refunds|money }}</dd>
+  <dt class="leo-cart-totals__grand">Expected in drawer</dt><dd class="leo-cart-totals__grand">{% if shift and not shift.is_open %}{{ shift.expected_cash|money }}{% else %}{{ summary.expected_cash|money }}{% endif %}</dd>
+  {% if shift and not shift.is_open %}
+  <dt>Counted</dt><dd>{{ shift.counted_cash|money }}</dd>
+  <dt>Difference</dt><dd class="{% if shift.difference < 0 %}leo-qty--out{% elif shift.difference > 0 %}leo-qty--in{% endif %}">{{ shift.difference|money }}</dd>
+  {% endif %}
+</dl>
+<p class="small text-body-secondary mb-0">
+  {{ summary.sales_count }} sale{{ summary.sales_count|pluralize }} · {{ summary.sales_total|money }}
+  {% if summary.discounts %}· discounts {{ summary.discounts|money }}{% endif %}
+  · bank transfers {{ summary.bank_paid|money }}{% if summary.bank_pending %} (+ {{ summary.bank_pending|money }} awaiting check){% endif %}
+  {% if summary.voided_count %}· {{ summary.voided_count }} voided{% endif %}
+</p>

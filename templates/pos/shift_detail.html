@@ -1,0 +1,67 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Shift {{ shift.code }} — {{ brand.name }}{% endblock %}
+{% block page_title %}Shift {{ shift.code }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'pos:shifts' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Shifts</span></a>
+  {% if can_manage %}<a href="{% url 'pos:shift_close' shift.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-lock" aria-hidden="true"></i>Close shift</a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary">
+  {% if shift.is_open %}<span class="leo-badge leo-badge--gold">Open</span>{% else %}<span class="leo-badge">Closed</span>{% endif %}
+  {{ shift.cashier.get_full_name|default:shift.cashier.username }} · opened {{ shift.opened_at|date:"j M Y, H:i" }}{% if shift.opening_note %} ({{ shift.opening_note }}){% endif %}
+  {% if shift.closed_at %}· closed {{ shift.closed_at|date:"j M Y, H:i" }} by {{ shift.closed_by.get_full_name|default:shift.closed_by.username }}{% endif %}
+</p>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-5">
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <h2 class="h5">Cash drawer</h2>
+        {% include "pos/partials/_shift_summary.html" %}
+        {% if shift.closing_note %}<p class="mt-2 mb-0"><strong>Closing note:</strong> {{ shift.closing_note|linebreaksbr }}</p>{% endif %}
+      </div>
+    </article>
+    {% if can_manage %}
+    <form method="post" action="{% url 'pos:cash_movement' shift.pk %}" class="leo-card leo-card--auto" data-once>
+      <div class="leo-card__body">
+        {% csrf_token %}
+        <h2 class="h5">Cash in / cash out</h2>
+        {% include "partials/_form_field.html" with field=cash_form.kind %}
+        {% include "partials/_form_field.html" with field=cash_form.amount %}
+        {% include "partials/_form_field.html" with field=cash_form.reason %}
+        <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Record</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+  <div class="col-12 col-xl-7">
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <h2 class="h5">Cash movements</h2>
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for m in movements %}
+          <li><span><span class="fw-semibold">{{ m.get_kind_display }}</span> · {{ m.reason }}{% if m.order %} (<a href="{% url 'pos:sale_detail' m.order.number %}">{{ m.order.number }}</a>){% endif %}
+            <span class="d-block small text-body-secondary">{{ m.created_at|date:"j M Y, H:i" }} · {{ m.created_by.get_full_name|default:m.created_by.username }}</span></span>
+            <span class="fw-semibold {% if m.kind == 'CASH_IN' %}leo-qty--in{% else %}leo-qty--out{% endif %}">{% if m.kind == 'CASH_IN' %}+{% else %}−{% endif %} {{ m.amount|money }}</span></li>
+          {% empty %}<li class="text-body-secondary">No cash added or taken out.</li>{% endfor %}
+        </ul>
+      </div>
+    </article>
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <h2 class="h5">Sales in this shift</h2>
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for order in sales %}
+          <li><span><a href="{% url 'pos:sale_detail' order.number %}" class="fw-semibold">{{ order.number }}</a>
+            <span class="d-block small text-body-secondary">{{ order.created_at|date:"H:i" }} · {{ order.get_payment_method_display }}</span></span>
+            <span class="d-flex gap-2 align-items-center">{% include "orders/partials/_status_badge.html" %}<span class="fw-semibold">{{ order.total|money }}</span></span></li>
+          {% empty %}<li class="text-body-secondary">No sales yet.</li>{% endfor %}
+        </ul>
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}

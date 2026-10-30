@@ -46,6 +46,10 @@ class Payment(TimeStampedModel):
     evidence_content_type = models.CharField(max_length=40, blank=True, editable=False)
     submitted_at = models.DateTimeField(null=True, blank=True)
 
+    # Cash at the POS: what the customer handed over and the change given back
+    cash_tendered = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    change_given = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
     # Online gateway
     gateway = models.CharField(max_length=30, blank=True)
     transaction_id = models.CharField(max_length=100, blank=True, help_text="Gateway or bank transaction ID.")
@@ -70,6 +74,8 @@ class Payment(TimeStampedModel):
             models.UniqueConstraint(fields=["gateway", "transaction_id"], condition=~Q(transaction_id=""),
                                     name="payments_unique_gateway_transaction"),
             models.CheckConstraint(condition=Q(amount__gte=0), name="payments_amount_non_negative"),
+            models.CheckConstraint(condition=Q(change_given__isnull=True) | Q(change_given__gte=0),
+                                   name="payments_change_non_negative"),
         ]
 
     def __str__(self):

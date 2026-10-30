@@ -58,7 +58,7 @@ own phase (`python manage.py startapp <name> apps/<name>`), which avoids empty c
 | `shop` (incl. `cart`) | **Created** (Phase 05) | Customer storefront (browse, search, product pages) and shopping cart (see §15) |
 | `orders` | **Created** (Phase 06) | Checkout, orders, status workflow, delivery settings (see §16) |
 | `payments` | **Created** (Phase 06) | Payment records, cash, bank transfer, refunds, online gateway adapters (see §16) |
-| `pos` | Planned | In-store point of sale |
+| `pos` | **Created** (Phase 07) | Till, cashier shifts, cash drawer movements, receipts, POS settings; sales are `orders.Order` rows (see §17) |
 | `finance` | Planned | Income, expenses, summaries |
 | `notifications` | Planned | Email and in-app notifications |
 | `reports` | Planned | Business reports and exports |
@@ -690,3 +690,29 @@ Orders, order lines and status events are never deleted (`PROTECT` foreign keys 
 | Staff order list, detail, status, cancel, cash | `/staff/orders/`, `/staff/orders/<number>/`, `.../status/`, `.../cancel/`, `.../cash/` |
 | Staff verify transfer, record refund | `/staff/payments/<reference>/review/`, `.../refund/` |
 | Delivery & payment settings, delivery areas | `/staff/orders/settings/`, `.../zones/new/`, `.../zones/<id>/edit/` |
+
+---
+
+## 17. Point of sale
+
+- **No second sales model.** A till sale is an `orders.Order` with `channel=POS`, `fulfilment=IN_STORE`, an optional
+  customer, the `cashier` and `shift`, and discount fields. Lines, price snapshots, stock deduction
+  (`orders.services.add_items_and_deduct_stock`, shared with online checkout), `payments.Payment`, cancellation/restock
+  and refunds are the Phase 06 code paths.
+- **`pos` app:** `PosSettings` (receipt details, discount limits), `CashierShift` (one OPEN per cashier, unique
+  constraint; expected/counted/difference fixed at closing), `CashMovement` (CASH_IN, CASH_OUT, REFUND; one REFUND
+  per sale), `ReceiptPrint` (reprint log). All are protected from deletion.
+- **Sale flow** (`pos.services.create_sale`): idempotent on the checkout token; inside one transaction it locks the
+  cashier's open shift, re-reads prices and stock, applies the discount rules, checks the total the cashier saw,
+  creates the order and lines, deducts stock, and creates the payment (cash: PAID with tendered/change; bank transfer:
+  PENDING_VERIFICATION). `payments.services.review_bank_transfer` completes a POS sale when its transfer is approved.
+- **Discounts:** limit by capability: `UNLIMITED_DISCOUNTS` (Owner), `APPROVE_DISCOUNTS` (Manager limit), `PROCESS_SALES`
+  (Cashier limit). Approval re-authenticates the approver through the normal backend and its brute-force lock.
+- **Refunds:** `pos.services.refund_sale` = `orders.services.cancel_order` (POS sales may be cancelled when completed)
+  + `payments.services.record_refund` + a REFUND cash movement on an open shift for cash.
+- **Capabilities added:** `VIEW_POS_SALES`, `APPROVE_DISCOUNTS`, `UNLIMITED_DISCOUNTS`, `MANAGE_SHIFTS`, `REFUND_POS_SALES`
+  (existing `PROCESS_SALES`, `VIEW_OWN_TRANSACTIONS` etc. are now used). Cashiers' views are filtered to their own
+  sales and shifts in `visible_sales` / `visible_shifts`.
+- **Pages:** `/staff/pos/` (till), `/staff/pos/sale/` (JSON checkout), `/staff/pos/sales/…` (history, detail, receipt,
+  reprint, refund), `/staff/pos/shifts/…` (list, detail, cash, close), `/staff/pos/settings/`. Front end:
+  `static/js/pos.js`, `static/js/receipt.js`, `static/css/receipt.css`.

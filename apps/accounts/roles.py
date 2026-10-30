@@ -67,6 +67,11 @@ class Capability:
     ISSUE_RECEIPTS = "pos.receipts"
     TAKE_PAYMENTS = "pos.take_payment"
     VIEW_OWN_TRANSACTIONS = "pos.own_transactions"
+    VIEW_POS_SALES = "pos.view_sales"          # every cashier's sales and receipts
+    APPROVE_DISCOUNTS = "pos.approve_discounts"  # discounts above the cashier limit (up to the manager limit)
+    UNLIMITED_DISCOUNTS = "pos.unlimited_discounts"
+    MANAGE_SHIFTS = "pos.manage_shifts"        # review every shift, close a forgotten shift
+    REFUND_POS_SALES = "pos.refund"            # void / refund an in-store sale
 
     # Customer portal
     USE_CUSTOMER_PORTAL = "customer_portal.use"
@@ -83,6 +88,7 @@ _OWNER = {
     _C.VIEW_OPERATIONAL_REPORTS,
     _C.MANAGE_PAYMENTS, _C.VERIFY_PAYMENTS, _C.RECORD_CASH_PAYMENTS, _C.MANAGE_FINANCE, _C.VIEW_ALL_REPORTS,
     _C.USE_POS, _C.PROCESS_SALES, _C.ISSUE_RECEIPTS, _C.TAKE_PAYMENTS, _C.VIEW_OWN_TRANSACTIONS,
+    _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.UNLIMITED_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
 }
 
 ROLE_CAPABILITIES = {
@@ -99,6 +105,8 @@ ROLE_CAPABILITIES = {
         _C.MANAGE_PURCHASES,
         _C.VIEW_ORDERS, _C.VERIFY_PAYMENTS, _C.RECORD_CASH_PAYMENTS,
         _C.VIEW_OPERATIONAL_REPORTS,
+        # Point of sale: oversight, not selling.
+        _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
     }),
     Role.CASHIER: frozenset({
         _C.VIEW_STAFF_PORTAL,

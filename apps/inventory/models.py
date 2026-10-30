@@ -227,7 +227,7 @@ class StockMovement(models.Model):
         EXPIRED = "EXPIRED", "Expired stock"
         CORRECTION = "CORRECTION", "Correction (count)"
         OTHER = "OTHER", "Other adjustment"
-        SALE = "SALE", "Online order"                          # Phase 06: stock leaves when an order is placed
+        SALE = "SALE", "Sale (order)"                          # Phase 06: stock leaves when an order is placed
         ORDER_CANCEL = "ORDER_CANCEL", "Order cancelled (restock)"
 
     item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT, related_name="movements")

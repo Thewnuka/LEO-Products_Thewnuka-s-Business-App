@@ -36,6 +36,20 @@
 <li class="nav-item"><a class="nav-link{% if oset_url in path %} active{% endif %}" href="{{ oset_url }}"><i class="bi bi-sliders" aria-hidden="true"></i>Delivery &amp; payment</a></li>
 {% endif %}
 {% endif %}
+{% if can.PROCESS_SALES or can.VIEW_POS_SALES or can.VIEW_OWN_TRANSACTIONS or can.MANAGE_SHIFTS %}
+<li><p class="leo-sidebar__heading">Point of sale</p></li>
+{% url 'pos:terminal' as till_url %}{% url 'pos:sales' as sales_url %}{% url 'pos:shifts' as shifts_url %}{% url 'pos:settings' as pset_url %}
+{% if can.PROCESS_SALES %}
+<li class="nav-item"><a class="nav-link{% if path == till_url %} active{% endif %}" href="{{ till_url }}"><i class="bi bi-shop-window" aria-hidden="true"></i>Till</a></li>
+{% endif %}
+{% if can.VIEW_POS_SALES or can.VIEW_OWN_TRANSACTIONS %}
+<li class="nav-item"><a class="nav-link{% if sales_url in path %} active{% endif %}" href="{{ sales_url }}"><i class="bi bi-receipt" aria-hidden="true"></i>{% if can.VIEW_POS_SALES %}POS sales{% else %}My sales{% endif %}</a></li>
+{% endif %}
+<li class="nav-item"><a class="nav-link{% if shifts_url in path %} active{% endif %}" href="{{ shifts_url }}"><i class="bi bi-cash-stack" aria-hidden="true"></i>{% if can.MANAGE_SHIFTS %}Cashier shifts{% else %}My shifts{% endif %}</a></li>
+{% if can.MANAGE_BUSINESS_SETTINGS %}
+<li class="nav-item"><a class="nav-link{% if pset_url in path %} active{% endif %}" href="{{ pset_url }}"><i class="bi bi-sliders2" aria-hidden="true"></i>POS settings</a></li>
+{% endif %}
+{% endif %}
 {% if can.MANAGE_CATALOG %}
 <li><p class="leo-sidebar__heading">Catalogue</p></li>
 {% url 'catalog:dashboard' as cat_url %}{% url 'catalog:product_list' as prod_url %}{% url 'catalog:category_list' as catg_url %}{% url 'catalog:unit_list' as unit_url %}

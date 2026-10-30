@@ -956,3 +956,58 @@ form.leo-pay-box { border: 1px solid var(--leo-gold); }
 .leo-stats--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 768px) { .leo-stats--compact { grid-template-columns: repeat(2, minmax(0, 14rem)); } }
 .leo-stats--compact .leo-stat__value { font-size: 1.6rem; }
+
+
+/* Point of sale (Phase 07) */
+.leo-empty-note { color: var(--leo-text-muted); text-align: center; padding: 1.5rem 0.5rem; margin: 0; }
+.leo-stat__value--money { font-size: 1.35rem; overflow-wrap: anywhere; }
+.leo-drawer dd { font-variant-numeric: tabular-nums; }
+
+.leo-pos { padding: 0.75rem; max-width: 1600px; margin: 0 auto; }
+.leo-pos__bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.leo-pos__shift { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; color: var(--leo-text-muted); }
+.leo-pos__links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.leo-pos__grid { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 992px) {
+  .leo-pos { padding: 1rem 1.25rem; }
+  .leo-pos__grid { grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); align-items: start; }
+  .leo-pos__cart { position: sticky; top: 80px; max-height: calc(100vh - 96px); overflow-y: auto; }
+}
+.leo-pos__catalog, .leo-pos__cart { background: var(--leo-surface); border: 1px solid var(--leo-border); border-radius: var(--leo-radius); padding: 0.85rem; min-width: 0; }
+.leo-pos__search { position: relative; }
+.leo-pos__search .bi { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--leo-text-muted); }
+.leo-pos__search .form-control { padding-left: 2.4rem; min-height: 48px; font-size: 1.05rem; }
+.leo-pos__cats { display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.75rem 0; scrollbar-width: thin; }
+.leo-pos__cats .leo-chip { flex-shrink: 0; }
+.leo-pos__products { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.leo-pos__tile { display: flex; flex-direction: column; gap: 0.15rem; text-align: left; min-height: 104px; padding: 0.7rem 0.8rem;
+  border: 1px solid var(--leo-border-strong); border-radius: var(--leo-radius-sm); background: var(--leo-surface); color: inherit;
+  transition: border-color var(--leo-transition), background-color var(--leo-transition); }
+.leo-pos__tile:hover, .leo-pos__tile:focus-visible { border-color: var(--leo-green-3); background: var(--leo-green-tint); }
+.leo-pos__tile:active { transform: scale(0.98); }
+.leo-pos__tile-name { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.leo-pos__tile-size { font-size: 0.85rem; color: var(--leo-text-muted); }
+.leo-pos__tile-price { font-weight: 700; color: var(--leo-green); margin-top: auto; }
+.leo-pos__tile-stock { font-size: 0.72rem; color: var(--leo-text-muted); overflow-wrap: anywhere; }
+
+.leo-pos__cart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.leo-pos__lines { list-style: none; padding: 0; margin: 0; }
+.leo-pos__line { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "info remove" "qty total"; gap: 0.35rem 0.5rem;
+  align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--leo-border); }
+.leo-pos__line-info { grid-area: info; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.leo-pos__line .leo-cart-remove { grid-area: remove; }
+.leo-pos__qty { grid-area: qty; display: flex; gap: 0.3rem; align-items: center; }
+.leo-pos__qty .btn { min-width: 36px; min-height: 36px; padding: 0; }
+.leo-pos__qty .form-control { width: 4.2rem; text-align: center; }
+.leo-pos__line-total { grid-area: total; font-weight: 700; color: var(--leo-green); white-space: nowrap; text-align: right; }
+.leo-pos__section { border-top: 1px solid var(--leo-border); padding-top: 0.6rem; margin-top: 0.6rem; }
+.leo-pos__section > summary { font-weight: 600; cursor: pointer; min-height: 32px; }
+.leo-pos__approval { background: var(--leo-gold-tint); border-radius: var(--leo-radius-sm); padding: 0.6rem; }
+.leo-pos__pay { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.leo-pos__pay-opt { display: flex; gap: 0.4rem; align-items: center; justify-content: center; min-height: 48px; padding: 0.4rem;
+  border: 1px solid var(--leo-border-strong); border-radius: var(--leo-radius-sm); font-weight: 600; cursor: pointer; text-align: center; }
+.leo-pos__pay-opt:has(input:checked) { border-color: var(--leo-green-3); background: var(--leo-green-tint); color: var(--leo-green); }
+.leo-pos__pay-opt:has(input:focus-visible) { outline: 3px solid var(--leo-gold); outline-offset: 2px; }
+.leo-pos__quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.leo-pos__change { margin: 0.6rem 0 0; font-size: 1.1rem; }
+.leo-pos__change strong { color: var(--leo-green); }

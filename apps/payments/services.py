@@ -185,8 +185,21 @@ def review_bank_transfer(payment, staff, approve, note=""):
     log(payment, "bank_transfer_approved" if approve else "bank_transfer_rejected", staff, note=note.strip())
     order = Order.objects.get(pk=payment.order_id)
     sync_order_payment_status(order)
+    if approve and order.channel == Order.Channel.POS:
+        _complete_pos_sale(order, staff)
     _notify(order, "payment_approved" if approve else "payment_rejected", payment=payment)
     return payment
+
+
+def _complete_pos_sale(order, staff):
+    """An in-store sale paid by bank transfer is completed once the transfer is approved."""
+    from apps.orders.models import OrderStatusEvent
+
+    now = timezone.now()
+    if Order.objects.filter(pk=order.pk, status=Order.Status.PENDING).update(
+            status=Order.Status.COMPLETED, completed_at=now, updated_at=now):
+        OrderStatusEvent.objects.create(order=order, from_status=Order.Status.PENDING, to_status=Order.Status.COMPLETED,
+                                        created_by=staff, note="Bank transfer approved")
 
 
 # ---------------------------------------------------------------------------

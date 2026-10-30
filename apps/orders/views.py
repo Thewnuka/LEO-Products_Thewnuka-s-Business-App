@@ -210,7 +210,9 @@ class StaffOrderAccess(CapabilityRequiredMixin):
 
 
 def filter_orders(form):
-    qs = Order.objects.select_related("customer").annotate(lines=Count("items")).order_by("-created_at", "-pk")
+    # Online orders only; in-store sales have their own history under Point of sale.
+    qs = (Order.objects.filter(channel=Order.Channel.ONLINE).select_related("customer").annotate(lines=Count("items"))
+          .order_by("-created_at", "-pk"))
     if not (form.is_bound and form.is_valid()):
         return qs
     d = form.cleaned_data
@@ -241,14 +243,21 @@ class StaffOrderListView(StaffOrderAccess, TemplateView):
         page = Paginator(filter_orders(form), settings.ORDER_PAGE_SIZE).get_page(self.request.GET.get("page"))
         query = self.request.GET.copy()
         query.pop("page", None)
+        online = Order.objects.filter(channel=Order.Channel.ONLINE)
         ctx.update(filter_form=form, page_obj=page, querystring=query.urlencode(),
-                   to_verify=Order.objects.filter(payment_status=Order.PaymentStatus.PENDING_VERIFICATION).count(),
-                   pending=Order.objects.filter(status=Order.Status.PENDING).count())
+                   to_verify=online.filter(payment_status=Order.PaymentStatus.PENDING_VERIFICATION).count(),
+                   pending=online.filter(status=Order.Status.PENDING).count())
         return ctx
 
 
 class StaffOrderDetailView(StaffOrderAccess, TemplateView):
     template_name = "orders/staff/order_detail.html"
+
+    def get(self, request, *args, **kwargs):
+        order = get_object_or_404(Order, number=kwargs["number"])
+        if order.is_pos:
+            return redirect(order.get_staff_url())  # in-store sales: POS pages (with their own permissions)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

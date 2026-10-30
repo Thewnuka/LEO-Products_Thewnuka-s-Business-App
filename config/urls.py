@@ -17,6 +17,7 @@ urlpatterns = [
     path("", include("apps.shop.urls")),       # /shop/... and /cart/...
     path("", include("apps.orders.urls")),     # /checkout/, /account/orders/, /staff/orders/
     path("", include("apps.payments.urls")),   # /payments/..., payment actions
+    path("", include("apps.pos.urls")),        # /staff/pos/... point of sale
     path("", include("apps.accounts.urls")),
     path("", include("apps.core.urls")),
 ]

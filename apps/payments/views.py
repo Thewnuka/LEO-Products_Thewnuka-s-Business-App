@@ -133,7 +133,7 @@ class ReviewBankTransferView(CapabilityRequiredMixin, View):
             messages.error(request, " ".join(error.messages))
         else:
             messages.success(request, "Payment approved." if approve else "Payment rejected; the customer can submit new details.")
-        return redirect("orders:staff_detail", number=payment.order.number)
+        return redirect(payment.order.get_staff_url())
 
 
 class RecordCashView(CapabilityRequiredMixin, View):
@@ -167,4 +167,4 @@ class RecordRefundView(CapabilityRequiredMixin, View):
             messages.error(request, " ".join(error.messages))
         else:
             messages.success(request, f"Refund recorded for {payment.reference}.")
-        return redirect("orders:staff_detail", number=payment.order.number)
+        return redirect(payment.order.get_staff_url())

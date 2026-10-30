@@ -1,0 +1,8 @@
+{% load catalog_tags %}
+{% comment %}Today's POS figures. Needs `today` from pos.services.today_summary (already limited to what the user may see).{% endcomment %}
+<div class="leo-stats">
+  <div class="leo-stat"><span class="leo-stat__label">{% if today.all_tills %}Today's POS sales{% else %}My sales today{% endif %}</span><span class="leo-stat__value leo-stat__value--money">{{ today.sales_total|money }}</span><span class="leo-stat__note">{{ today.sales_count }} transaction{{ today.sales_count|pluralize }}{% if today.voided %} · {{ today.voided }} voided{% endif %}</span></div>
+  <div class="leo-stat"><span class="leo-stat__label">Cash sales</span><span class="leo-stat__value leo-stat__value--money">{{ today.cash_sales|money }}</span></div>
+  <div class="leo-stat"><span class="leo-stat__label">Bank transfer sales</span><span class="leo-stat__value leo-stat__value--money">{{ today.bank_sales|money }}</span><span class="leo-stat__note">{% if today.bank_pending %}{{ today.bank_pending }} awaiting check{% else %}verified only{% endif %}</span></div>
+  <div class="leo-stat"><span class="leo-stat__label">Open shifts</span><span class="leo-stat__value">{{ today.open_shifts|length }}</span><span class="leo-stat__note">drawer{{ today.open_shifts|length|pluralize }} should hold {{ today.drawer_total|money }}</span></div>
+</div>

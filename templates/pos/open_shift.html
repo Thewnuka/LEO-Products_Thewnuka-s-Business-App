@@ -1,0 +1,24 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Open shift — {{ brand.name }}{% endblock %}
+{% block page_title %}Point of sale{% endblock %}
+
+{% block page_content %}
+<form method="post" action="{% url 'pos:shift_open' %}" novalidate class="leo-card leo-card--auto leo-form-card" data-once>
+  <div class="leo-card__body">
+    {% csrf_token %}
+    <h2 class="h5"><i class="bi bi-door-open me-2" aria-hidden="true"></i>Open your shift</h2>
+    <p class="text-body-secondary">Count the cash in the drawer before you start. Every sale and cash movement is
+      recorded against your shift, and you count the drawer again when you close it.</p>
+    {% include "partials/_form_errors.html" %}
+    <div class="row g-0 gx-2 gx-md-3">
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.opening_cash %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.opening_note %}</div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-play-circle" aria-hidden="true"></i>Open shift</button>
+      <a href="{% url 'pos:shifts' %}" class="btn btn-leo-outline">My shifts</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

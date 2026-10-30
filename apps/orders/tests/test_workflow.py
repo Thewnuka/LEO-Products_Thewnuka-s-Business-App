@@ -289,7 +289,7 @@ class StaffOrderPageTests(OrdersTestCase):
     def test_detail_shows_history_and_stock_movements(self):
         self.login(self.owner)
         response = self.client.get(reverse("orders:staff_detail", args=[self.order.number]))
-        self.assertContains(response, "Online order")
+        self.assertContains(response, "Sale (order)")
         self.assertContains(response, "12 Galle Road")
         self.assertContains(response, "Order placed")
 

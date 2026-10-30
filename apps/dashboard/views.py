@@ -1,16 +1,16 @@
 """
 Staff dashboards, one per role.
 
-These are placeholders: they describe each role's responsibilities and
-link only to features that exist. Business modules (and their figures)
-are added to them in later phases. OWNER may open every dashboard.
+Each describes the role's responsibilities and links only to features that
+exist. Dashboards that cover the till also show today's real POS figures
+(limited to what the user may see). OWNER may open every dashboard.
 """
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import TemplateView
 
 from apps.accounts.permissions import RoleRequiredMixin, StaffRequiredMixin
-from apps.accounts.roles import Role
+from apps.accounts.roles import Capability, Role, has_capability
 from apps.accounts.routing import home_url_for
 
 
@@ -26,8 +26,16 @@ class RoleDashboardView(RoleRequiredMixin, TemplateView):
     summary = ""
     responsibilities = ()
     upcoming = ()  # (module, phase)
+    shows_pos = False
 
     def get_context_data(self, **kwargs):
+        user = self.request.user
+        if self.shows_pos and (has_capability(user, Capability.VIEW_POS_SALES)
+                               or has_capability(user, Capability.PROCESS_SALES)):
+            from apps.pos.services import current_shift, today_summary
+
+            kwargs["pos_today"] = today_summary(user)
+            kwargs["my_shift"] = current_shift(user) if has_capability(user, Capability.PROCESS_SALES) else None
         return super().get_context_data(
             dashboard_role=self.dashboard_role,
             dashboard_title=self.title,
@@ -50,9 +58,9 @@ class OwnerDashboardView(RoleDashboardView):
         "Oversee products, inventory, orders, payments and finance",
         "View every dashboard and report",
     )
+    shows_pos = True
     upcoming = (
-        ("Point of sale (POS)", "06b"),
-        ("Finance & reports", "07"),
+        ("Finance & reports", "08"),
         ("Business settings & logo upload", "08"),
     )
 
@@ -86,8 +94,9 @@ class ManagerDashboardView(RoleDashboardView):
         "Manage customer orders and customers",
         "View operational reports",
     )
+    shows_pos = True
     upcoming = (
-        ("Operational reports", "07"),
+        ("Operational reports", "08"),
     )
 
 
@@ -102,8 +111,4 @@ class CashierDashboardView(RoleDashboardView):
         "Take permitted payments",
         "View your own transactions",
     )
-    upcoming = (
-        ("Point of sale (POS)", "06b"),
-        ("Receipts", "06b"),
-        ("My transactions", "06b"),
-    )
+    shows_pos = True

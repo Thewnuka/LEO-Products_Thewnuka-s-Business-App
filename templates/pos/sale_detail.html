@@ -1,0 +1,111 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags inventory_tags %}
+
+{% block title %}{{ order.number }} — POS sales — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ order.number }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'pos:sales' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Sales</span></a>
+{% endblock %}
+
+{% block page_content %}
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  {% include "pos/partials/_sale_status.html" %}
+  <span class="small text-body-secondary">{{ order.created_at|date:"j M Y, H:i" }} · cashier {{ order.cashier.get_full_name|default:order.cashier.username }} · shift <a href="{% url 'pos:shift_detail' order.shift_id %}">{{ order.shift.code }}</a></span>
+</div>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <h2 class="h5">Items</h2>
+        <ul class="list-unstyled leo-mini-list mb-3">
+          {% for item in items %}
+          <li><span>{{ item.quantity }} × {{ item.product_name }} <span class="small text-body-secondary">({{ item.variation_name }} · {{ item.sku }} · {{ item.unit_price|money }} each)</span>
+            {% for m in item.stock_movements.all %}<span class="d-block small {% if m.quantity_change > 0 %}leo-qty--in{% else %}leo-qty--out{% endif %}">{{ m.get_movement_type_display }}: {{ m.quantity_change|qty_signed:m.item }}</span>{% endfor %}</span>
+            <span class="fw-semibold">{{ item.line_total|money }}</span></li>
+          {% endfor %}
+        </ul>
+        {% include "orders/partials/_totals.html" with subtotal=order.subtotal discount=order.discount_amount delivery_fee=order.delivery_fee total=order.total in_store=True %}
+        {% if order.discount_amount %}
+        <p class="small text-body-secondary mb-0">Discount: {% if order.discount_type == "PERCENT" %}{{ order.discount_value|floatformat:"-2" }}%{% else %}{{ order.discount_value|money }}{% endif %}
+          · “{{ order.discount_reason }}” · given by {{ order.discount_applied_by.get_full_name|default:order.discount_applied_by.username|default:"—" }}
+          {% if order.discount_approved_by %}· approved by {{ order.discount_approved_by.get_full_name|default:order.discount_approved_by.username }}{% endif %}</p>
+        {% endif %}
+      </div>
+    </article>
+
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <h2 class="h5">Payment</h2>
+        {% for p in payments %}
+        <div class="leo-payment">
+          <div class="d-flex flex-wrap justify-content-between gap-2">
+            <span><span class="fw-semibold">{{ p.reference }}</span> · {{ p.get_method_display }} · {{ p.amount|money }}</span>
+            <span class="leo-badge leo-paystatus leo-paystatus--{{ p.status|lower }}">{{ p.get_status_display }}</span>
+          </div>
+          <dl class="leo-dl small mt-2 mb-0">
+            {% if p.cash_tendered is not None %}<dt>Cash received</dt><dd>{{ p.cash_tendered|money }} · change {{ p.change_given|money }}</dd>{% endif %}
+            {% if p.bank_reference %}<dt>Transfer ref.</dt><dd>{{ p.bank_reference }}</dd>{% endif %}
+            {% if p.verified_at %}<dt>{% if p.status == "REJECTED" %}Rejected{% else %}Confirmed{% endif %}</dt><dd>{{ p.verified_at|date:"j M Y, H:i" }}{% if p.verified_by %} by {{ p.verified_by }}{% endif %}{% if p.verification_note %} · {{ p.verification_note }}{% endif %}</dd>{% endif %}
+            {% if p.refunded_at %}<dt>Refunded</dt><dd>{{ p.refunded_at|date:"j M Y, H:i" }} by {{ p.refunded_by|default:"—" }} · {{ p.refund_note }}</dd>{% endif %}
+          </dl>
+          {% if p.status == "PENDING_VERIFICATION" and can_verify %}
+          <form method="post" action="{% url 'payments:review' p.reference %}" class="mt-2 d-flex flex-column flex-md-row gap-2">
+            {% csrf_token %}
+            <input type="text" name="note" class="form-control form-control-sm" placeholder="Note (required to reject)" maxlength="500">
+            <button type="submit" name="decision" value="approve" class="btn btn-leo-primary btn-sm" data-confirm-click="Approve {{ p.amount|money }}? Only approve if the money is in the account.">Approve</button>
+            <button type="submit" name="decision" value="reject" class="btn btn-outline-danger btn-sm">Reject</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% if cash_refund %}<p class="small mt-2 mb-0">Cash refund of {{ cash_refund.amount|money }} paid from shift <a href="{% url 'pos:shift_detail' cash_refund.shift_id %}">{{ cash_refund.shift.code }}</a>.</p>{% endif %}
+      </div>
+    </article>
+
+    {% if can_refund %}
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <details>
+          <summary class="fw-semibold text-danger">Void / refund this sale</summary>
+          <p class="small text-body-secondary mt-2">The items go back into stock{% if needs_drawer %} and the cash refund is recorded as money taken from the till you choose{% endif %}. The sale stays in the history, marked as voided.</p>
+          <form method="post" action="{% url 'pos:refund' order.number %}" data-confirm="Void {{ order.number }} and refund {{ order.total|money }}?" data-once>
+            {% csrf_token %}
+            {% include "partials/_form_field.html" with field=refund_form.reason %}
+            {% if needs_drawer %}{% include "partials/_form_field.html" with field=refund_form.drawer %}{% endif %}
+            <button type="submit" class="btn btn-outline-danger">Void and refund</button>
+          </form>
+        </details>
+      </div>
+    </article>
+    {% endif %}
+  </div>
+
+  <div class="col-12 col-xl-5">
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <h2 class="h5">Receipt</h2>
+        <p class="small text-body-secondary">Reprints are logged and marked “COPY”.</p>
+        <form method="post" action="{% url 'pos:reprint' order.number %}" target="_blank" class="d-flex flex-wrap gap-2">
+          {% csrf_token %}
+          <button type="submit" name="size" value="thermal" class="btn btn-leo-primary btn-sm"><i class="bi bi-printer" aria-hidden="true"></i>Reprint (till printer)</button>
+          <button type="submit" name="size" value="a4" class="btn btn-leo-outline btn-sm"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>Reprint A4</button>
+        </form>
+        {% if order.full_name != "Walk-in customer" or order.phone %}<p class="small mt-3 mb-0">Customer: {{ order.full_name }}{% if order.phone %} · {{ order.phone }}{% endif %}</p>{% endif %}
+        <p class="small text-body-secondary mt-3 mb-1">Reprints</p>
+        <ul class="list-unstyled small mb-0">
+          {% for r in reprints %}<li>{{ r.printed_at|date:"j M Y, H:i" }} · {{ r.printed_by.get_full_name|default:r.printed_by.username }}</li>{% empty %}<li class="text-body-secondary">None</li>{% endfor %}
+        </ul>
+      </div>
+    </article>
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <h2 class="h5">History</h2>
+        <ol class="leo-timeline">
+          {% for e in events %}<li><div class="fw-semibold">{{ e.to_label }}</div><div class="small text-body-secondary">{{ e.created_at|date:"j M Y, H:i" }} · {{ e.created_by|default:"system" }}{% if e.note %} · {{ e.note }}{% endif %}</div></li>{% endfor %}
+        </ol>
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}

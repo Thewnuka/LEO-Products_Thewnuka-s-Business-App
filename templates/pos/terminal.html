@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static catalog_tags %}
+{% comment %}
+  Till screen. Products and the cart are drawn by static/js/pos.js from the data
+  below; every price, stock level, discount and total is checked again on the server.
+{% endcomment %}
+
+{% block title %}Point of sale — {{ brand.name }}{% endblock %}
+{% block body_class %}leo-pos-body{% endblock %}
+{% block header %}{% include "partials/_staff_topbar.html" %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="leo-pos">
+  <div class="leo-pos__bar">
+    <span class="leo-pos__shift"><i class="bi bi-person-workspace" aria-hidden="true"></i>
+      Shift <strong>{{ shift.code }}</strong> · opened {{ shift.opened_at|date:"H:i" }}
+      <span class="d-none d-md-inline">· drawer should hold <strong>{{ summary.expected_cash|money }}</strong></span></span>
+    <nav class="leo-pos__links" aria-label="Point of sale">
+      <a href="{% url 'pos:sales' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-receipt" aria-hidden="true"></i>Sales</a>
+      <a href="{% url 'pos:shift_detail' shift.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-cash-stack" aria-hidden="true"></i>My shift</a>
+      <a href="{{ user.portal_home_url }}" class="btn btn-leo-outline btn-sm"><i class="bi bi-grid" aria-hidden="true"></i><span class="d-none d-sm-inline">Staff portal</span></a>
+    </nav>
+  </div>
+  {% include "partials/_messages.html" %}
+
+  <noscript>{% include "partials/_alert.html" with level="warning" text="The till needs JavaScript. Please enable it in your browser." %}</noscript>
+
+  <div class="leo-pos__grid">
+    <section class="leo-pos__catalog" aria-label="Products">
+      <div class="leo-pos__search">
+        <label class="visually-hidden" for="posSearch">Search products or scan a SKU</label>
+        <i class="bi bi-upc-scan" aria-hidden="true"></i>
+        <input type="search" id="posSearch" class="form-control" placeholder="Search name or type/scan SKU, then Enter" autocomplete="off" autofocus>
+      </div>
+      <div class="leo-pos__cats" id="posCats" role="toolbar" aria-label="Categories"></div>
+      <div class="leo-pos__products" id="posProducts" aria-live="polite"></div>
+      <p class="leo-empty-note" id="posNoProducts" hidden>No products match. Only active products with stock can be sold.</p>
+    </section>
+
+    <aside class="leo-pos__cart" aria-label="Current sale">
+      <div class="leo-pos__cart-head">
+        <h2 class="h5 mb-0">Current sale</h2>
+        <button type="button" class="btn btn-link btn-sm text-danger" id="posClear" disabled>Clear</button>
+      </div>
+      <ul class="leo-pos__lines" id="posLines"></ul>
+      <p class="leo-empty-note" id="posEmpty">Tap a product to add it.</p>
+
+      <form id="posForm" novalidate>
+        {% csrf_token %}
+        <details class="leo-pos__section" id="posDiscountBox">
+          <summary>Discount</summary>
+          <div class="row g-2 mt-1">
+            <div class="col-6"><label class="form-label" for="posDiscType">Type</label>
+              <select id="posDiscType" class="form-select form-select-sm"><option value="">None</option><option value="PERCENT">%</option><option value="FIXED">LKR</option></select></div>
+            <div class="col-6"><label class="form-label" for="posDiscValue">Value</label>
+              <input type="number" id="posDiscValue" class="form-control form-control-sm" min="0" step="0.01" inputmode="decimal"></div>
+            <div class="col-12"><label class="form-label" for="posDiscReason">Reason</label>
+              <input type="text" id="posDiscReason" class="form-control form-control-sm" maxlength="200" placeholder="e.g. loyal customer"></div>
+            <p class="small text-body-secondary mb-0">You can give up to {{ pos_data.discountLimit }}% without approval.</p>
+            <div class="col-12" id="posApproval" hidden>
+              <div class="leo-pos__approval">
+                <p class="small mb-2"><i class="bi bi-shield-lock" aria-hidden="true"></i> This discount needs a Manager or the Owner to approve it with their sign-in.</p>
+                <div class="row g-2">
+                  <div class="col-6"><label class="form-label" for="posApprUser">Approver</label><input type="text" id="posApprUser" class="form-control form-control-sm" autocomplete="off"></div>
+                  <div class="col-6"><label class="form-label" for="posApprPass">Password</label><input type="password" id="posApprPass" class="form-control form-control-sm" autocomplete="off"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <dl class="leo-cart-totals mt-3 mb-2">
+          <dt>Subtotal</dt><dd id="posSubtotal">—</dd>
+          <dt>Discount</dt><dd id="posDiscount">—</dd>
+          <dt class="leo-cart-totals__grand">Total</dt><dd class="leo-cart-totals__grand" id="posTotal">—</dd>
+        </dl>
+
+        <fieldset class="leo-pos__section">
+          <legend class="visually-hidden">Payment</legend>
+          <div class="leo-pos__pay" role="radiogroup" aria-label="Payment method">
+            <label class="leo-pos__pay-opt"><input type="radio" name="payment_method" value="CASH" checked> <i class="bi bi-cash-coin" aria-hidden="true"></i> Cash</label>
+            <label class="leo-pos__pay-opt"><input type="radio" name="payment_method" value="BANK_TRANSFER"> <i class="bi bi-bank" aria-hidden="true"></i> Bank transfer</label>
+          </div>
+          <div id="posCashBox" class="mt-2">
+            <label class="form-label" for="posTendered">Cash received (LKR)</label>
+            <input type="number" id="posTendered" class="form-control form-control-lg" min="0" step="0.01" inputmode="decimal">
+            <div class="leo-pos__quick" id="posQuick"></div>
+            <p class="leo-pos__change">Change: <strong id="posChange">—</strong></p>
+          </div>
+          <div id="posBankBox" class="mt-2" hidden>
+            <label class="form-label" for="posBankRef">Transfer reference</label>
+            <input type="text" id="posBankRef" class="form-control" maxlength="100">
+            <p class="small text-body-secondary mt-1 mb-0">The sale stays <strong>awaiting verification</strong> until a Manager or the Owner confirms the money arrived.</p>
+          </div>
+        </fieldset>
+
+        <details class="leo-pos__section">
+          <summary>Customer (optional)</summary>
+          <div class="row g-2 mt-1">
+            <div class="col-7"><label class="form-label" for="posCustName">Name</label><input type="text" id="posCustName" class="form-control form-control-sm" maxlength="150"></div>
+            <div class="col-5"><label class="form-label" for="posCustPhone">Phone</label><input type="tel" id="posCustPhone" class="form-control form-control-sm" maxlength="20"></div>
+          </div>
+        </details>
+
+        <div class="alert alert-danger mt-3 mb-0" id="posError" role="alert" hidden></div>
+        <button type="submit" class="btn btn-leo-gold btn-lg w-100 mt-3" id="posSubmit" disabled>
+          <span class="spinner-border spinner-border-sm" aria-hidden="true" hidden></span>
+          <span data-label>Complete sale</span>
+        </button>
+      </form>
+    </aside>
+  </div>
+</div>
+{{ pos_data|json_script:"posData" }}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/pos.js' %}"></script>{% endblock %}

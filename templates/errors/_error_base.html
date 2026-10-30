@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% comment %}
+  Shared layout for 400/403/404/500 pages. Each error template only fills
+  in error_code, error_title and error_message.
+  Uses |default fallbacks so it still renders if brand context is missing.
+{% endcomment %}
+
+{% block title %}{% block error_title_text %}{% endblock %} — {{ brand.name|default:"LEO PRODUCTS" }}{% endblock %}
+
+{% block content %}
+<section class="leo-error">
+  <div class="container">
+    <div class="mx-auto leo-intro">
+      {% include "partials/_logo.html" with size="md" show_text=False %}
+      <p class="leo-error__code mt-3 mb-2" aria-hidden="true">{% block error_code %}{% endblock %}</p>
+      <h1 class="h2">{% block error_title %}{% endblock %}</h1>
+      <hr class="leo-divider">
+      <p class="leo-lead">{% block error_message %}{% endblock %}</p>
+      <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4">
+        {% block error_actions %}{% endblock %}
+        <a href="{% url 'core:home' %}" class="btn btn-leo-outline">
+          <i class="bi bi-house-door" aria-hidden="true"></i> Back to home
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

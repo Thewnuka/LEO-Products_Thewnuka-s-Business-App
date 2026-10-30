@@ -1,0 +1,63 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags inventory_tags %}
+
+{% block title %}{{ purchase.reference }} — Purchases — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ purchase.reference }}{% endblock %}
+{% block page_actions %}
+  {% if purchase.is_editable %}
+    <a href="{% url 'inventory:purchase_update' purchase.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i><span class="d-none d-sm-inline">Edit</span></a>
+    <a href="{% url 'inventory:purchase_receive' purchase.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>Receive</a>
+  {% endif %}
+{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:purchase_list' as list_url %}
+{% include "inventory/partials/_breadcrumb.html" with section="Purchases" section_url=list_url current=purchase.reference %}
+
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <article class="leo-card leo-card--auto"><div class="leo-card__body">
+      <div class="mb-2">{% include "inventory/partials/_purchase_status.html" with status=purchase.status label=purchase.get_status_display %}</div>
+      <dl class="leo-dl">
+        <dt>Supplier</dt><dd><a href="{% url 'inventory:supplier_detail' purchase.supplier_id %}">{{ purchase.supplier.name }}</a></dd>
+        <dt>Purchase date</dt><dd>{{ purchase.purchase_date|date:"j M Y" }}</dd>
+        <dt>Invoice no.</dt><dd>{{ purchase.invoice_number|default:"—" }}</dd>
+        <dt>Total</dt><dd class="fw-semibold">{{ purchase.total|money }}</dd>
+        <dt>Created</dt><dd>{{ purchase.created_at|date:"j M Y, H:i" }}{% if purchase.created_by %} by {{ purchase.created_by }}{% endif %}</dd>
+        {% if purchase.received_at %}<dt>Received</dt><dd>{{ purchase.received_at|date:"j M Y, H:i" }} by {{ purchase.received_by|default:"—" }}</dd>{% endif %}
+        {% if purchase.cancelled_at %}<dt>Cancelled</dt><dd>{{ purchase.cancelled_at|date:"j M Y, H:i" }} by {{ purchase.cancelled_by|default:"—" }}<br><span class="small">{{ purchase.cancel_reason }}</span></dd>{% endif %}
+        {% if purchase.notes %}<dt>Notes</dt><dd>{{ purchase.notes|linebreaksbr }}</dd>{% endif %}
+      </dl>
+      {% if purchase.status == "DRAFT" %}
+        <p class="small text-body-secondary mt-3">This is a draft: stock has <strong>not</strong> changed yet.</p>
+        <form method="post" action="{% url 'inventory:purchase_cancel' purchase.pk %}" class="mt-2" data-confirm="Cancel {{ purchase.reference }}? It can't be received afterwards.">
+          {% csrf_token %}
+          <label class="form-label small" for="id_reason">Cancel this purchase</label>
+          <div class="d-flex flex-column flex-sm-row gap-2">
+            <input type="text" name="reason" id="id_reason" class="form-control" placeholder="Reason for cancelling" required maxlength="500">
+            <button type="submit" class="btn btn-outline-danger">Cancel purchase</button>
+          </div>
+        </form>
+      {% elif purchase.status == "RECEIVED" %}
+        <p class="small text-body-secondary mt-3 mb-0">Received purchases are permanent. To correct stock, use <em>Adjust stock</em> on the item with a reason.</p>
+      {% endif %}
+    </div></article>
+  </div>
+  <div class="col-12 col-lg-7">
+    <h2 class="h5">Items</h2>
+    <div class="leo-card leo-card--auto"><div class="table-responsive">
+      <table class="table leo-table leo-table--stack leo-table--nowrap">
+        <thead><tr><th scope="col">Item</th><th scope="col" class="text-end">Quantity</th><th scope="col" class="text-end">Unit cost</th><th scope="col" class="text-end">Line total</th>{% if purchase.status == "RECEIVED" %}<th scope="col" class="text-end">Added to stock</th>{% endif %}</tr></thead>
+        <tbody>{% for line in lines %}
+          <tr><td data-label="Item" class="leo-wrap"><a href="{% url 'inventory:item_detail' line.item_id %}">{{ line.item.display_name }}</a></td>
+            <td data-label="Quantity" class="text-end">{{ line.quantity|floatformat:"-3" }} {{ line.unit_label }}</td>
+            <td data-label="Unit cost" class="text-end">{{ line.unit_cost|money }}</td>
+            <td data-label="Line total" class="text-end">{{ line.line_total|money }}</td>
+            {% if purchase.status == "RECEIVED" %}<td data-label="Added to stock" class="text-end leo-qty--in">{% if line.movement %}{{ line.movement.quantity_change|qty_signed:line.item }}{% else %}—{% endif %}</td>{% endif %}</tr>
+        {% endfor %}</tbody>
+        <tfoot><tr><th scope="row" colspan="3" class="text-end">Total (goods only)</th><td class="text-end fw-semibold" data-label="Total">{{ purchase.total|money }}</td>{% if purchase.status == "RECEIVED" %}<td></td>{% endif %}</tr></tfoot>
+      </table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

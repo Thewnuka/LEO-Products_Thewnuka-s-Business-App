@@ -1,0 +1,42 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Units — {{ brand.name }}{% endblock %}
+{% block page_title %}Measurement units{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'catalog:unit_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">New unit</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% include "catalog/partials/_breadcrumb.html" with section="Units" %}
+<p class="text-body-secondary">Units describe variation sizes. Each unit belongs to one measurement type: <strong>Weight</strong> (g, kg…), <strong>Count</strong> (tea bags…) or <strong>Pieces</strong> (sweets…). Add new units at any time, e.g. <em>packs</em>.</p>
+
+<div class="row g-4">
+  {% for label, units in groups %}
+  <div class="col-12 col-lg-4">
+    <article class="leo-card">
+      <div class="leo-card__body">
+        <h2 class="h5">{{ label }}</h2>
+        {% if units %}
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for unit in units %}
+          <li{% if not unit.is_active %} class="leo-row--muted"{% endif %}>
+            <span><span class="fw-semibold">{{ unit.symbol }}</span> <span class="small text-body-secondary">{{ unit.name }} · e.g. “{% if unit.attach_symbol %}200{{ unit.symbol }}{% else %}10 {{ unit.symbol }}{% endif %}”</span></span>
+            <span class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="small text-body-secondary">{{ unit.variation_count }} in use{% if not unit.is_active %} · inactive{% endif %}</span>
+              <a href="{% url 'catalog:unit_update' unit.pk %}" class="btn btn-leo-outline btn-sm">Edit</a>
+              <form method="post" action="{% url 'catalog:unit_toggle' unit.pk %}">
+                {% csrf_token %}<button type="submit" class="btn btn-sm {% if unit.is_active %}btn-outline-danger{% else %}btn-leo-gold{% endif %}">{% if unit.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+              </form>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-body-secondary small mb-0">No units yet.</p>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

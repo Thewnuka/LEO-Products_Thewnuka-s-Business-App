@@ -1,0 +1,56 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}{{ supplier.name }} — Suppliers — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ supplier.name }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'inventory:supplier_update' supplier.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i><span class="d-none d-sm-inline">Edit</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:supplier_list' as list_url %}
+{% include "inventory/partials/_breadcrumb.html" with section="Suppliers" section_url=list_url current=supplier.name %}
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <article class="leo-card leo-card--auto"><div class="leo-card__body">
+      <div class="mb-2">{% if supplier.is_active %}<span class="leo-status leo-status--active">Active</span>{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</div>
+      <dl class="leo-dl">
+        <dt>Contact</dt><dd>{{ supplier.contact_person|default:"—" }}</dd>
+        <dt>Phone</dt><dd>{% if supplier.phone %}<a href="tel:{{ supplier.phone|cut:' ' }}">{{ supplier.phone }}</a>{% else %}—{% endif %}</dd>
+        <dt>Email</dt><dd class="text-break">{% if supplier.email %}<a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>{% else %}—{% endif %}</dd>
+        <dt>Address</dt><dd>{{ supplier.address|linebreaksbr|default:"—" }}</dd>
+        <dt>Registration no.</dt><dd>{{ supplier.registration_number|default:"—" }}</dd>
+        {% if supplier.notes %}<dt>Notes</dt><dd>{{ supplier.notes|linebreaksbr }}</dd>{% endif %}
+        <dt>Added</dt><dd>{{ supplier.created_at|date:"j M Y" }}</dd>
+      </dl>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        {% if can.MANAGE_PURCHASES and supplier.is_active %}<a href="{% url 'inventory:purchase_create' %}?supplier={{ supplier.pk }}" class="btn btn-leo-primary btn-sm"><i class="bi bi-receipt" aria-hidden="true"></i>New purchase</a>{% endif %}
+        <form method="post" action="{% url 'inventory:supplier_toggle' supplier.pk %}" data-confirm="{% if supplier.is_active %}Deactivate {{ supplier.name }}? Their purchase history is kept.{% else %}Reactivate {{ supplier.name }}?{% endif %}">
+          {% csrf_token %}<button type="submit" class="btn btn-sm {% if supplier.is_active %}btn-outline-danger{% else %}btn-leo-gold{% endif %}">{% if supplier.is_active %}Deactivate{% else %}Reactivate{% endif %}</button>
+        </form>
+      </div>
+      <p class="small text-body-secondary mt-3 mb-0">Suppliers are never deleted, so purchase history stays complete.</p>
+    </div></article>
+  </div>
+  <div class="col-12 col-lg-7">
+    <h2 class="h5">Purchase history</h2>
+    <p class="small text-body-secondary">Total of received purchases: <strong>{{ received_total|money }}</strong></p>
+    {% if page_obj.object_list %}
+    <div class="leo-card leo-card--auto"><div class="table-responsive">
+      <table class="table leo-table leo-table--stack leo-table--nowrap">
+        <thead><tr><th scope="col">Reference</th><th scope="col">Date</th><th scope="col">Invoice</th><th scope="col" class="text-end">Total</th><th scope="col">Status</th></tr></thead>
+        <tbody>{% for p in page_obj %}
+          <tr><td data-label="Reference"><a href="{% url 'inventory:purchase_detail' p.pk %}" class="fw-semibold">{{ p.reference }}</a></td>
+            <td data-label="Date">{{ p.purchase_date|date:"j M Y" }}</td><td data-label="Invoice">{{ p.invoice_number|default:"—" }}</td>
+            <td data-label="Total" class="text-end">{{ p.total|money }}</td>
+            <td data-label="Status">{% include "inventory/partials/_purchase_status.html" with status=p.status label=p.get_status_display %}</td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div></div>
+    {% include "partials/_pager.html" %}
+    {% else %}
+    <div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No purchases from this supplier yet.</div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

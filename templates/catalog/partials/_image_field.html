@@ -1,0 +1,22 @@
+{% load catalog_tags %}
+{% comment %}
+  Image upload with preview.
+    {% include "catalog/partials/_image_field.html" with field=form.image current=obj.image remove=form.remove_image %}
+  catalog.js shows a live preview of the chosen file before upload.
+{% endcomment %}
+<div class="leo-field leo-image-field">
+  <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  <div class="leo-image-field__row">
+    <div class="leo-image-field__preview">
+      {% catalog_image current "Current image" "leo-image-preview" %}
+    </div>
+    <div class="leo-image-field__controls">
+      {{ field }}
+      {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+      <div class="form-text">{{ field.help_text }}</div>
+      {% if remove %}
+        <div class="form-check mt-2">{{ remove }}<label class="form-check-label" for="{{ remove.id_for_label }}">{{ remove.label }}</label></div>
+      {% endif %}
+    </div>
+  </div>
+</div>

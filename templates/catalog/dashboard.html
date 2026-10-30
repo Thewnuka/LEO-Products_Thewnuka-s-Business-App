@@ -1,0 +1,80 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Catalogue — {{ brand.name }}{% endblock %}
+{% block page_title %}Catalogue{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'catalog:product_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">New product</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% comment %}All figures are counted from the database on each visit.{% endcomment %}
+<section aria-label="Catalogue statistics" class="leo-stats mb-4">
+  <a class="leo-stat" href="{% url 'catalog:product_list' %}">
+    <span class="leo-stat__label">Total products</span><span class="leo-stat__value">{{ stats.total_products }}</span>
+    <span class="leo-stat__note">{{ stats.draft_products }} draft</span>
+  </a>
+  <a class="leo-stat" href="{% url 'catalog:product_list' %}?status=ACTIVE">
+    <span class="leo-stat__label">Active products</span><span class="leo-stat__value">{{ stats.active_products }}</span>
+  </a>
+  <a class="leo-stat" href="{% url 'catalog:product_list' %}?status=INACTIVE">
+    <span class="leo-stat__label">Inactive products</span><span class="leo-stat__value">{{ stats.inactive_products }}</span>
+  </a>
+  <a class="leo-stat" href="{% url 'catalog:category_list' %}">
+    <span class="leo-stat__label">Main categories</span><span class="leo-stat__value">{{ stats.main_categories }}</span>
+  </a>
+  <a class="leo-stat" href="{% url 'catalog:category_list' %}">
+    <span class="leo-stat__label">Subcategories</span><span class="leo-stat__value">{{ stats.subcategories }}</span>
+  </a>
+  <a class="leo-stat" href="{% url 'catalog:product_list' %}?view=table">
+    <span class="leo-stat__label">Product variations</span><span class="leo-stat__value">{{ stats.total_variations }}</span>
+    <span class="leo-stat__note">{{ stats.active_variations }} active</span>
+  </a>
+</section>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Recently updated products</h2>
+      <a href="{% url 'catalog:product_list' %}" class="small">All products</a>
+    </div>
+    {% if recent_products %}
+      <div class="leo-product-grid">
+        {% for product in recent_products %}{% include "catalog/partials/_product_card.html" %}{% endfor %}
+      </div>
+    {% else %}
+      <div class="leo-card leo-card--auto"><div class="leo-card__body text-center">
+        <span class="leo-card__icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+        <p class="mb-3">No products yet. Start by creating your first product, then add its sizes and prices.</p>
+        <a href="{% url 'catalog:product_create' %}" class="btn btn-leo-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Create a product</a>
+      </div></div>
+    {% endif %}
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h5 mb-0">Categories</h2>
+          <a href="{% url 'catalog:category_list' %}" class="small">Manage</a>
+        </div>
+        <ul class="list-unstyled mb-0 leo-mini-list">
+          {% for cat in main_categories %}
+            <li>
+              <span class="fw-semibold">{{ cat.name }}{% if not cat.is_active %} <span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</span>
+              <span class="small text-body-secondary">{{ cat.sub_count }} sub · {{ cat.product_count }} product{{ cat.product_count|pluralize }}</span>
+            </li>
+          {% empty %}
+            <li class="text-body-secondary">No categories yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </article>
+    <article class="leo-card leo-card--auto mt-4">
+      <div class="leo-card__body">
+        <h2 class="h6">Stock levels</h2>
+        <p class="small text-body-secondary mb-0">Inventory and stock tracking arrive in Phase 04. Variations are ready to be linked to stock records.</p>
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}

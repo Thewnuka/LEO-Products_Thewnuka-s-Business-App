@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}Your cart — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section pt-4">
+  <div class="container">
+    <h1 class="h2 mb-3">Your cart</h1>
+
+    {% if not can_shop %}
+      {% include "partials/_alert.html" with level="info" text="Staff accounts don't have a shopping cart. Sign out and use a customer account to shop." %}
+    {% elif not summary.lines %}
+      <div class="leo-empty">
+        <i class="bi bi-bag" aria-hidden="true"></i>
+        <h2 class="h5">Your cart is empty</h2>
+        <p>Browse our tea, tea bags and sweets and add your favourites.</p>
+        <a href="{% url 'shop:home' %}" class="btn btn-leo-primary"><i class="bi bi-shop" aria-hidden="true"></i>Start shopping</a>
+      </div>
+    {% else %}
+    <div class="row g-4">
+      <div class="col-12 col-lg-8">
+        <ul class="leo-cart-list list-unstyled mb-0">
+          {% for line in summary.lines %}
+          {% with v=line.item.variation %}
+          <li class="leo-cart-line{% if line.status == 'unavailable' %} is-unavailable{% endif %}">
+            <a href="{% url 'shop:product' v.product.slug %}" class="leo-cart-line__img" tabindex="-1" aria-hidden="true">{% if v.image %}{% catalog_image v.image v.display_name %}{% else %}{% catalog_image v.product.image v.product.name %}{% endif %}</a>
+            <div class="leo-cart-line__info">
+              <a href="{% url 'shop:product' v.product.slug %}" class="fw-semibold">{{ v.product.name }}</a>
+              <div class="small text-body-secondary">{{ v.display_name }} · {{ line.unit_price|money }} each</div>
+              {% if line.note %}<div class="small {% if line.status == 'unavailable' %}text-danger{% else %}leo-text-warning{% endif %} mt-1"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ line.note }}</div>{% endif %}
+            </div>
+            <div class="leo-cart-line__actions">
+              {% if line.status != "unavailable" %}
+              <form method="post" action="{% url 'shop:cart_update' line.item.pk %}" class="leo-cart-qty">
+                {% csrf_token %}
+                <label class="visually-hidden" for="q{{ line.item.pk }}">Quantity of {{ v.product.name }} {{ v.display_name }}</label>
+                <input type="number" id="q{{ line.item.pk }}" name="quantity" value="{{ line.item.quantity }}" min="0" max="{{ line.available }}" step="1" inputmode="numeric" class="form-control form-control-sm">
+                <button type="submit" class="btn btn-leo-outline btn-sm">Update</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{% url 'shop:cart_remove' line.item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm leo-cart-remove"><i class="bi bi-trash" aria-hidden="true"></i>Remove</button>
+              </form>
+            </div>
+            <div class="leo-cart-line__total">{% if line.status == 'unavailable' %}—{% else %}{{ line.line_total|money }}{% endif %}</div>
+          </li>
+          {% endwith %}
+          {% endfor %}
+        </ul>
+        <a href="{% url 'shop:home' %}" class="btn btn-leo-outline mt-3"><i class="bi bi-arrow-left" aria-hidden="true"></i>Continue shopping</a>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <aside class="leo-card leo-card--auto leo-cart-summary" aria-label="Cart summary">
+          <div class="leo-card__body">
+            <h2 class="h5">Summary</h2>
+            <dl class="leo-cart-totals">
+              <dt>Items</dt><dd>{{ summary.item_count }}</dd>
+              <dt>Subtotal</dt><dd>{{ summary.subtotal|money }}</dd>
+              <dt class="leo-cart-totals__grand">Total</dt><dd class="leo-cart-totals__grand">{{ summary.total|money }}</dd>
+            </dl>
+            {% if summary.item_count %}
+              {% if not user.is_authenticated or user.is_customer %}
+              <a href="{% url 'orders:checkout' %}" class="btn btn-leo-gold btn-lg w-100 mb-3"><i class="bi bi-bag-check" aria-hidden="true"></i>Proceed to checkout</a>
+              {% if not user.is_authenticated %}<p class="small text-body-secondary">You'll be asked to sign in or create an account first.</p>{% endif %}
+              {% else %}
+              <p class="small text-body-secondary">Staff accounts can't place online orders. Sign in with a customer account to check out.</p>
+              {% endif %}
+            {% endif %}
+            <p class="small text-body-secondary mb-0">Delivery charges, if any, will be shown at checkout. Your cart is saved{% if user.is_authenticated %} to your account{% else %} on this device; sign in to keep it with your account{% endif %}.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% comment %}Order payment-status badge.{% endcomment %}
+<span class="leo-badge leo-paystatus leo-paystatus--{{ order.payment_status|lower }}">{{ order.get_payment_status_display }}</span>

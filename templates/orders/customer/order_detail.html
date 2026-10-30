@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}Order {{ order.number }} — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    {% if just_placed %}
+    <div class="leo-confirmation mb-4">
+      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+      <div>
+        <h1 class="h3 mb-1">Thank you, your order is placed!</h1>
+        <p class="mb-0">Your order number is <strong>{{ order.number }}</strong>. {% if order.email %}We've emailed a confirmation to {{ order.email }}.{% endif %}</p>
+      </div>
+    </div>
+    {% else %}
+    <nav aria-label="breadcrumb" class="leo-breadcrumb"><ol class="breadcrumb mb-2"><li class="breadcrumb-item"><a href="{% url 'orders:my_orders' %}">My orders</a></li><li class="breadcrumb-item active" aria-current="page">{{ order.number }}</li></ol></nav>
+    <h1 class="h2 mb-3">Order {{ order.number }}</h1>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+      {% include "orders/partials/_status_badge.html" %} {% include "orders/partials/_payment_badge.html" %}
+      <span class="small text-body-secondary">Placed {{ order.created_at|date:"j M Y, H:i" }} · {{ order.get_payment_method_display }}</span>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-7">
+        {# ---- Payment actions ---- #}
+        {% if order.status != "CANCELLED" %}
+          {% if needs_bank_details %}
+          <article class="leo-card leo-card--auto leo-pay-box mb-4">
+            <div class="leo-card__body">
+              <h2 class="h5"><i class="bi bi-bank me-2" aria-hidden="true"></i>Pay by bank transfer</h2>
+              {% if latest_payment and latest_payment.status == "REJECTED" %}
+                {% include "partials/_alert.html" with level="warning" text="We couldn't confirm your previous transfer: "|add:latest_payment.verification_note|add:" Please check and submit again." %}
+              {% endif %}
+              <p>Please transfer <strong>{{ order.total|money }}</strong> and use <strong>{{ order.number }}</strong> as the reference.</p>
+              {% include "orders/partials/_bank_details.html" %}
+              <form method="post" action="{% url 'payments:bank_submit' order.number %}" enctype="multipart/form-data" class="mt-3" data-once>
+                {% csrf_token %}
+                {% include "partials/_form_field.html" with field=bank_form.reference %}
+                {% include "partials/_form_field.html" with field=bank_form.evidence %}
+                <button type="submit" class="btn btn-leo-primary"><i class="bi bi-upload" aria-hidden="true"></i>Submit transfer details</button>
+              </form>
+            </div>
+          </article>
+          {% elif order.payment_status == "PENDING_VERIFICATION" %}
+            {% include "partials/_alert.html" with level="info" text="We've received your transfer details and will confirm the payment after checking it." %}
+          {% elif order.payment_method == "ONLINE" and order.payment_status == "PENDING" %}
+          <article class="leo-card leo-card--auto leo-pay-box mb-4">
+            <div class="leo-card__body">
+              <h2 class="h5"><i class="bi bi-credit-card me-2" aria-hidden="true"></i>Pay online</h2>
+              {% if online_available %}
+                <p>Pay <strong>{{ order.total|money }}</strong> securely on our payment provider's page.</p>
+                <form method="post" action="{% url 'payments:online_start' order.number %}" data-once>{% csrf_token %}
+                  <button type="submit" class="btn btn-leo-gold"><i class="bi bi-lock" aria-hidden="true"></i>Pay now</button></form>
+              {% else %}
+                {% include "partials/_alert.html" with level="warning" text="Online payment is not available at the moment. Please contact us and we'll help you pay another way." %}
+              {% endif %}
+            </div>
+          </article>
+          {% elif order.payment_method == "CASH" and order.payment_status == "PENDING" %}
+            {% include "partials/_alert.html" with level="info" text="Please have the cash ready when you receive or collect your order." %}
+          {% endif %}
+        {% elif order.payment_status == "REFUND_DUE" %}
+          {% include "partials/_alert.html" with level="info" text="This order was cancelled after you paid. We will arrange your refund." %}
+        {% endif %}
+
+        <article class="leo-card leo-card--auto mb-4">
+          <div class="leo-card__body">
+            <h2 class="h5">Items</h2>
+            <ul class="list-unstyled leo-mini-list mb-3">
+              {% for item in order.items.all %}
+              <li><span>{{ item.quantity }} × {{ item.product_name }} <span class="small text-body-secondary">({{ item.variation_name }}, {{ item.unit_price|money }} each)</span></span><span class="fw-semibold">{{ item.line_total|money }}</span></li>
+              {% endfor %}
+            </ul>
+            {% include "orders/partials/_totals.html" with subtotal=order.subtotal delivery_fee=order.delivery_fee total=order.total is_delivery=order.is_delivery zone_name=order.delivery_zone_name %}
+          </div>
+        </article>
+
+        {% if can_cancel %}
+        <details class="leo-card leo-card--auto">
+          <summary class="leo-card__body fw-semibold">Cancel this order</summary>
+          <form method="post" action="{% url 'orders:cancel' order.number %}" class="px-4 pb-4" data-confirm="Cancel order {{ order.number }}?">
+            {% csrf_token %}
+            {% include "partials/_form_field.html" with field=cancel_form.reason %}
+            <button type="submit" class="btn btn-outline-danger">Cancel order</button>
+          </form>
+        </details>
+        {% endif %}
+      </div>
+
+      <div class="col-12 col-lg-5">
+        <article class="leo-card leo-card--auto mb-4">
+          <div class="leo-card__body">
+            <h2 class="h5">{% if order.is_delivery %}Delivery{% else %}Pickup{% endif %}</h2>
+            <dl class="leo-dl">
+              <dt>Name</dt><dd>{{ order.full_name }}</dd>
+              <dt>Contact</dt><dd>{{ order.phone }}</dd>
+              {% if order.is_delivery %}
+                <dt>Address</dt><dd>{{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}, {{ order.city }}<br><span class="small text-body-secondary">{{ order.delivery_zone_name }}</span></dd>
+              {% else %}
+                <dt>Collect from</dt><dd>{{ config.pickup_address|linebreaksbr|default:"Our store" }}{% if config.pickup_hours %}<br><span class="small">{{ config.pickup_hours }}</span>{% endif %}</dd>
+              {% endif %}
+              {% if order.delivery_instructions %}<dt>Instructions</dt><dd>{{ order.delivery_instructions|linebreaksbr }}</dd>{% endif %}
+            </dl>
+          </div>
+        </article>
+        <article class="leo-card leo-card--auto">
+          <div class="leo-card__body">
+            <h2 class="h5">Order progress</h2>
+            <ol class="leo-timeline">
+              {% for event in order.events.all %}
+              <li><div class="fw-semibold">{{ event.to_label }}</div><div class="small text-body-secondary">{{ event.created_at|date:"j M Y, H:i" }}</div></li>
+              {% endfor %}
+            </ol>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

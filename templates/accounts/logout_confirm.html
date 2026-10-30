@@ -1,0 +1,16 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Sign out — {{ brand.name }}{% endblock %}
+{% block auth_eyebrow %}{{ user.get_role_display }}{% endblock %}
+{% block auth_title %}Sign out?{% endblock %}
+{% block auth_subtitle %}You are signed in as <strong>{{ user.get_full_name|default:user.username }}</strong>.{% endblock %}
+
+{% block auth_body %}
+<form method="post" class="d-grid gap-2">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-leo-primary">
+    <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Yes, sign me out
+  </button>
+  <a href="{{ user.portal_home_url }}" class="btn btn-leo-outline">Cancel</a>
+</form>
+{% endblock %}

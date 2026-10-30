@@ -1,0 +1,81 @@
+{% extends "layouts/staff.html" %}
+{% load static %}
+
+{% block title %}{% if item %}Stock settings{% else %}Track new item{% endif %} — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if item %}Stock settings{% else %}Track new item{% endif %}{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:item_list' as list_url %}
+{% include "inventory/partials/_breadcrumb.html" with section="Stock items" section_url=list_url current=item.display_name|default:"New" %}
+
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card" id="itemForm">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+
+    {% if form.kind %}
+    <fieldset class="leo-fieldset">
+      <legend>What are you tracking?</legend>
+      <div class="leo-choice-group" role="radiogroup">
+        {% for radio in form.kind %}
+          <label class="leo-choice">
+            {{ radio.tag }}
+            <span><strong>{{ radio.choice_label }}</strong>
+              <span class="d-block small text-body-secondary">{% if radio.data.value == "RAW" %}Unpacked stock measured by weight or another unit, e.g. loose tea in kg. Not sold directly.{% else %}A sellable product variation from the catalogue, e.g. Black Tea 200g, counted in packets.{% endif %}</span></span>
+          </label>
+        {% endfor %}
+      </div>
+      {% for error in form.kind.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    </fieldset>
+    {% else %}
+      <p class="mb-3"><strong>{{ item.display_name }}</strong> · {{ item.get_kind_display }} · current stock <strong>{{ item.quantity_display }}</strong>.
+        <span class="small text-body-secondary d-block">Stock quantity is changed with <a href="{% url 'inventory:item_adjust' item.pk %}">Adjust stock</a> or by receiving purchases, never on this page.</span></p>
+    {% endif %}
+
+    <fieldset class="leo-fieldset" data-kind-section="FINISHED"{% if item and not item.is_finished %} hidden{% endif %}>
+      <legend>Finished product</legend>
+      <div class="row g-0 gx-2 gx-md-3">
+        {% if form.variation %}<div class="col-12 col-md-8">{% include "partials/_form_field.html" with field=form.variation %}</div>{% endif %}
+        {% if form.count_label %}<div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=form.count_label %}</div>{% endif %}
+      </div>
+      {% if form.variation and not form.variation.field.queryset.exists %}<p class="small text-body-secondary">Every product variation already has stock tracking, or none exist yet. Create variations in the <a href="{% url 'catalog:product_list' %}">catalogue</a> first.</p>{% endif %}
+    </fieldset>
+
+    <fieldset class="leo-fieldset" data-kind-section="RAW"{% if item and item.is_finished %} hidden{% endif %}>
+      <legend>Raw material</legend>
+      <div class="row g-0 gx-2 gx-md-3">
+        {% if form.name %}<div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.name %}</div>{% endif %}
+        {% if form.stock_unit %}<div class="col-12 col-md-3">{% include "partials/_form_field.html" with field=form.stock_unit %}</div>{% endif %}
+        {% if form.category %}<div class="col-12 col-md-3">{% include "partials/_form_field.html" with field=form.category %}</div>{% endif %}
+      </div>
+    </fieldset>
+
+    {% if form.opening_quantity %}
+    <fieldset class="leo-fieldset">
+      <legend>Opening stock</legend>
+      <div class="row g-0 gx-2 gx-md-3"><div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.opening_quantity %}</div></div>
+    </fieldset>
+    {% endif %}
+
+    <fieldset class="leo-fieldset">
+      <legend>Stock levels &amp; alerts</legend>
+      <p class="small text-body-secondary">In the stock unit (or whole packets for finished products). A low-stock warning shows when stock reaches the reorder level.</p>
+      <div class="row g-0 gx-2 gx-md-3">
+        <div class="col-12 col-sm-4">{% include "partials/_form_field.html" with field=form.reorder_level %}</div>
+        <div class="col-12 col-sm-4">{% include "partials/_form_field.html" with field=form.minimum_level %}</div>
+        <div class="col-12 col-sm-4">{% include "partials/_form_field.html" with field=form.maximum_level %}</div>
+      </div>
+      {% include "partials/_form_field.html" with field=form.is_active %}
+      {% if form.allow_negative %}{% include "partials/_form_field.html" with field=form.allow_negative %}{% endif %}
+      {% include "partials/_form_field.html" with field=form.notes %}
+    </fieldset>
+
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>{% if item %}Save settings{% else %}Start tracking{% endif %}</button>
+      <a href="{% if item %}{% url 'inventory:item_detail' item.pk %}{% else %}{{ list_url }}{% endif %}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/inventory.js' %}"></script>{% endblock %}

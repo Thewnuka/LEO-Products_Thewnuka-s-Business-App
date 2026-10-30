@@ -1,0 +1,43 @@
+{% load catalog_tags %}
+{% comment %}Variation table. manage=True adds edit / activate buttons.{% endcomment %}
+{% if variations %}
+<div class="leo-card leo-card--auto">
+  <div class="table-responsive">
+    <table class="table leo-table leo-table--stack leo-table--nowrap">
+      <thead><tr>
+        <th scope="col"><span class="visually-hidden">Image</span></th><th scope="col">Variation</th><th scope="col">Measurement</th><th scope="col">SKU</th>
+        <th scope="col" class="text-end">Selling price</th><th scope="col" class="text-end">Wholesale</th><th scope="col">Status</th>
+        {% if manage %}<th scope="col"><span class="visually-hidden">Actions</span></th>{% endif %}
+      </tr></thead>
+      <tbody>
+        {% for v in variations %}
+        <tr{% if not v.is_active %} class="leo-row--muted"{% endif %}>
+          <td data-label="" class="leo-thumb-cell">{% catalog_image v.image v.display_name "leo-thumb" %}</td>
+          <td data-label="Variation" class="fw-semibold">{{ v.display_name }}{% if v.name %} <span class="small text-body-secondary fw-normal">({{ v.size_label }})</span>{% endif %}</td>
+          <td data-label="Measurement">{{ v.get_measurement_type_display }}</td>
+          <td data-label="SKU"><code>{{ v.sku }}</code></td>
+          <td data-label="Selling price" class="text-end">{{ v.selling_price|money }}</td>
+          <td data-label="Wholesale" class="text-end">{{ v.wholesale_price|money }}</td>
+          <td data-label="Status">{% if v.is_active %}<span class="leo-status leo-status--active">Active</span>{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</td>
+          {% if manage %}
+          <td data-label="" class="text-end">
+            <div class="d-inline-flex gap-2">
+              <a href="{% url 'catalog:variation_update' product.pk v.pk %}" class="btn btn-leo-outline btn-sm">Edit</a>
+              <form method="post" action="{% url 'catalog:variation_toggle' product.pk v.pk %}" data-confirm="{% if v.is_active %}Deactivate {{ v.display_name }}?{% else %}Activate {{ v.display_name }}?{% endif %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if v.is_active %}btn-outline-danger{% else %}btn-leo-gold{% endif %}">{% if v.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+              </form>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">
+  No variations yet. <a href="{% url 'catalog:variation_create' product.pk %}">Add the first size and price</a>.
+</div></div>
+{% endif %}

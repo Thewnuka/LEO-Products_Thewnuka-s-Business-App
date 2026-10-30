@@ -1,0 +1,2 @@
+{% comment %}{% include "partials/_role_badge.html" with person=member %}{% endcomment %}
+<span class="leo-badge leo-role leo-role--{{ person.role|lower }}">{{ person.get_role_display }}</span>

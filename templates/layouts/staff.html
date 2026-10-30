@@ -1,0 +1,81 @@
+{% extends "layouts/sidebar.html" %}
+{% comment %}
+  Staff portal layout: staff top bar + role-aware sidebar.
+  Pages fill page_title and page_content (and optionally page_actions).
+  Links appear only when the user's role allows them; the views
+  enforce the same rules on the server.
+{% endcomment %}
+
+{% block body_class %}leo-staff{% endblock %}
+{% block header %}{% include "partials/_staff_topbar.html" %}{% endblock %}
+{% block sidebar_title %}Staff portal{% endblock %}
+
+{% block sidebar_nav %}
+{% with path=request.path %}
+<li class="nav-item">
+  <a class="nav-link{% if path == user.portal_home_url %} active{% endif %}" href="{{ user.portal_home_url }}"{% if path == user.portal_home_url %} aria-current="page"{% endif %}>
+    <i class="bi bi-speedometer2" aria-hidden="true"></i>My dashboard
+  </a>
+</li>
+
+{% if can.VIEW_ALL_DASHBOARDS %}
+<li><p class="leo-sidebar__heading">All dashboards</p></li>
+{% url 'dashboard:it_admin' as it_url %}{% url 'dashboard:manager' as mgr_url %}{% url 'dashboard:cashier' as cash_url %}
+<li class="nav-item"><a class="nav-link{% if path == it_url %} active{% endif %}" href="{{ it_url }}"><i class="bi bi-cpu" aria-hidden="true"></i>IT Admin</a></li>
+<li class="nav-item"><a class="nav-link{% if path == mgr_url %} active{% endif %}" href="{{ mgr_url }}"><i class="bi bi-briefcase" aria-hidden="true"></i>Manager</a></li>
+<li class="nav-item"><a class="nav-link{% if path == cash_url %} active{% endif %}" href="{{ cash_url }}"><i class="bi bi-cash-coin" aria-hidden="true"></i>Cashier</a></li>
+{% endif %}
+
+{% if can.VIEW_ORDERS or can.MANAGE_BUSINESS_SETTINGS %}
+<li><p class="leo-sidebar__heading">Orders</p></li>
+{% url 'orders:staff_list' as ord_url %}{% url 'orders:settings' as oset_url %}
+{% if can.VIEW_ORDERS %}
+<li class="nav-item"><a class="nav-link{% if ord_url in path and oset_url not in path %} active{% endif %}" href="{{ ord_url }}"><i class="bi bi-bag-check" aria-hidden="true"></i>Customer orders</a></li>
+{% endif %}
+{% if can.MANAGE_BUSINESS_SETTINGS %}
+<li class="nav-item"><a class="nav-link{% if oset_url in path %} active{% endif %}" href="{{ oset_url }}"><i class="bi bi-sliders" aria-hidden="true"></i>Delivery &amp; payment</a></li>
+{% endif %}
+{% endif %}
+{% if can.MANAGE_CATALOG %}
+<li><p class="leo-sidebar__heading">Catalogue</p></li>
+{% url 'catalog:dashboard' as cat_url %}{% url 'catalog:product_list' as prod_url %}{% url 'catalog:category_list' as catg_url %}{% url 'catalog:unit_list' as unit_url %}
+<li class="nav-item"><a class="nav-link{% if path == cat_url %} active{% endif %}" href="{{ cat_url }}"><i class="bi bi-grid-1x2" aria-hidden="true"></i>Overview</a></li>
+<li class="nav-item"><a class="nav-link{% if prod_url in path %} active{% endif %}" href="{{ prod_url }}"><i class="bi bi-box-seam" aria-hidden="true"></i>Products</a></li>
+<li class="nav-item"><a class="nav-link{% if catg_url in path %} active{% endif %}" href="{{ catg_url }}"><i class="bi bi-diagram-3" aria-hidden="true"></i>Categories</a></li>
+<li class="nav-item"><a class="nav-link{% if unit_url in path %} active{% endif %}" href="{{ unit_url }}"><i class="bi bi-rulers" aria-hidden="true"></i>Units</a></li>
+{% endif %}
+
+{% if can.MANAGE_INVENTORY or can.MANAGE_SUPPLIERS or can.MANAGE_PURCHASES %}
+<li><p class="leo-sidebar__heading">Inventory</p></li>
+{% if can.MANAGE_INVENTORY %}
+{% url 'inventory:dashboard' as inv_url %}{% url 'inventory:item_list' as items_url %}{% url 'inventory:movement_list' as moves_url %}
+<li class="nav-item"><a class="nav-link{% if path == inv_url %} active{% endif %}" href="{{ inv_url }}"><i class="bi bi-clipboard-data" aria-hidden="true"></i>Stock overview</a></li>
+<li class="nav-item"><a class="nav-link{% if items_url in path %} active{% endif %}" href="{{ items_url }}"><i class="bi bi-boxes" aria-hidden="true"></i>Stock items</a></li>
+<li class="nav-item"><a class="nav-link{% if moves_url in path %} active{% endif %}" href="{{ moves_url }}"><i class="bi bi-journal-text" aria-hidden="true"></i>Stock movements</a></li>
+{% endif %}
+{% if can.MANAGE_SUPPLIERS %}{% url 'inventory:supplier_list' as sup_url %}
+<li class="nav-item"><a class="nav-link{% if sup_url in path %} active{% endif %}" href="{{ sup_url }}"><i class="bi bi-truck" aria-hidden="true"></i>Suppliers</a></li>
+{% endif %}
+{% if can.MANAGE_PURCHASES %}{% url 'inventory:purchase_list' as pur_url %}
+<li class="nav-item"><a class="nav-link{% if pur_url in path %} active{% endif %}" href="{{ pur_url }}"><i class="bi bi-receipt" aria-hidden="true"></i>Purchases</a></li>
+{% endif %}
+{% endif %}
+
+{% if can.VIEW_STAFF or user.is_superuser %}
+<li><p class="leo-sidebar__heading">Administration</p></li>
+{% if can.VIEW_STAFF %}
+{% url 'accounts:staff_list' as staff_url %}
+<li class="nav-item"><a class="nav-link{% if staff_url in path %} active{% endif %}" href="{{ staff_url }}"><i class="bi bi-people" aria-hidden="true"></i>Staff accounts</a></li>
+{% endif %}
+{% if user.is_superuser %}
+<li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-gear" aria-hidden="true"></i>Django admin</a></li>
+{% endif %}
+{% endif %}
+
+<li><p class="leo-sidebar__heading">My account</p></li>
+{% url 'accounts:staff_profile' as profile_url %}
+<li class="nav-item"><a class="nav-link{% if path == profile_url %} active{% endif %}" href="{{ profile_url }}"><i class="bi bi-person-badge" aria-hidden="true"></i>My profile</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'accounts:password_change' %}"><i class="bi bi-key" aria-hidden="true"></i>Change password</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out</a></li>
+{% endwith %}
+{% endblock %}

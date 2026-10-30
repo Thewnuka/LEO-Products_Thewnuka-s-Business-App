@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ brand.name }} — {{ brand.tagline }}{% endblock %}
+
+{% block content %}
+<section class="leo-hero" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="row align-items-center g-4 g-lg-5">
+      <div class="col-12 col-lg-7 order-2 order-lg-1 text-center text-lg-start">
+        <span class="leo-eyebrow">Welcome to</span>
+        <h1 id="hero-title" class="mt-2 mb-2">{{ brand.name }}</h1>
+        <p class="leo-hero__tagline mb-3">{{ brand.tagline }}</p>
+        <p class="leo-hero__text mb-4 mx-auto mx-lg-0">
+          Time-honoured recipes and carefully chosen ingredients, prepared with a
+          commitment to purity in every product.
+        </p>
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+          <a href="{% url 'shop:home' %}" class="btn btn-leo-gold btn-lg">
+            <i class="bi bi-shop" aria-hidden="true"></i> Shop now
+          </a>
+          <a href="#about" class="btn btn-leo-outline-light btn-lg">
+            <i class="bi bi-flower1" aria-hidden="true"></i> Our story
+          </a>
+          <a href="#roadmap" class="btn btn-leo-outline-light btn-lg">
+            <i class="bi bi-signpost-split" aria-hidden="true"></i> What's coming
+          </a>
+        </div>
+      </div>
+      <div class="col-12 col-lg-5 order-1 order-lg-2 text-center">
+        {% include "partials/_logo.html" with size="xl" show_text=False link=False %}
+        {% if brand.logo_is_placeholder %}
+          <p class="leo-hero__note small mt-2 mb-0">
+            <i class="bi bi-info-circle" aria-hidden="true"></i> Temporary placeholder logo
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="leo-section" aria-labelledby="about-title">
+  <div class="container">
+    <div class="leo-intro text-center mx-auto mb-5">
+      <span class="leo-eyebrow">About us</span>
+      <h2 id="about-title" class="mt-2">Rooted in tradition</h2>
+      <hr class="leo-divider">
+      <p class="leo-lead mb-0">
+        {{ brand.name }} brings the flavours of tradition to today's homes, with an
+        uncompromising focus on purity and quality.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12 col-md-6 col-lg-4">
+        <article class="leo-card leo-card--interactive">
+          <div class="leo-card__body">
+            <span class="leo-card__icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+            <h3 class="h5">Taste of tradition</h3>
+            <p class="mb-0 text-body-secondary">Recipes and methods carried forward with respect for how they have always been made.</p>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <article class="leo-card leo-card--interactive">
+          <div class="leo-card__body">
+            <span class="leo-card__icon"><i class="bi bi-droplet" aria-hidden="true"></i></span>
+            <h3 class="h5">Zip of purity</h3>
+            <p class="mb-0 text-body-secondary">Clean ingredients and careful handling, so what reaches you is exactly what it should be.</p>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-md-12 col-lg-4">
+        <article class="leo-card leo-card--interactive">
+          <div class="leo-card__body">
+            <span class="leo-card__icon"><i class="bi bi-award" aria-hidden="true"></i></span>
+            <h3 class="h5">Crafted with care</h3>
+            <p class="mb-0 text-body-secondary">Every batch is prepared with attention to detail and a promise of consistent quality.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap" class="leo-section leo-section--alt" aria-labelledby="roadmap-title">
+  <div class="container">
+    <div class="row g-4 g-lg-5 align-items-start">
+      <div class="col-12 col-lg-4">
+        <span class="leo-eyebrow">Under construction</span>
+        <h2 id="roadmap-title" class="mt-2">Our platform is on its way</h2>
+        <hr class="leo-divider">
+        <p class="text-body-secondary">
+          We are building one system for our online shop, in-store sales and
+          business management, available on the web, on Windows and as an
+          installable mobile app.
+        </p>
+        {% include "partials/_alert.html" with level="info" text="Our online shop is open: order online for home delivery or store pickup, and pay by cash or bank transfer." %}
+      </div>
+      <div class="col-12 col-lg-8">
+        <ol class="leo-roadmap">
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">01</span>Foundation &amp; design</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">02</span>Accounts &amp; roles</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">03</span>Product catalogue</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">04</span>Inventory &amp; suppliers</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">05</span>Online shop &amp; cart</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">06</span>Checkout, orders &amp; payments</span><span class="leo-badge leo-badge--done"><i class="bi bi-check2" aria-hidden="true"></i>Done</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">07</span>Finance &amp; reports</span><span class="leo-badge leo-badge--gold">Planned</span></li>
+          <li><span class="leo-roadmap__phase"><span class="leo-roadmap__num">08</span>Desktop &amp; mobile apps</span><span class="leo-badge leo-badge--gold">Planned</span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% comment %}
+  Centred card layout for sign-in, registration and password pages.
+  Blocks: auth_variant (extra class, e.g. "leo-auth--staff"), auth_eyebrow,
+          auth_title, auth_subtitle, auth_body, auth_after.
+{% endcomment %}
+
+{% block main_class %}leo-main--fill{% endblock %}
+
+{% block content %}
+<section class="leo-auth {% block auth_variant %}{% endblock %}">
+  <div class="container">
+    <div class="leo-auth__card {% block auth_card_class %}{% endblock %}">
+      <div class="text-center mb-4">
+        <div>{% include "partials/_logo.html" with size="md" show_text=False %}</div>
+        <p class="leo-eyebrow mt-3 mb-1">{% block auth_eyebrow %}{% endblock %}</p>
+        <h1 class="h3 mb-2">{% block auth_title %}{% endblock %}</h1>
+        <p class="text-body-secondary mb-0">{% block auth_subtitle %}{% endblock %}</p>
+      </div>
+      {% block auth_body %}{% endblock %}
+    </div>
+    {% block auth_after %}{% endblock %}
+  </div>
+</section>
+{% endblock %}

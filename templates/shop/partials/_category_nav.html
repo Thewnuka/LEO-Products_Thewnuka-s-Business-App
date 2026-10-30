@@ -1,0 +1,7 @@
+{% comment %}Category chips. Highlights `current` (a Category) if given.{% endcomment %}
+<nav class="leo-chips" aria-label="Shop categories">
+  <a href="{% url 'shop:home' %}" class="leo-chip{% if not current %} active{% endif %}"{% if not current %} aria-current="page"{% endif %}>All products</a>
+  {% for c in categories %}
+    <a href="{% url 'shop:category' c.slug %}" class="leo-chip{% if current and current.pk == c.pk or current and current.parent_id == c.pk %} active{% endif %}"{% if current and current.pk == c.pk %} aria-current="page"{% endif %}>{{ c.name }}</a>
+  {% endfor %}
+</nav>

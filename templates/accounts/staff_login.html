@@ -1,0 +1,29 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Staff sign in — {{ brand.name }}{% endblock %}
+{% block auth_variant %}leo-auth--staff{% endblock %}
+{% block auth_eyebrow %}Staff portal{% endblock %}
+{% block auth_title %}Staff sign in{% endblock %}
+{% block auth_subtitle %}For owners, IT admins, managers and cashiers.{% endblock %}
+
+{% block auth_body %}
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  {% include "partials/_form_field.html" with field=form.username %}
+  {% include "partials/_form_field.html" with field=form.password %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button type="submit" class="btn btn-leo-primary w-100 mt-2">
+    <i class="bi bi-shield-lock" aria-hidden="true"></i> Sign in to staff portal
+  </button>
+</form>
+<div class="leo-auth__links">
+  <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+</div>
+{% endblock %}
+
+{% block auth_after %}
+<p class="leo-auth__switch">
+  Shopping with us? <a href="{% url 'accounts:customer_login' %}">Customer sign in</a>
+</p>
+{% endblock %}

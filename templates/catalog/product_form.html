@@ -1,0 +1,34 @@
+{% extends "layouts/staff.html" %}
+{% load static catalog_tags %}
+
+{% block title %}{% if product %}Edit {{ product.name }}{% else %}New product{% endif %} — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if product %}Edit product{% else %}New product{% endif %}{% endblock %}
+
+{% block page_content %}
+{% url 'catalog:product_list' as list_url %}
+{% if product %}{% include "catalog/partials/_breadcrumb.html" with section="Products" section_url=list_url current=product.name %}{% else %}{% include "catalog/partials/_breadcrumb.html" with section="Products" section_url=list_url current="New" %}{% endif %}
+
+<form method="post" enctype="multipart/form-data" novalidate class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    <div class="row g-0 gx-2 gx-md-3">
+      <div class="col-12">{% include "partials/_form_field.html" with field=form.name %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.category %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.subcategory %}</div>
+      <div class="col-12">{% include "partials/_form_field.html" with field=form.description %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.status %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.slug %}</div>
+      <div class="col-12">
+        {% include "catalog/partials/_image_field.html" with field=form.image current=product.image remove=form.remove_image %}
+      </div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>{% if product %}Save changes{% else %}Create product{% endif %}</button>
+      <a href="{% if product %}{% url 'catalog:product_detail' product.pk %}{% else %}{{ list_url }}{% endif %}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/catalog.js' %}"></script>{% endblock %}

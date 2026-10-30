@@ -1,0 +1,2 @@
+{% load static %}{% comment %}Uploaded image or neutral placeholder. Use {% catalog_image obj.image "Alt text" "css-class" %}.{% endcomment %}
+{% if image %}<img src="{{ image.url }}" alt="{{ alt }}" class="{{ css_class }}" loading="lazy" decoding="async">{% else %}<img src="{% static 'images/placeholder-product.svg' %}" alt="{% if alt %}{{ alt }} (no image yet){% endif %}" class="{{ css_class }} leo-img--placeholder" loading="lazy">{% endif %}

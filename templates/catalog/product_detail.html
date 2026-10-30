@@ -1,0 +1,63 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}{{ product.name }} — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ product.name }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'catalog:product_update' product.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i><span class="d-none d-sm-inline">Edit</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% url 'catalog:product_list' as list_url %}
+{% include "catalog/partials/_breadcrumb.html" with section="Products" section_url=list_url current=product.name %}
+
+<div class="row g-4">
+  <div class="col-12 col-md-5 col-xl-4">
+    <div class="leo-card leo-card--auto">
+      <div class="leo-card__media leo-card__media--square">{% catalog_image product.image product.name %}</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-7 col-xl-8">
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          {% include "catalog/partials/_status_badge.html" with status=product.status label=product.get_status_display %}
+          <span class="small text-body-secondary">{{ product.category.name }}{% if product.subcategory %} › {{ product.subcategory.name }}{% endif %}</span>
+        </div>
+        {% if product.description %}<p class="mb-3">{{ product.description|linebreaksbr }}</p>{% else %}<p class="text-body-secondary mb-3">No description yet.</p>{% endif %}
+        <dl class="leo-dl">
+          <dt>Web address</dt><dd class="text-break"><code>{{ product.slug }}</code></dd>
+          <dt>Variations</dt><dd>{{ product.active_variation_count }} active of {{ product.variation_count }}</dd>
+          <dt>Price range</dt><dd>{% if product.min_price %}{{ product.min_price|money }}{% if product.max_price != product.min_price %} – {{ product.max_price|money }}{% endif %}{% else %}—{% endif %}</dd>
+          <dt>Created</dt><dd>{{ product.created_at|date:"j M Y, H:i" }}{% if product.created_by %} by {{ product.created_by }}{% endif %}</dd>
+          <dt>Last updated</dt><dd>{{ product.updated_at|date:"j M Y, H:i" }}{% if product.updated_by %} by {{ product.updated_by }}{% endif %}</dd>
+        </dl>
+      </div>
+    </article>
+
+    <article class="leo-card leo-card--auto mt-4">
+      <div class="leo-card__body">
+        <h2 class="h6 mb-3">Status</h2>
+        <form method="post" action="{% url 'catalog:product_status' product.pk %}" class="d-flex flex-wrap gap-2">
+          {% csrf_token %}
+          {% for value, label in status_choices %}
+            <button type="submit" name="status" value="{{ value }}" class="btn btn-sm {% if product.status == value %}btn-leo-primary{% else %}btn-leo-outline{% endif %}"{% if product.status == value %} disabled aria-pressed="true"{% endif %}>{{ label }}</button>
+          {% endfor %}
+        </form>
+        <p class="small text-body-secondary mt-2 mb-0">A product can only be made Active when it has at least one active variation. Products are never deleted; set them to Inactive to archive them.</p>
+      </div>
+    </article>
+  </div>
+</div>
+
+<section class="mt-4" aria-labelledby="variations-title">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h2 class="h5 mb-0" id="variations-title">Variations (sizes &amp; prices)</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'catalog:variation_list' product.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-sliders" aria-hidden="true"></i>Manage</a>
+      <a href="{% url 'catalog:variation_create' product.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add variation</a>
+    </div>
+  </div>
+  {% include "catalog/partials/_variation_table.html" with manage=False %}
+</section>
+{% endblock %}

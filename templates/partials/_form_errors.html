@@ -1,0 +1,4 @@
+{% comment %}Errors that belong to the whole form (e.g. "incorrect login details").{% endcomment %}
+{% for error in form.non_field_errors %}
+  {% include "partials/_alert.html" with level="danger" text=error %}
+{% endfor %}

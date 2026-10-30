@@ -1,0 +1,52 @@
+{% url 'core:home' as home_url %}{% url 'shop:home' as shop_url %}{% url 'shop:cart' as cart_url %}
+<header class="leo-site-header">
+  <nav class="navbar navbar-expand-lg leo-navbar" aria-label="Main navigation">
+    <div class="container">
+      <span class="navbar-brand p-0 me-2">{% include "partials/_logo.html" with size="sm" %}</span>
+
+      {% if show_cart %}
+      {# Always visible (outside the collapsing menu); last on wide screens. #}
+      <a href="{{ cart_url }}" class="leo-cart-link ms-auto ms-lg-2 me-2 me-lg-0 order-lg-last{% if request.path == cart_url %} active{% endif %}"
+         aria-label="Cart, {{ cart_count }} item{{ cart_count|pluralize }}">
+        <i class="bi bi-bag" aria-hidden="true"></i>
+        {% if cart_count %}<span class="leo-cart-link__count">{{ cart_count }}</span>{% endif %}
+      </a>
+      {% endif %}
+
+      <button class="navbar-toggler{% if not show_cart %} ms-auto{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#leoMainNav"
+              aria-controls="leoMainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="leoMainNav">
+        {# Only links to pages that exist. #}
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item">
+            <a class="nav-link{% if request.path == home_url %} active{% endif %}" href="{{ home_url }}"{% if request.path == home_url %} aria-current="page"{% endif %}>
+              <i class="bi bi-house-door me-2" aria-hidden="true"></i>Home
+            </a>
+          </li>
+          <li class="nav-item"><a class="nav-link{% if shop_url in request.path %} active{% endif %}" href="{{ shop_url }}"{% if shop_url in request.path %} aria-current="page"{% endif %}><i class="bi bi-shop me-2" aria-hidden="true"></i>Shop</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ home_url }}#about"><i class="bi bi-flower1 me-2" aria-hidden="true"></i>About</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ home_url }}#roadmap"><i class="bi bi-signpost-split me-2" aria-hidden="true"></i>Roadmap</a></li>
+          {% if user.is_authenticated %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-2" aria-hidden="true"></i>{{ user.first_name|default:user.username }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end leo-dropdown">
+              <li><a class="dropdown-item" href="{{ user.portal_home_url }}"><i class="bi bi-{% if user.is_staff_member %}speedometer2{% else %}person{% endif %}" aria-hidden="true"></i>{% if user.is_staff_member %}Staff dashboard{% else %}My account{% endif %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}"><i class="bi bi-key" aria-hidden="true"></i>Change password</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out</a></li>
+            </ul>
+          </li>
+          {% else %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:customer_login' %}"><i class="bi bi-person me-2" aria-hidden="true"></i>Sign in</a></li>
+          <li class="nav-item ms-lg-2 py-2 py-lg-0"><a class="btn btn-leo-gold btn-sm" href="{% url 'accounts:register' %}">Create account</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static catalog_tags %}
+
+{% block title %}{{ product.name }} — {{ brand.name }}{% endblock %}
+{% block meta_description %}{{ product.description|default:product.name|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<section class="leo-section pt-4">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="leo-breadcrumb">
+      <ol class="breadcrumb mb-3">
+        <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Shop</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'shop:category' product.category.slug %}">{{ product.category.name }}</a></li>
+        {% if product.subcategory %}<li class="breadcrumb-item"><a href="{% url 'shop:category' product.subcategory.slug %}">{{ product.subcategory.name }}</a></li>{% endif %}
+        <li class="breadcrumb-item active text-truncate" aria-current="page">{{ product.name }}</li>
+      </ol>
+    </nav>
+
+    <div class="row g-4 g-lg-5">
+      <div class="col-12 col-md-6">
+        <div class="leo-product-gallery">
+          {% catalog_image product.image product.name "leo-product-gallery__img" %}
+          {% for v in variations %}{% if v.image %}<img src="{{ v.image.url }}" alt="{{ product.name }} {{ v.display_name }}" class="leo-product-gallery__img" data-variation-image="{{ v.pk }}" hidden loading="lazy">{% endif %}{% endfor %}
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <p class="leo-eyebrow mb-1">{{ product.subcategory.name|default:product.category.name }}</p>
+        <h1 class="h2 mb-2">{{ product.name }}</h1>
+        <p class="leo-product-price mb-1" id="shopPrice" aria-live="polite">{% if selected %}{{ selected.selling_price|money }}{% else %}—{% endif %}</p>
+        <p class="mb-3" id="shopAvailability" aria-live="polite">
+          {% if selected %}<span class="leo-avail {% if selected.is_low %}leo-avail--low{% endif %}"><i class="bi bi-check-circle" aria-hidden="true"></i>{{ selected.availability }}</span>
+          {% else %}<span class="leo-avail leo-avail--out"><i class="bi bi-x-circle" aria-hidden="true"></i>Currently unavailable</span>{% endif %}
+        </p>
+
+        {% if variations %}
+        <form method="post" action="{% url 'shop:cart_add' %}" id="addToCart" class="leo-buy">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <fieldset class="mb-3">
+            <legend class="form-label">Choose {% if variations.0.measurement_type == "WEIGHT" %}a weight{% else %}a pack size{% endif %}</legend>
+            <div class="leo-options">
+              {% for v in variations %}
+                <label class="leo-option{% if v.available <= 0 %} is-disabled{% endif %}">
+                  <input type="radio" name="variation" value="{{ v.pk }}" class="visually-hidden"
+                         {% if v.available <= 0 %}disabled{% endif %}{% if selected and v.pk == selected.pk %} checked{% endif %}
+                         data-price="{{ v.selling_price|money }}" data-availability="{{ v.availability }}" data-max="{{ v.max_qty }}"
+                         data-low="{% if v.is_low %}1{% else %}0{% endif %}">
+                  <span class="leo-option__size">{{ v.display_name }}</span>
+                  <span class="leo-option__price">{{ v.selling_price|money }}</span>
+                  {% if v.available <= 0 %}<span class="leo-option__note">Out of stock</span>{% endif %}
+                </label>
+              {% endfor %}
+            </div>
+          </fieldset>
+
+          {% if selected and can_shop %}
+          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-end">
+            <div class="leo-qty">
+              <label class="form-label" for="qty">Quantity</label>
+              <input type="number" name="quantity" id="qty" value="1" min="1" max="{{ selected.max_qty }}" step="1" inputmode="numeric" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-leo-primary btn-lg flex-grow-1"><i class="bi bi-bag-plus" aria-hidden="true"></i>Add to cart</button>
+          </div>
+          {% elif selected %}
+            {% include "partials/_alert.html" with level="info" text="You are signed in with a staff account. Use a customer account to shop." %}
+          {% endif %}
+        </form>
+        {% endif %}
+
+        {% if product.description %}
+        <div class="leo-product-desc mt-4">
+          <h2 class="h6">About this product</h2>
+          <p class="mb-0">{{ product.description|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+        <p class="small text-body-secondary mt-3 mb-0"><i class="bi bi-info-circle" aria-hidden="true"></i> Adding to your cart does not reserve stock; stock is confirmed when you place your order.</p>
+      </div>
+    </div>
+
+    {% if related %}
+    <section class="mt-5" aria-labelledby="relatedTitle">
+      <h2 class="h4" id="relatedTitle">You may also like</h2>
+      <div class="leo-shop-grid">{% for product in related %}{% include "shop/partials/_product_card.html" %}{% endfor %}</div>
+    </section>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/shop.js' %}"></script>{% endblock %}

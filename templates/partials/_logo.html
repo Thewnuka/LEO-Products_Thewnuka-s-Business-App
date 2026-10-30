@@ -1,0 +1,27 @@
+{% load static %}{% comment %}
+  THE ONLY place the logo image is rendered. Every page uses this partial.
+
+  Usage:
+    {% include "partials/_logo.html" %}                          small logo + name + tagline
+    {% include "partials/_logo.html" with size="lg" show_text=False link=False %}
+
+  Options:
+    size       sm (default) | md | lg | xl
+    show_text  set to False to hide the brand name and tagline
+    link       set to False to stop it linking to the home page
+
+  To replace the logo: overwrite static/images/leo-logo.png, or change
+  BRAND["LOGO"] in config/settings/base.py. No template changes are needed.
+{% endcomment %}
+{% if link is False %}<span class="leo-logo leo-logo--{{ size|default:'sm' }}">{% else %}<a href="{% url 'core:home' %}" class="leo-logo leo-logo--{{ size|default:'sm' }}">{% endif %}
+  <img class="leo-logo__img"
+       src="{% static brand.logo|default:'images/leo-logo.png' %}"
+       alt="{{ brand.name|default:'LEO PRODUCTS' }} logo{% if brand.logo_is_placeholder %} (temporary placeholder){% endif %}"
+       width="971" height="971">
+  {% if show_text is not False %}
+  <span class="leo-logo__text">
+    <span class="leo-logo__name">{{ brand.name|default:"LEO PRODUCTS" }}</span>
+    <span class="leo-logo__tagline">{{ brand.tagline|default:"taste of tradition, zip of purity" }}</span>
+  </span>
+  {% endif %}
+{% if link is False %}</span>{% else %}</a>{% endif %}

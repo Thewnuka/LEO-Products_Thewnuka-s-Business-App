@@ -1,0 +1,82 @@
+{% extends "layouts/staff.html" %}
+{% load inventory_tags catalog_tags %}
+
+{% block title %}{{ item.display_name }} — Stock — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ item.display_name }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'inventory:item_adjust' item.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-slash-minus" aria-hidden="true"></i><span class="d-none d-sm-inline">Adjust stock</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:item_list' as list_url %}
+{% include "inventory/partials/_breadcrumb.html" with section="Stock items" section_url=list_url current=item.display_name %}
+
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <article class="leo-card leo-card--auto leo-stock-hero">
+      <div class="leo-card__body">
+        <span class="leo-stat__label">Current stock</span>
+        <p class="leo-stock-hero__value">{{ item.quantity_display }}</p>
+        {% if item.is_active %}{% include "inventory/partials/_state_badge.html" with state=item.state %}{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}
+        {% if item.state == "LOW" or item.state == "OUT" or item.state == "BELOW_MIN" %}
+          <p class="small mt-3 mb-0">Stock is at or below the reorder level ({{ item.reorder_level|qty:item }}).{% if can.MANAGE_PURCHASES %} <a href="{% url 'inventory:purchase_create' %}">Create a purchase</a>.{% endif %}</p>
+        {% endif %}
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a href="{% url 'inventory:item_adjust' item.pk %}?type=INCREASE" class="btn btn-leo-outline btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add</a>
+          <a href="{% url 'inventory:item_adjust' item.pk %}?type=DECREASE" class="btn btn-leo-outline btn-sm"><i class="bi bi-dash-lg" aria-hidden="true"></i>Remove</a>
+          <a href="{% url 'inventory:item_adjust' item.pk %}?type=DAMAGE" class="btn btn-leo-outline btn-sm">Damage</a>
+          <a href="{% url 'inventory:item_adjust' item.pk %}?type=CORRECTION" class="btn btn-leo-outline btn-sm">Stock count</a>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div class="col-12 col-lg-7">
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <h2 class="h5 mb-0">Details</h2>
+          <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-gear" aria-hidden="true"></i>Settings</a>
+        </div>
+        <dl class="leo-dl">
+          <dt>Type</dt><dd>{{ item.get_kind_display }}</dd>
+          {% if item.variation %}<dt>Product</dt><dd><a href="{% url 'catalog:product_detail' item.variation.product_id %}">{{ item.variation.product.name }}</a> · {{ item.variation.display_name }} · <code>{{ item.variation.sku }}</code></dd>{% endif %}
+          <dt>Category</dt><dd>{{ item.effective_category|default:"—" }}</dd>
+          <dt>Counted in</dt><dd>{% if item.is_finished %}whole {{ item.count_label }}{% else %}{{ item.stock_unit.name }} ({{ item.stock_unit.symbol }}){% endif %}</dd>
+          <dt>Reorder level</dt><dd>{{ item.reorder_level|qty:item }}</dd>
+          <dt>Minimum level</dt><dd>{{ item.minimum_level|qty:item }}</dd>
+          <dt>Maximum level</dt><dd>{{ item.maximum_level|qty:item }}</dd>
+          <dt>Negative stock</dt><dd>{% if item.allow_negative %}<span class="text-danger fw-semibold">Allowed (set by Owner)</span>{% else %}Not allowed{% endif %}</dd>
+          <dt>Last change</dt><dd>{{ item.last_movement_at|date:"j M Y, H:i"|default:"—" }}</dd>
+          {% if item.notes %}<dt>Notes</dt><dd>{{ item.notes|linebreaksbr }}</dd>{% endif %}
+        </dl>
+      </div>
+    </article>
+  </div>
+</div>
+
+<section class="mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">Stock history</h2>
+    <a href="{% url 'inventory:movement_list' %}?q={{ item.variation.sku|default:item.name|urlencode }}" class="small">Search full history</a>
+  </div>
+  {% include "inventory/partials/_movement_table.html" with movements=movements show_item=False %}
+</section>
+
+{% if can.MANAGE_PURCHASES and purchase_lines %}
+<section class="mt-4">
+  <h2 class="h5">Recent purchases of this item</h2>
+  <div class="leo-card leo-card--auto"><div class="table-responsive">
+    <table class="table leo-table leo-table--stack leo-table--nowrap">
+      <thead><tr><th scope="col">Purchase</th><th scope="col">Supplier</th><th scope="col">Date</th><th scope="col" class="text-end">Quantity</th><th scope="col" class="text-end">Unit cost</th><th scope="col">Status</th></tr></thead>
+      <tbody>{% for line in purchase_lines %}
+        <tr><td data-label="Purchase"><a href="{% url 'inventory:purchase_detail' line.purchase_id %}">{{ line.purchase.reference }}</a></td>
+          <td data-label="Supplier">{{ line.purchase.supplier.name }}</td><td data-label="Date">{{ line.purchase.purchase_date|date:"j M Y" }}</td>
+          <td data-label="Quantity" class="text-end">{{ line.quantity|floatformat:"-3" }} {{ line.unit_label }}</td>
+          <td data-label="Unit cost" class="text-end">{{ line.unit_cost|money }}</td>
+          <td data-label="Status">{% include "inventory/partials/_purchase_status.html" with status=line.purchase.status label=line.purchase.get_status_display %}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div></div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% comment %}
+  Reusable alert.
+    {% include "partials/_alert.html" with level="success" text="Saved." %}
+  level: success | info | warning | danger      dismissible: True | False
+{% endcomment %}
+<div class="alert alert-{{ level|default:'info' }}{% if dismissible %} alert-dismissible fade show{% endif %}" role="{% if level == 'danger' or level == 'warning' %}alert{% else %}status{% endif %}">
+  {% if level == "success" %}<i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+  {% elif level == "warning" %}<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+  {% elif level == "danger" %}<i class="bi bi-x-octagon-fill" aria-hidden="true"></i>
+  {% else %}<i class="bi bi-info-circle-fill" aria-hidden="true"></i>{% endif %}
+  <div>{{ text }}</div>
+  {% if dismissible %}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>{% endif %}
+</div>

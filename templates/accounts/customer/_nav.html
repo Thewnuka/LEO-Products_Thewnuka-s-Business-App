@@ -1,0 +1,8 @@
+{% url 'accounts:customer_home' as home_url %}{% url 'accounts:customer_profile' as profile_url %}{% url 'orders:my_orders' as orders_url %}
+<nav class="leo-tabs" aria-label="My account">
+  <a class="leo-tabs__link{% if request.path == home_url %} active{% endif %}" href="{{ home_url }}"{% if request.path == home_url %} aria-current="page"{% endif %}><i class="bi bi-grid" aria-hidden="true"></i>Overview</a>
+  <a class="leo-tabs__link{% if orders_url in request.path %} active{% endif %}" href="{{ orders_url }}"{% if request.path == orders_url %} aria-current="page"{% endif %}><i class="bi bi-bag" aria-hidden="true"></i>Orders</a>
+  <a class="leo-tabs__link{% if request.path == profile_url %} active{% endif %}" href="{{ profile_url }}"{% if request.path == profile_url %} aria-current="page"{% endif %}><i class="bi bi-person" aria-hidden="true"></i>Profile</a>
+  <a class="leo-tabs__link" href="{% url 'accounts:password_change' %}"><i class="bi bi-key" aria-hidden="true"></i>Password</a>
+  <a class="leo-tabs__link" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out</a>
+</nav>

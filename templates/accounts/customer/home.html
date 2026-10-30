@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}My account — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    <span class="leo-eyebrow">My account</span>
+    <h1 class="h2 mt-1 mb-3">Hello, {{ user.first_name|default:user.username }}</h1>
+    {% include "accounts/customer/_nav.html" %}
+
+    <div class="row g-4 mt-1">
+      <div class="col-12 col-lg-5">
+        <article class="leo-card">
+          <div class="leo-card__body">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+              <h2 class="h5 mb-0">Account details</h2>
+              <a href="{% url 'accounts:customer_profile' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i>Edit</a>
+            </div>
+            <dl class="leo-dl">
+              <dt>Name</dt><dd>{{ user.get_full_name|default:"—" }}</dd>
+              <dt>Email</dt><dd class="text-break">{{ user.email|default:"—" }}</dd>
+              <dt>Phone</dt><dd>{{ user.phone_number|default:"—" }}</dd>
+              <dt>Member since</dt><dd>{{ user.date_joined|date:"j F Y" }}</dd>
+            </dl>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <div class="row g-4">
+          <div class="col-12 col-md-6 col-lg-12 col-xl-6">
+            <article class="leo-card">
+              <div class="leo-card__body">
+                <span class="leo-card__icon"><i class="bi bi-bag" aria-hidden="true"></i></span>
+                <h2 class="h5">My orders</h2>
+                {% if recent_orders %}
+                <ul class="list-unstyled leo-mini-list mb-2">
+                  {% for order in recent_orders %}
+                  <li><span><a href="{% url 'orders:detail' order.number %}" class="fw-semibold">{{ order.number }}</a><span class="d-block small text-body-secondary">{{ order.created_at|date:"j M Y" }} · {{ order.total|money }}</span></span>{% include "orders/partials/_status_badge.html" %}</li>
+                  {% endfor %}
+                </ul>
+                <a href="{% url 'orders:my_orders' %}" class="small">All my orders</a>
+                {% else %}
+                <p class="text-body-secondary mb-0">You haven't placed any orders yet. <a href="{% url 'shop:home' %}">Browse the shop</a> or <a href="{% url 'shop:cart' %}">view your cart</a>.</p>
+                {% endif %}
+              </div>
+            </article>
+          </div>
+          <div class="col-12 col-md-6 col-lg-12 col-xl-6">
+            <article class="leo-card">
+              <div class="leo-card__body">
+                <span class="leo-card__icon"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+                <h2 class="h5">Payment history</h2>
+                {% if recent_payments %}
+                <ul class="list-unstyled leo-mini-list mb-0">
+                  {% for p in recent_payments %}
+                  <li><span><span class="fw-semibold">{{ p.amount|money }}</span><span class="d-block small text-body-secondary">{{ p.get_method_display }} · <a href="{% url 'orders:detail' p.order.number %}">{{ p.order.number }}</a></span></span><span class="leo-badge leo-paystatus leo-paystatus--{{ p.status|lower }}">{{ p.get_status_display }}</span></li>
+                  {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-body-secondary mb-0">No payments yet. Payments for your orders will be listed here.</p>
+                {% endif %}
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

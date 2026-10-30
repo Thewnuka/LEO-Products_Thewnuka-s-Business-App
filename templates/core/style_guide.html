@@ -1,0 +1,166 @@
+{% extends "layouts/sidebar.html" %}
+{% load static %}
+{% comment %}
+  Development-only page (available when DEBUG=True at /style-guide/).
+  Shows every shared UI component so the design can be checked in one place.
+{% endcomment %}
+
+{% block title %}Style guide — {{ brand.name }}{% endblock %}
+{% block sidebar_title %}Style guide{% endblock %}
+
+{% block sidebar_nav %}
+<li class="nav-item"><a class="nav-link" href="#colours"><i class="bi bi-palette" aria-hidden="true"></i>Colours</a></li>
+<li class="nav-item"><a class="nav-link" href="#typography"><i class="bi bi-type" aria-hidden="true"></i>Typography</a></li>
+<li class="nav-item"><a class="nav-link" href="#logo"><i class="bi bi-image" aria-hidden="true"></i>Logo</a></li>
+<li class="nav-item"><a class="nav-link" href="#buttons"><i class="bi bi-hand-index" aria-hidden="true"></i>Buttons</a></li>
+<li class="nav-item"><a class="nav-link" href="#cards"><i class="bi bi-card-text" aria-hidden="true"></i>Cards</a></li>
+<li class="nav-item"><a class="nav-link" href="#forms"><i class="bi bi-ui-checks" aria-hidden="true"></i>Forms</a></li>
+<li class="nav-item"><a class="nav-link" href="#alerts"><i class="bi bi-bell" aria-hidden="true"></i>Alerts</a></li>
+<li class="nav-item"><a class="nav-link" href="#tables"><i class="bi bi-table" aria-hidden="true"></i>Tables</a></li>
+<li><p class="leo-sidebar__heading">Site</p></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}"><i class="bi bi-house-door" aria-hidden="true"></i>Home page</a></li>
+{% endblock %}
+
+{% block page_title %}UI style guide{% endblock %}
+
+{% block page_content %}
+{% include "partials/_alert.html" with level="info" text="Development preview of shared components. Buttons and forms on this page are samples and do not perform any action." %}
+
+<section id="colours" class="mb-5">
+  <h2 class="h4">Colours</h2>
+  <div class="row row-cols-2 row-cols-sm-3 row-cols-xl-6 g-3">
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-green)"></div><div class="leo-swatch__label">Forest green<br><code>--leo-green</code></div></div></div>
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-green-2)"></div><div class="leo-swatch__label">Secondary green<br><code>--leo-green-2</code></div></div></div>
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-gold)"></div><div class="leo-swatch__label">Gold<br><code>--leo-gold</code></div></div></div>
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-white)"></div><div class="leo-swatch__label">White<br><code>--leo-white</code></div></div></div>
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-bg)"></div><div class="leo-swatch__label">Background<br><code>--leo-bg</code></div></div></div>
+    <div class="col"><div class="leo-swatch"><div class="leo-swatch__color" style="background: var(--leo-text)"></div><div class="leo-swatch__label">Text<br><code>--leo-text</code></div></div></div>
+  </div>
+</section>
+
+<section id="typography" class="mb-5">
+  <h2 class="h4">Typography</h2>
+  <div class="leo-card"><div class="leo-card__body">
+    <span class="leo-eyebrow">Eyebrow label</span>
+    <p class="h1 mb-2">Heading one</p>
+    <p class="h2 mb-2">Heading two</p>
+    <p class="h3 mb-3">Heading three</p>
+    <p class="leo-lead">Lead paragraph for introductions.</p>
+    <p class="mb-0">Body text in Inter. <a href="#typography">A text link</a>. <span class="text-body-secondary">Muted text.</span></p>
+  </div></div>
+</section>
+
+<section id="logo" class="mb-5">
+  <h2 class="h4">Logo sizes</h2>
+  <div class="leo-card"><div class="leo-card__body d-flex flex-wrap align-items-end gap-4">
+    {% include "partials/_logo.html" with size="sm" link=False %}
+    {% include "partials/_logo.html" with size="md" show_text=False link=False %}
+    {% include "partials/_logo.html" with size="lg" show_text=False link=False %}
+  </div></div>
+</section>
+
+<section id="buttons" class="mb-5">
+  <h2 class="h4">Buttons</h2>
+  <div class="d-flex flex-wrap gap-3">
+    <button type="button" class="btn btn-leo-primary">Primary</button>
+    <button type="button" class="btn btn-leo-gold">Gold</button>
+    <button type="button" class="btn btn-leo-outline">Outline</button>
+    <button type="button" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Small</button>
+    <button type="button" class="btn btn-leo-primary" disabled>Disabled</button>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <span class="leo-badge">Badge</span>
+    <span class="leo-badge leo-badge--gold">Gold badge</span>
+    <span class="leo-badge leo-badge--done">Done badge</span>
+  </div>
+</section>
+
+<section id="cards" class="mb-5">
+  <h2 class="h4">Cards</h2>
+  <p class="text-body-secondary">Interactive cards lift and zoom on mouse hover. On touch screens the same highlight shows on tap; keyboard users see it on focus.</p>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+    <div class="col">
+      <article class="leo-card leo-card--interactive">
+        <div class="leo-card__media"><img src="{% static brand.logo %}" alt="" loading="lazy"></div>
+        <div class="leo-card__body">
+          <span class="leo-badge leo-badge--gold mb-2">Sample</span>
+          <h3 class="h5"><a href="#cards" class="stretched-link text-decoration-none">Sample product card</a></h3>
+          <p class="mb-0 text-body-secondary small">Layout sample for future product cards. Not a real product.</p>
+        </div>
+      </article>
+    </div>
+    <div class="col">
+      <article class="leo-card"><div class="leo-card__body">
+        <span class="leo-card__icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+        <h3 class="h5">Static card</h3>
+        <p class="mb-0 text-body-secondary small">For information panels that are not clickable.</p>
+      </div></article>
+    </div>
+  </div>
+</section>
+
+<section id="forms" class="mb-5">
+  <h2 class="h4">Forms</h2>
+  <div class="leo-card"><div class="leo-card__body">
+    <form onsubmit="return false;" novalidate>
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="sg-name">Full name</label>
+          <input class="form-control" id="sg-name" type="text" placeholder="e.g. Nimal Perera" autocomplete="off">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="sg-email">Email</label>
+          <input class="form-control is-invalid" id="sg-email" type="email" value="not-an-email" aria-describedby="sg-email-error">
+          <div id="sg-email-error" class="invalid-feedback">Enter a valid email address.</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="sg-select">Category</label>
+          <select class="form-select" id="sg-select"><option>Option one</option><option>Option two</option></select>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="sg-notes">Notes</label>
+          <textarea class="form-control" id="sg-notes" rows="1"></textarea>
+          <div class="form-text">Helper text explains a field.</div>
+        </div>
+        <div class="col-12">
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="sg-check" checked><label class="form-check-label" for="sg-check">Checkbox option</label></div>
+        </div>
+      </div>
+    </form>
+  </div></div>
+</section>
+
+<section id="alerts" class="mb-5">
+  <h2 class="h4">Alerts</h2>
+  {% include "partials/_alert.html" with level="success" text="Success: the action completed." %}
+  {% include "partials/_alert.html" with level="info" text="Info: something worth knowing." %}
+  {% include "partials/_alert.html" with level="warning" text="Warning: please check this." %}
+  {% include "partials/_alert.html" with level="danger" text="Error: something went wrong." dismissible=True %}
+</section>
+
+<section id="tables" class="mb-5">
+  <h2 class="h4">Tables</h2>
+  <p class="text-body-secondary">Scrolling table (wide data stays inside its card):</p>
+  <div class="leo-card leo-card--auto mb-4">
+    <div class="table-responsive">
+      <table class="table leo-table">
+        <thead><tr><th scope="col">Code</th><th scope="col">Item</th><th scope="col">Category</th><th scope="col">Unit</th><th scope="col" class="text-end">Quantity</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          <tr><td>S-001</td><td>Sample item one</td><td>Sample category</td><td>kg</td><td class="text-end">12</td><td><span class="leo-badge">Sample</span></td></tr>
+          <tr><td>S-002</td><td>Sample item two</td><td>Sample category</td><td>pack</td><td class="text-end">40</td><td><span class="leo-badge leo-badge--gold">Sample</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-body-secondary">Stacking table (rows become cards on phones):</p>
+  <div class="leo-card leo-card--auto">
+    <table class="table leo-table leo-table--stack">
+      <thead><tr><th scope="col">Code</th><th scope="col">Item</th><th scope="col" class="text-end">Quantity</th></tr></thead>
+      <tbody>
+        <tr><td data-label="Code">S-001</td><td data-label="Item">Sample item one</td><td data-label="Quantity" class="text-end">12</td></tr>
+        <tr><td data-label="Code">S-002</td><td data-label="Item">Sample item two</td><td data-label="Quantity" class="text-end">40</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

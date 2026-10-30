@@ -1,0 +1,16 @@
+{% load catalog_tags %}
+{% comment %}Product card: hover lifts/zooms on mouse devices; tap/focus highlight on touch (see leo.css).{% endcomment %}
+<article class="leo-card leo-card--interactive leo-product-card">
+  <div class="leo-card__media">{% catalog_image product.image product.name %}</div>
+  <div class="leo-card__body">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+      <span class="small text-body-secondary text-truncate">{{ product.category.name }}{% if product.subcategory %} › {{ product.subcategory.name }}{% endif %}</span>
+      {% include "catalog/partials/_status_badge.html" with status=product.status label=product.get_status_display %}
+    </div>
+    <h3 class="h6 mb-1"><a href="{% url 'catalog:product_detail' product.pk %}" class="stretched-link text-decoration-none">{{ product.name }}</a></h3>
+    <p class="small text-body-secondary mb-0">
+      {{ product.active_variation_count }} active variation{{ product.active_variation_count|pluralize }}
+      {% if product.min_price %}· {% if product.min_price == product.max_price %}{{ product.min_price|money }}{% else %}{{ product.min_price|money }} – {{ product.max_price|money }}{% endif %}{% endif %}
+    </p>
+  </div>
+</article>

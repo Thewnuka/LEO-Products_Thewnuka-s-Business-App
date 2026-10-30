@@ -1,0 +1,14 @@
+{% comment %}Search + sort. `action` is where the form submits (shop home or a category).{% endcomment %}
+<form method="get" action="{{ action }}" class="leo-shop-toolbar" role="search">
+  <div class="leo-shop-toolbar__search">
+    <label class="visually-hidden" for="{{ form.q.id_for_label }}">Search products</label>
+    {{ form.q }}
+  </div>
+  <div class="leo-shop-toolbar__sort">
+    <label class="visually-hidden" for="{{ form.sort.id_for_label }}">Sort by</label>
+    <select name="sort" id="{{ form.sort.id_for_label }}" class="form-select">
+      {% for key, label in sorts.items %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-leo-primary"><i class="bi bi-search" aria-hidden="true"></i><span class="d-sm-none d-lg-inline">Search</span></button>
+</form>

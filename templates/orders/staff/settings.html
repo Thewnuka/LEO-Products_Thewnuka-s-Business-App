@@ -1,0 +1,68 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Delivery &amp; payment settings — {{ brand.name }}{% endblock %}
+{% block page_title %}Delivery &amp; payment settings{% endblock %}
+
+{% block page_content %}
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <form method="post" novalidate class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        {% csrf_token %}
+        {% include "partials/_form_errors.html" %}
+        <fieldset class="leo-fieldset"><legend>Delivery &amp; pickup</legend>
+          {% include "partials/_form_field.html" with field=form.delivery_enabled %}
+          {% include "partials/_form_field.html" with field=form.pickup_enabled %}
+          {% include "partials/_form_field.html" with field=form.pickup_address %}
+          {% include "partials/_form_field.html" with field=form.pickup_hours %}
+        </fieldset>
+        <fieldset class="leo-fieldset"><legend>Cash</legend>
+          {% include "partials/_form_field.html" with field=form.cash_on_delivery_enabled %}
+          {% include "partials/_form_field.html" with field=form.cash_on_pickup_enabled %}
+        </fieldset>
+        <fieldset class="leo-fieldset"><legend>Bank transfer</legend>
+          {% include "partials/_form_field.html" with field=form.bank_transfer_enabled %}
+          <div class="row g-0 gx-2 gx-md-3">
+            <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.bank_name %}</div>
+            <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.bank_branch %}</div>
+            <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.bank_account_name %}</div>
+            <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.bank_account_number %}</div>
+          </div>
+          {% include "partials/_form_field.html" with field=form.bank_instructions %}
+        </fieldset>
+        <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save settings</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-12 col-xl-5">
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h5 mb-0">Delivery areas</h2>
+          <a href="{% url 'orders:zone_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add area</a></div>
+        <p class="small text-body-secondary">Home delivery is offered only when at least one active area exists. Changing a fee doesn't affect orders already placed.</p>
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for z in zones %}
+          <li{% if not z.is_active %} class="leo-row--muted"{% endif %}>
+            <span><span class="fw-semibold">{{ z.name }}</span> · {{ z.fee|money }}{% if z.free_delivery_over is not None %} <span class="small text-body-secondary">(free over {{ z.free_delivery_over|money }})</span>{% endif %}{% if not z.is_active %} · inactive{% endif %}
+              {% if z.areas %}<span class="d-block small text-body-secondary">{{ z.areas }}</span>{% endif %}</span>
+            <a href="{% url 'orders:zone_update' z.pk %}" class="btn btn-leo-outline btn-sm">Edit</a>
+          </li>
+          {% empty %}<li class="text-body-secondary">No delivery areas yet, so only store pickup is offered.</li>{% endfor %}
+        </ul>
+      </div>
+    </article>
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <h2 class="h5">Online payment</h2>
+        {% if online_available %}
+          <p class="mb-0"><span class="leo-status leo-status--active">Configured</span> Gateway: <strong>{{ gateway_name }}</strong>.</p>
+        {% else %}
+          <p class="mb-2"><span class="leo-status leo-status--inactive">Not configured</span> Customers can't choose online payment.</p>
+          <p class="small text-body-secondary mb-0">To enable it, a developer adds the gateway credentials to the server's <code>.env</code> file (see DEVELOPMENT_GUIDE). Credentials are never entered or stored here.</p>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Categories — {{ brand.name }}{% endblock %}
+{% block page_title %}Categories{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'catalog:category_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">New main category</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% include "catalog/partials/_breadcrumb.html" with section="Categories" %}
+<p class="text-body-secondary">Main categories group subcategories. Change the order with each category's <em>Sort order</em> (lower numbers first). Categories that contain products cannot be deleted; deactivate them instead.</p>
+
+{% for main in main_categories %}
+<article class="leo-card leo-card--auto leo-category mb-4{% if not main.is_active %} leo-category--inactive{% endif %}">
+  <header class="leo-category__head">
+    <div class="leo-category__thumb">{% catalog_image main.image main.name "leo-thumb" %}</div>
+    <div class="min-w-0 flex-grow-1">
+      <h2 class="h5 mb-1">{{ main.name }}</h2>
+      <p class="small text-body-secondary mb-0">
+        {{ main.subs|length }} subcategor{{ main.subs|length|pluralize:"y,ies" }} · {{ main.product_count }} product{{ main.product_count|pluralize }} · order {{ main.sort_order }}
+        · {% if main.is_active %}<span class="leo-status leo-status--active">Active</span>{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}
+      </p>
+    </div>
+    <div class="leo-category__actions">
+      <a href="{% url 'catalog:category_create' %}?parent={{ main.pk }}" class="btn btn-leo-gold btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Subcategory</a>
+      <a href="{% url 'catalog:category_update' main.pk %}" class="btn btn-leo-outline btn-sm">Edit</a>
+      <form method="post" action="{% url 'catalog:category_toggle' main.pk %}" data-confirm="{% if main.is_active %}Deactivate {{ main.name }}?{% else %}Activate {{ main.name }}?{% endif %}">
+        {% csrf_token %}<button type="submit" class="btn btn-sm {% if main.is_active %}btn-outline-danger{% else %}btn-leo-gold{% endif %}">{% if main.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+      </form>
+    </div>
+  </header>
+  {% if main.subs %}
+  <ul class="leo-category__subs">
+    {% for sub in main.subs %}
+    <li{% if not sub.is_active %} class="leo-row--muted"{% endif %}>
+      <span class="leo-category__subname">{% catalog_image sub.image sub.name "leo-thumb leo-thumb--sm" %}<span class="text-truncate">{{ sub.name }}</span></span>
+      <span class="small text-body-secondary">{{ sub.product_count }} product{{ sub.product_count|pluralize }}{% if not sub.is_active %} · <span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</span>
+      <span class="leo-category__actions">
+        <a href="{% url 'catalog:category_update' sub.pk %}" class="btn btn-leo-outline btn-sm">Edit</a>
+        <form method="post" action="{% url 'catalog:category_toggle' sub.pk %}" data-confirm="{% if sub.is_active %}Deactivate {{ sub.name }}?{% else %}Activate {{ sub.name }}?{% endif %}">
+          {% csrf_token %}<button type="submit" class="btn btn-sm {% if sub.is_active %}btn-outline-danger{% else %}btn-leo-gold{% endif %}">{% if sub.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+        </form>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="small text-body-secondary px-3 pb-3 mb-0">No subcategories yet.</p>
+  {% endif %}
+</article>
+{% empty %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No categories yet. <a href="{% url 'catalog:category_create' %}">Create the first main category</a>.</div></div>
+{% endfor %}
+{% endblock %}

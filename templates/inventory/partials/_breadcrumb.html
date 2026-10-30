@@ -1,0 +1,7 @@
+<nav aria-label="breadcrumb" class="leo-breadcrumb">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+    {% if section %}<li class="breadcrumb-item{% if not current %} active{% endif %}"{% if not current %} aria-current="page"{% endif %}>{% if current %}<a href="{{ section_url }}">{{ section }}</a>{% else %}{{ section }}{% endif %}</li>{% endif %}
+    {% if current %}<li class="breadcrumb-item active text-truncate" aria-current="page">{{ current }}</li>{% endif %}
+  </ol>
+</nav>

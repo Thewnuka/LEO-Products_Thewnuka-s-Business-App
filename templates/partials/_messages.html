@@ -1,0 +1,14 @@
+{% comment %}
+  Shows Django "messages framework" notifications as branded alerts.
+  Views add them with: messages.success(request, "Saved.")
+  Pass flush=True when already inside a padded content area.
+{% endcomment %}
+{% if messages %}
+<div class="{% if flush %}mb-3{% else %}container mt-3{% endif %}" aria-live="polite">
+  {% for message in messages %}
+    {% if message.level_tag == "error" %}{% include "partials/_alert.html" with level="danger" text=message dismissible=True %}
+    {% elif message.level_tag == "debug" %}{% include "partials/_alert.html" with level="info" text=message dismissible=True %}
+    {% else %}{% include "partials/_alert.html" with level=message.level_tag text=message dismissible=True %}{% endif %}
+  {% endfor %}
+</div>
+{% endif %}

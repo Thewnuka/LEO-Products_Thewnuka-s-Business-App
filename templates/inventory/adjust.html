@@ -1,0 +1,60 @@
+{% extends "layouts/staff.html" %}
+{% load static inventory_tags %}
+
+{% block title %}Adjust stock — {{ item.display_name }} — {{ brand.name }}{% endblock %}
+{% block page_title %}Adjust stock{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:item_detail' item.pk as item_url %}
+{% include "inventory/partials/_breadcrumb.html" with section=item.display_name section_url=item_url current="Adjust" %}
+
+{% if preview %}
+{# Step 2: confirmation. Nothing has been saved yet. #}
+<article class="leo-card leo-card--auto leo-form-card leo-confirm">
+  <div class="leo-card__body">
+    <h2 class="h5"><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Please confirm this stock change</h2>
+    <dl class="leo-dl">
+      <dt>Item</dt><dd>{{ item.display_name }}</dd>
+      <dt>Change</dt><dd>{{ movement_label }}</dd>
+      <dt>Stock now</dt><dd>{{ preview.before|qty:item }}</dd>
+      <dt>Stock after</dt><dd class="fw-semibold">{{ preview.after|qty:item }} <span class="{% if preview.change > 0 %}leo-qty--in{% else %}leo-qty--out{% endif %}">({{ preview.change|qty_signed:item }})</span></dd>
+      <dt>Reason</dt><dd>{{ form.cleaned_data.reason }}</dd>
+    </dl>
+    {% if preview.would_go_negative %}
+      {% include "partials/_alert.html" with level="danger" text="This would take stock below zero, which is not allowed. Go back and change the quantity." %}
+    {% endif %}
+    <form method="post" class="d-flex flex-column flex-sm-row gap-2 mt-3">
+      {% csrf_token %}
+      {% for field in form %}<input type="hidden" name="{{ field.html_name }}" value="{{ field.value|default_if_none:'' }}">{% endfor %}
+      {% if not preview.would_go_negative %}
+      <button type="submit" name="confirm" value="1" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Confirm and record</button>
+      {% endif %}
+      <button type="submit" name="edit" value="1" formaction="{% url 'inventory:item_adjust' item.pk %}?edit=1" class="btn btn-leo-outline" formnovalidate>Back to edit</button>
+    </form>
+  </div>
+</article>
+{% else %}
+{# Step 1: the adjustment form. #}
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card" id="adjustForm">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    <p>Current stock of <strong>{{ item.display_name }}</strong>: <strong>{{ item.quantity_display }}</strong>.</p>
+    {% include "partials/_form_errors.html" %}
+    <div class="row g-0 gx-2 gx-md-3">
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.movement_type %}</div>
+      <div class="col-12 col-md-6" data-show-for="OTHER">{% include "partials/_form_field.html" with field=form.direction %}</div>
+      <div class="{% if form.unit %}col-7{% else %}col-12{% endif %} col-md-4">{% include "partials/_form_field.html" with field=form.quantity %}</div>
+      {% if form.unit %}<div class="col-5 col-md-4">{% include "partials/_form_field.html" with field=form.unit %}</div>{% endif %}
+      <div class="col-12">{% include "partials/_form_field.html" with field=form.reason %}</div>
+    </div>
+    <p class="small text-body-secondary">You will see a summary and confirm before anything is saved. Every change is kept in the stock history and cannot be deleted.</p>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-arrow-right" aria-hidden="true"></i>Review change</button>
+      <a href="{{ item_url }}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/inventory.js' %}"></script>{% endblock %}

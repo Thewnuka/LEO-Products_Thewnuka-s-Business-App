@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% comment %}
+  Layout with a responsive sidebar — the foundation for the future dashboard.
+    < 992px : sidebar is hidden; the "Menu" button opens it as a drawer.
+    ≥ 992px : sidebar is always visible beside the content.
+
+  Child templates fill:
+    sidebar_title  heading at the top of the sidebar
+    sidebar_nav    <li class="nav-item"><a class="nav-link" ...></li> items
+    page_title     heading shown above the page content
+    page_content   the page itself
+{% endcomment %}
+
+{% block footer %}{% endblock %}
+{% block main_class %}leo-shell{% endblock %}
+{# Messages are shown inside the content column, not beside the sidebar. #}
+{% block messages %}{% endblock %}
+
+{% block content %}
+<aside class="leo-sidebar">
+  <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="leoSidebar" aria-labelledby="leoSidebarLabel">
+    <div class="offcanvas-header">
+      <h2 class="offcanvas-title h6 mb-0 text-white" id="leoSidebarLabel">{% block sidebar_title %}Menu{% endblock %}</h2>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#leoSidebar" aria-label="Close menu"></button>
+    </div>
+    <div class="offcanvas-body flex-column">
+      <ul class="nav flex-column gap-1 w-100">
+        {% block sidebar_nav %}{% endblock %}
+      </ul>
+    </div>
+  </div>
+</aside>
+
+<div class="leo-shell__content">
+  <div class="leo-shell__toolbar">
+    <button class="btn btn-leo-outline btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#leoSidebar" aria-controls="leoSidebar">
+      <i class="bi bi-layout-sidebar" aria-hidden="true"></i> Menu
+    </button>
+    <h1 class="h3 mb-0">{% block page_title %}{% endblock %}</h1>
+    <div class="ms-auto d-flex gap-2">{% block page_actions %}{% endblock %}</div>
+  </div>
+  {% include "partials/_messages.html" with flush=True %}
+  {% block page_content %}{% endblock %}
+</div>
+{% endblock %}

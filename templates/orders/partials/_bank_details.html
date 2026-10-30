@@ -1,0 +1,7 @@
+{% comment %}Business bank account (from Checkout settings).{% endcomment %}
+<dl class="leo-dl leo-bank">
+  <dt>Bank</dt><dd>{{ config.bank_name }}{% if config.bank_branch %}, {{ config.bank_branch }}{% endif %}</dd>
+  <dt>Account name</dt><dd>{{ config.bank_account_name }}</dd>
+  <dt>Account number</dt><dd class="fw-semibold"><span class="leo-mono">{{ config.bank_account_number }}</span></dd>
+</dl>
+{% if config.bank_instructions %}<p class="small mt-2 mb-0">{{ config.bank_instructions|linebreaksbr }}</p>{% endif %}

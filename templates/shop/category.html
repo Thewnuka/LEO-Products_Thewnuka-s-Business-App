@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}{{ category.name }} — Shop — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-shop-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="leo-breadcrumb leo-breadcrumb--light">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Shop</a></li>
+        {% if category.parent %}<li class="breadcrumb-item"><a href="{% url 'shop:category' category.parent.slug %}">{{ category.parent.name }}</a></li>{% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">{{ category.name }}</h1>
+    {% if category.description %}<p class="mb-0 leo-shop-hero__text">{{ category.description }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="leo-section pt-4">
+  <div class="container">
+    {% url 'shop:category' category.slug as cat_url %}
+    {% include "shop/partials/_toolbar.html" with action=cat_url %}
+    {% include "shop/partials/_category_nav.html" with current=category %}
+    {% if subcategories %}
+    <div class="leo-subchips mt-2">
+      <a href="{% url 'shop:category' main.slug %}" class="leo-chip leo-chip--sm{% if category.pk == main.pk %} active{% endif %}">All {{ main.name }}</a>
+      {% for sub in subcategories %}<a href="{% url 'shop:category' sub.slug %}" class="leo-chip leo-chip--sm{% if sub.pk == category.pk %} active{% endif %}">{{ sub.name }}</a>{% endfor %}
+    </div>
+    {% endif %}
+
+    <p class="small text-body-secondary mt-3" aria-live="polite">{{ page_obj.paginator.count }} product{{ page_obj.paginator.count|pluralize }}{% if q %} matching “{{ q }}”{% endif %}</p>
+    {% if page_obj.object_list %}
+      <div class="leo-shop-grid">{% for product in page_obj %}{% include "shop/partials/_product_card.html" %}{% endfor %}</div>
+      {% include "partials/_pager.html" %}
+    {% else %}
+      <div class="leo-empty">
+        <i class="bi bi-{% if q %}search{% else %}basket{% endif %}" aria-hidden="true"></i>
+        <h2 class="h5">{% if q %}No products found{% else %}Nothing here right now{% endif %}</h2>
+        <p>{% if q %}No {{ category.name }} products match “{{ q }}”.{% else %}Products in {{ category.name }} are currently out of stock. Please check back soon.{% endif %}</p>
+        <a href="{% url 'shop:home' %}" class="btn btn-leo-primary">See all products</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Suppliers — {{ brand.name }}{% endblock %}
+{% block page_title %}Suppliers{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'inventory:supplier_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">New supplier</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% include "inventory/partials/_breadcrumb.html" with section="Suppliers" %}
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=filter_form.q %}</div>
+    <div class="col-12 col-sm-6 col-md-3">{% include "partials/_form_field.html" with field=filter_form.active %}</div>
+    <div class="col-12 col-sm-6 col-md-3 d-grid leo-field"><button type="submit" class="btn btn-leo-primary"><i class="bi bi-search" aria-hidden="true"></i>Apply</button></div>
+  </div>
+</form>
+
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Supplier</th><th scope="col">Contact</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col" class="text-end">Received purchases</th><th scope="col">Status</th></tr></thead>
+    <tbody>{% for s in page_obj %}
+      <tr{% if not s.is_active %} class="leo-row--muted"{% endif %}>
+        <td data-label="Supplier" class="leo-wrap"><a href="{% url 'inventory:supplier_detail' s.pk %}" class="fw-semibold">{{ s.name }}</a></td>
+        <td data-label="Contact">{{ s.contact_person|default:"—" }}</td>
+        <td data-label="Phone">{% if s.phone %}<a href="tel:{{ s.phone|cut:' ' }}">{{ s.phone }}</a>{% else %}—{% endif %}</td>
+        <td data-label="Email">{% if s.email %}<a href="mailto:{{ s.email }}">{{ s.email }}</a>{% else %}—{% endif %}</td>
+        <td data-label="Received purchases" class="text-end">{{ s.purchase_count }}</td>
+        <td data-label="Status">{% if s.is_active %}<span class="leo-status leo-status--active">Active</span>{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No suppliers found. <a href="{% url 'inventory:supplier_create' %}">Add a supplier</a>.</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

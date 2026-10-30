@@ -1,0 +1,9 @@
+{% extends "errors/_error_base.html" %}
+{% comment %}
+  Shown by Django when a form is submitted without a valid CSRF token
+  (an expired page, blocked cookies, or a forged request from another site).
+{% endcomment %}
+{% block error_title_text %}Form expired{% endblock %}
+{% block error_code %}403{% endblock %}
+{% block error_title %}This form has expired{% endblock %}
+{% block error_message %}For your security, the form could not be submitted. Go back, refresh the page and try again. Make sure cookies are enabled in your browser.{% endblock %}

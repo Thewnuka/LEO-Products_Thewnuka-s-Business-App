@@ -1,0 +1,23 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Stock movements — {{ brand.name }}{% endblock %}
+{% block page_title %}Stock movements{% endblock %}
+
+{% block page_content %}
+{% include "inventory/partials/_breadcrumb.html" with section="Stock movements" %}
+<p class="text-body-secondary small">The permanent record of every stock change. Entries can never be edited or deleted; a mistake is fixed by recording a new correction.</p>
+
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.q %}</div>
+    <div class="col-12 col-sm-6 col-lg-3">{% include "partials/_form_field.html" with field=filter_form.movement_type %}</div>
+    <div class="col-6 col-lg-2">{% include "partials/_form_field.html" with field=filter_form.date_from %}</div>
+    <div class="col-6 col-lg-2">{% include "partials/_form_field.html" with field=filter_form.date_to %}</div>
+    <div class="col-12 col-lg-1 d-grid leo-field"><button type="submit" class="btn btn-leo-primary"><i class="bi bi-search" aria-hidden="true"></i><span class="d-lg-none">Apply</span></button></div>
+  </div>
+</form>
+
+<p class="small text-body-secondary">{{ page_obj.paginator.count }} movement{{ page_obj.paginator.count|pluralize }}</p>
+{% include "inventory/partials/_movement_table.html" with movements=page_obj.object_list show_item=True %}
+{% include "partials/_pager.html" %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}{% if member %}Edit {{ member.username }}{% else %}New staff account{% endif %} — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if member %}Edit {{ member.get_full_name|default:member.username }}{% else %}New staff account{% endif %}{% endblock %}
+
+{% block page_content %}
+<article class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "partials/_form_errors.html" %}
+      <div class="row g-0 gx-md-3">
+        {% for field in form %}
+          <div class="col-12{% if field.name != 'password1' and field.name != 'password2' %} col-md-6{% endif %}">{% include "partials/_form_field.html" %}</div>
+        {% endfor %}
+      </div>
+      <p class="small text-body-secondary">Roles you can assign: {% for value, label in form.fields.role.choices %}{{ label }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+      <div class="d-flex flex-column flex-sm-row gap-2">
+        <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>{% if member %}Save changes{% else %}Create account{% endif %}</button>
+        <a href="{% if member %}{% url 'accounts:staff_detail' member.pk %}{% else %}{% url 'accounts:staff_list' %}{% endif %}" class="btn btn-leo-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</article>
+{% endblock %}

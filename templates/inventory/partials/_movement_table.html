@@ -1,0 +1,31 @@
+{% load inventory_tags %}
+{% comment %}Stock ledger rows. show_item=False hides the item column (on an item's own page).{% endcomment %}
+{% if movements %}
+<div class="leo-card leo-card--auto">
+  <div class="table-responsive">
+    <table class="table leo-table leo-table--stack leo-table--nowrap">
+      <thead><tr>
+        <th scope="col">When</th>{% if show_item %}<th scope="col">Item</th>{% endif %}<th scope="col">Type</th>
+        <th scope="col" class="text-end">Change</th><th scope="col" class="text-end">Before</th><th scope="col" class="text-end">After</th>
+        <th scope="col">Reason / reference</th><th scope="col">By</th>
+      </tr></thead>
+      <tbody>
+      {% for m in movements %}
+        <tr>
+          <td data-label="When">{{ m.created_at|date:"j M Y, H:i" }}</td>
+          {% if show_item %}<td data-label="Item" class="leo-wrap"><a href="{% url 'inventory:item_detail' m.item_id %}">{{ m.item.display_name }}</a></td>{% endif %}
+          <td data-label="Type">{{ m.get_movement_type_display }}</td>
+          <td data-label="Change" class="text-end fw-semibold {% if m.quantity_change > 0 %}leo-qty--in{% else %}leo-qty--out{% endif %}">{{ m.quantity_change|qty_signed:m.item }}</td>
+          <td data-label="Before" class="text-end">{{ m.quantity_before|qty:m.item }}</td>
+          <td data-label="After" class="text-end">{{ m.quantity_after|qty:m.item }}</td>
+          <td data-label="Reason" class="leo-wrap">{% if m.purchase %}<a href="{% url 'inventory:purchase_detail' m.purchase_id %}">{{ m.purchase.reference }}</a>{% else %}{{ m.reason|default:"—" }}{% endif %}{% if m.entered_unit and m.entered_unit_id != m.item.stock_unit_id %} <span class="small text-body-secondary">(entered as {{ m.entered_quantity|floatformat:"-3" }} {{ m.entered_unit.symbol }})</span>{% endif %}</td>
+          <td data-label="By">{{ m.created_by|default:"system" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No stock movements yet.</div></div>
+{% endif %}

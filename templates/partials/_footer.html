@@ -1,0 +1,32 @@
+{% url 'core:home' as home_url %}
+<footer class="leo-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-12 col-md-6 col-lg-5">
+        {% include "partials/_logo.html" with size="md" %}
+        <p class="mt-3 mb-0">Traditional quality, prepared with care and a commitment to purity.</p>
+      </div>
+      <div class="col-6 col-md-3 col-lg-3 offset-lg-1">
+        <h2 class="h6 mb-3">Explore</h2>
+        <ul class="list-unstyled d-grid gap-2 mb-0">
+          <li><a href="{{ home_url }}">Home</a></li>
+          <li><a href="{% url 'shop:home' %}">Shop</a></li>
+          <li><a href="{{ home_url }}#about">About</a></li>
+          <li><a href="{{ home_url }}#roadmap">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <h2 class="h6 mb-3">Account</h2>
+        <ul class="list-unstyled d-grid gap-2 mb-0">
+          <li><a href="{% url 'accounts:customer_login' %}">Customer sign in</a></li>
+          <li><a href="{% url 'accounts:register' %}">Create account</a></li>
+          <li><a href="{% url 'accounts:staff_login' %}">Staff portal</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="leo-footer__bottom d-flex flex-column flex-sm-row justify-content-between gap-2">
+      <span>&copy; {% now "Y" %} {{ brand.name|default:"LEO PRODUCTS" }}. All rights reserved.</span>
+      <span class="fst-italic">{{ brand.tagline|default:"taste of tradition, zip of purity" }}</span>
+    </div>
+  </div>
+</footer>

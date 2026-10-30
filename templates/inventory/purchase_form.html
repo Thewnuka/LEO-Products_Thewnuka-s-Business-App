@@ -1,0 +1,47 @@
+{% extends "layouts/staff.html" %}
+{% load static %}
+
+{% block title %}{% if purchase %}Edit {{ purchase.reference }}{% else %}New purchase{% endif %} — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if purchase %}Edit draft {{ purchase.reference }}{% else %}New purchase{% endif %}{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:purchase_list' as list_url %}
+{% include "inventory/partials/_breadcrumb.html" with section="Purchases" section_url=list_url current=purchase.reference|default:"New" %}
+{% include "partials/_alert.html" with level="info" text="Saving creates a DRAFT. Stock does not change until you open the purchase and click “Receive”. Record goods only; transport and other operating costs are expenses, not purchases." %}
+
+<form method="post" novalidate class="leo-card leo-card--auto" id="purchaseForm">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    <div class="row g-0 gx-2 gx-md-3">
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.supplier %}</div>
+      <div class="col-12 col-sm-6 col-md-3">{% include "partials/_form_field.html" with field=form.purchase_date %}</div>
+      <div class="col-12 col-sm-6 col-md-3">{% include "partials/_form_field.html" with field=form.invoice_number %}</div>
+    </div>
+
+    <fieldset class="leo-fieldset">
+      <legend>Items</legend>
+      {{ formset.management_form }}
+      {% for error in formset.non_form_errors %}{% include "partials/_alert.html" with level="danger" text=error %}{% endfor %}
+      <div id="purchaseLines" class="leo-lines">
+        {% for line in formset %}
+          {% include "inventory/partials/_purchase_line.html" with line=line %}
+        {% endfor %}
+      </div>
+      <template id="emptyLine">{% include "inventory/partials/_purchase_line.html" with line=formset.empty_form %}</template>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+        <button type="button" class="btn btn-leo-outline btn-sm" id="addLine"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add another item</button>
+        <p class="mb-0">Total: <strong id="purchaseTotal" data-currency="LKR">LKR 0.00</strong> <span class="small text-body-secondary">(calculated again on save)</span></p>
+      </div>
+    </fieldset>
+
+    {% include "partials/_form_field.html" with field=form.notes %}
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save draft</button>
+      <a href="{% if purchase %}{% url 'inventory:purchase_detail' purchase.pk %}{% else %}{{ list_url }}{% endif %}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/inventory.js' %}"></script>{% endblock %}

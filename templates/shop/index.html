@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Shop — {{ brand.name }}{% endblock %}
+{% block meta_description %}Shop {{ brand.name }}: traditional tea, tea bags and sweets.{% endblock %}
+
+{% block content %}
+<section class="leo-shop-hero">
+  <div class="container">
+    <span class="leo-eyebrow">{{ brand.name }} shop</span>
+    <h1 class="h2 mt-1 mb-1">{% if mode == "results" and q %}Results for “{{ q }}”{% else %}Shop our products{% endif %}</h1>
+    <p class="mb-0 leo-shop-hero__text">{{ brand.tagline }}</p>
+  </div>
+</section>
+
+<section class="leo-section pt-4">
+  <div class="container">
+    {% url 'shop:home' as shop_url %}
+    {% include "shop/partials/_toolbar.html" with action=shop_url %}
+    {% include "shop/partials/_category_nav.html" with current=None %}
+
+    {% if mode == "results" %}
+      <p class="small text-body-secondary mt-3" aria-live="polite">{{ page_obj.paginator.count }} product{{ page_obj.paginator.count|pluralize }}</p>
+      {% if page_obj.object_list %}
+        <div class="leo-shop-grid">{% for product in page_obj %}{% include "shop/partials/_product_card.html" %}{% endfor %}</div>
+        {% include "partials/_pager.html" %}
+      {% else %}
+        <div class="leo-empty">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <h2 class="h5">No products found</h2>
+          <p>We couldn't find anything matching “{{ q }}”. Try a different word, or browse a category.</p>
+          <a href="{% url 'shop:home' %}" class="btn btn-leo-primary">See all products</a>
+        </div>
+      {% endif %}
+    {% else %}
+      {% for main, products in sections %}
+        <section class="leo-shop-section" aria-labelledby="cat-{{ main.pk }}">
+          <div class="leo-shop-section__head">
+            <div>
+              <h2 class="h4 mb-0" id="cat-{{ main.pk }}">{{ main.name }}</h2>
+              {% if main.description %}<p class="small text-body-secondary mb-0">{{ main.description }}</p>{% endif %}
+            </div>
+            <a href="{% url 'shop:category' main.slug %}" class="btn btn-leo-outline btn-sm">View all</a>
+          </div>
+          {% if main.visible_subs %}
+          <div class="leo-subchips">{% for sub in main.visible_subs %}<a href="{% url 'shop:category' sub.slug %}" class="leo-chip leo-chip--sm">{{ sub.name }}</a>{% endfor %}</div>
+          {% endif %}
+          <div class="leo-shop-grid">{% for product in products %}{% include "shop/partials/_product_card.html" %}{% endfor %}</div>
+        </section>
+      {% empty %}
+        <div class="leo-empty">
+          <i class="bi bi-basket" aria-hidden="true"></i>
+          <h2 class="h5">Our shop is getting ready</h2>
+          <p>Products will appear here as soon as they are in stock. Please check back soon.</p>
+          <a href="{% url 'core:home' %}" class="btn btn-leo-outline">Back to home</a>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

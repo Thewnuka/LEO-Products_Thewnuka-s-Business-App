@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static catalog_tags %}
+
+{% block title %}Checkout — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section pt-4">
+  <div class="container">
+    <ol class="leo-steps" aria-label="Checkout steps">
+      <li class="is-done"><a href="{% url 'shop:cart' %}">Cart</a></li>
+      <li class="is-current" aria-current="step">Details</li>
+      <li>Review &amp; place order</li>
+    </ol>
+    <h1 class="h2 mb-3">Checkout</h1>
+
+    {% if not can_checkout %}
+      {% include "partials/_alert.html" with level="warning" text="Online ordering isn't available right now (no delivery or payment options are set up). Please contact us to order." %}
+    {% else %}
+    <div class="row g-4">
+      <div class="col-12 col-lg-7">
+        <form method="post" novalidate class="leo-card leo-card--auto" id="checkoutForm">
+          <div class="leo-card__body">
+            {% csrf_token %}
+            {% include "partials/_form_errors.html" %}
+
+            <fieldset class="leo-fieldset">
+              <legend>Your details</legend>
+              <div class="row g-0 gx-2 gx-md-3">
+                <div class="col-12 col-md-7">{% include "partials/_form_field.html" with field=form.full_name %}</div>
+                <div class="col-12 col-md-5">{% include "partials/_form_field.html" with field=form.phone %}</div>
+              </div>
+              <p class="small text-body-secondary mb-0">Order updates are emailed to <strong>{{ user.email }}</strong>.</p>
+            </fieldset>
+
+            <fieldset class="leo-fieldset">
+              <legend>{{ form.fulfilment.label }}</legend>
+              <div class="leo-choice-group" role="radiogroup">
+                {% for radio in form.fulfilment %}
+                  <label class="leo-choice">{{ radio.tag }}
+                    <span><strong>{{ radio.choice_label }}</strong>
+                      <span class="d-block small text-body-secondary">{% if radio.data.value == "DELIVERY" %}Delivered to your address. The fee depends on your area.{% else %}Collect from our store, no delivery fee.{% if config.pickup_address %}<br>{{ config.pickup_address|linebreaksbr }}{% endif %}{% if config.pickup_hours %}<br>{{ config.pickup_hours }}{% endif %}{% endif %}</span></span>
+                  </label>
+                {% endfor %}
+              </div>
+              {% for error in form.fulfilment.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </fieldset>
+
+            <fieldset class="leo-fieldset" data-for-fulfilment="DELIVERY">
+              <legend>Delivery address</legend>
+              {% include "partials/_form_field.html" with field=form.delivery_zone %}
+              {% include "partials/_form_field.html" with field=form.address_line1 %}
+              <div class="row g-0 gx-2 gx-md-3">
+                <div class="col-12 col-md-7">{% include "partials/_form_field.html" with field=form.address_line2 %}</div>
+                <div class="col-12 col-md-5">{% include "partials/_form_field.html" with field=form.city %}</div>
+              </div>
+            </fieldset>
+            {% include "partials/_form_field.html" with field=form.delivery_instructions %}
+
+            <fieldset class="leo-fieldset">
+              <legend>{{ form.payment_method.label }}</legend>
+              <div class="leo-choice-group" role="radiogroup">
+                {% for radio in form.payment_method %}
+                  <label class="leo-choice">{{ radio.tag }}
+                    <span><strong>{{ radio.choice_label }}</strong>
+                      <span class="d-block small text-body-secondary">{% if radio.data.value == "CASH" %}Pay in cash when you receive or collect your order.{% elif radio.data.value == "BANK_TRANSFER" %}Transfer to our bank account, then upload your receipt. We confirm after checking it.{% else %}Pay securely online by card or online banking.{% endif %}</span></span>
+                  </label>
+                {% endfor %}
+              </div>
+              {% for error in form.payment_method.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              {% if not online_available %}<p class="small text-body-secondary mt-2 mb-0"><i class="bi bi-info-circle" aria-hidden="true"></i> Online card payment is not available yet.</p>{% endif %}
+            </fieldset>
+
+            <div class="d-flex flex-column flex-sm-row gap-2 mt-3">
+              <button type="submit" class="btn btn-leo-primary btn-lg"><i class="bi bi-arrow-right" aria-hidden="true"></i>Review order</button>
+              <a href="{% url 'shop:cart' %}" class="btn btn-leo-outline btn-lg">Back to cart</a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="col-12 col-lg-5">
+        <aside class="leo-card leo-card--auto leo-cart-summary" aria-label="Order summary">
+          <div class="leo-card__body">
+            <h2 class="h5">Your items</h2>
+            <ul class="list-unstyled leo-mini-list mb-3">
+              {% for line in quote.lines %}
+              <li><span>{{ line.item.quantity }} × {{ line.item.variation.product.name }} <span class="small text-body-secondary">({{ line.item.variation.display_name }})</span></span><span class="fw-semibold">{{ line.line_total|money }}</span></li>
+              {% endfor %}
+            </ul>
+            <p class="small text-body-secondary mb-0">Subtotal <strong>{{ quote.subtotal|money }}</strong>. The delivery fee (if any) and final total are shown on the next step.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}{% if can_checkout %}{{ payment_map|json_script:"leoPaymentMap" }}{% endif %}<script src="{% static 'js/checkout.js' %}"></script>{% endblock %}

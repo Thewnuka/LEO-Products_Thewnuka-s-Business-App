@@ -1,0 +1,7 @@
+{% autoescape off %}Hello {{ order.full_name }},
+
+We couldn't confirm the bank transfer you submitted for order {{ order.number }}.
+Reason: {{ payment.verification_note }}
+
+Please check your transfer and submit the details again on your order page.
+{% include "orders/email/_footer.txt" %}{% endautoescape %}

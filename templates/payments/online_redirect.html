@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Redirecting to payment — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section">
+  <div class="container text-center leo-intro mx-auto">
+    <h1 class="h3">Taking you to secure payment…</h1>
+    <p>Order {{ order.number }} · payment {{ payment.reference }}</p>
+    {# Fields are built and signed on the server by the gateway adapter. #}
+    <form method="{{ checkout.method }}" action="{{ checkout.action_url }}" id="gatewayForm">
+      {% for name, value in fields %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+      <button type="submit" class="btn btn-leo-gold btn-lg">Continue to payment</button>
+    </form>
+    <p class="small text-body-secondary mt-3">Your order is only marked as paid after the payment provider confirms it to us.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}<script>document.getElementById("gatewayForm").submit();</script>{% endblock %}

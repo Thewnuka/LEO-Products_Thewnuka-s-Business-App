@@ -1,0 +1,16 @@
+{% comment %}One purchase line (also used as the template for new lines via __prefix__).{% endcomment %}
+<div class="leo-line" data-line>
+  {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+  {% for error in line.non_field_errors %}<div class="invalid-feedback d-block mb-2">{{ error }}</div>{% endfor %}
+  <div class="row g-0 gx-2 align-items-start">
+    <div class="col-12 col-lg-5">{% include "partials/_form_field.html" with field=line.item %}</div>
+    <div class="col-6 col-sm-4 col-lg-2">{% include "partials/_form_field.html" with field=line.quantity %}</div>
+    <div class="col-6 col-sm-3 col-lg-1" data-unit-wrap>{% include "partials/_form_field.html" with field=line.unit %}
+      <span class="leo-line__count small text-body-secondary" data-count-display hidden></span></div>
+    <div class="col-12 col-sm-5 col-lg-2">{% include "partials/_form_field.html" with field=line.unit_cost %}</div>
+    <div class="col-12 col-lg-2 d-flex align-items-center justify-content-between justify-content-lg-end gap-2 leo-line__end">
+      <span class="small">Line: <strong data-line-total>LKR 0.00</strong></span>
+      {% if line.DELETE %}<label class="leo-line__remove small">{{ line.DELETE }} Remove</label>{% endif %}
+    </div>
+  </div>
+</div>

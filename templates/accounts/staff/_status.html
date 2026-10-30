@@ -1,0 +1,1 @@
+{% if member.is_active %}<span class="leo-status leo-status--active">Active</span>{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}{% if member.must_change_password %} <span class="leo-badge leo-badge--gold" title="Must choose a new password at next sign-in">Temp password</span>{% endif %}

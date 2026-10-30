@@ -1,0 +1,8 @@
+{% load catalog_tags %}
+{% comment %}Totals block. Needs subtotal, delivery_fee, total, is_delivery (and zone_name).{% endcomment %}
+<dl class="leo-cart-totals">
+  <dt>Subtotal</dt><dd>{{ subtotal|money }}</dd>
+  {% if is_delivery %}<dt>Delivery{% if zone_name %} <span class="small">({{ zone_name }})</span>{% endif %}</dt><dd>{% if delivery_fee %}{{ delivery_fee|money }}{% else %}Free{% endif %}</dd>
+  {% else %}<dt>Store pickup</dt><dd>No delivery fee</dd>{% endif %}
+  <dt class="leo-cart-totals__grand">Total</dt><dd class="leo-cart-totals__grand">{{ total|money }}</dd>
+</dl>

@@ -1,0 +1,13 @@
+{% autoescape off %}Hello {{ order.full_name }},
+
+Thank you for your order {{ order.number }}.
+
+{% for item in order.items.all %}{{ item.quantity }} × {{ item.product_name }} ({{ item.variation_name }}) — LKR {{ item.line_total|floatformat:2 }}
+{% endfor %}
+Subtotal: LKR {{ order.subtotal|floatformat:2 }}
+{% if order.is_delivery %}Delivery ({{ order.delivery_zone_name }}): LKR {{ order.delivery_fee|floatformat:2 }}
+{% endif %}Total: LKR {{ order.total|floatformat:2 }}
+
+{% if order.is_delivery %}Delivery to: {{ order.address_line1 }}{% if order.address_line2 %}, {{ order.address_line2 }}{% endif %}, {{ order.city }}{% else %}Store pickup — we'll let you know when it is ready.{% endif %}
+Payment: {{ order.get_payment_method_display }}{% if order.payment_method == "BANK_TRANSFER" %} — please transfer the total and upload your receipt on the order page.{% endif %}
+{% include "orders/email/_footer.txt" %}{% endautoescape %}

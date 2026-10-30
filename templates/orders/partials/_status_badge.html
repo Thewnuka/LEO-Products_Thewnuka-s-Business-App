@@ -1,0 +1,2 @@
+{% comment %}Order status badge. {% include "orders/partials/_status_badge.html" with order=order %}{% endcomment %}
+<span class="leo-badge leo-ostatus leo-ostatus--{{ order.status|lower }}">{{ order.get_status_display }}</span>

@@ -1,0 +1,50 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Orders — {{ brand.name }}{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block page_actions %}
+  {% if can.MANAGE_BUSINESS_SETTINGS %}<a href="{% url 'orders:settings' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-gear" aria-hidden="true"></i><span class="d-none d-sm-inline">Delivery &amp; payment settings</span></a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<div class="leo-stats leo-stats--compact mb-3">
+  <a class="leo-stat" href="?status=PENDING"><span class="leo-stat__label">New (pending)</span><span class="leo-stat__value">{{ pending }}</span></a>
+  <a class="leo-stat" href="?payment_status=PENDING_VERIFICATION"><span class="leo-stat__label">Payments to verify</span><span class="leo-stat__value">{{ to_verify }}</span></a>
+</div>
+
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.q %}</div>
+    <div class="col-12 col-sm-6 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.status %}</div>
+    <div class="col-12 col-sm-6 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.payment_method %}</div>
+    <div class="col-12 col-sm-6 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.payment_status %}</div>
+    <div class="col-6 col-lg-3">{% include "partials/_form_field.html" with field=filter_form.date_from %}</div>
+    <div class="col-6 col-lg-3">{% include "partials/_form_field.html" with field=filter_form.date_to %}</div>
+    <div class="col-12 col-lg-2 d-grid leo-field"><button type="submit" class="btn btn-leo-primary"><i class="bi bi-search" aria-hidden="true"></i>Apply</button></div>
+  </div>
+</form>
+
+<p class="small text-body-secondary">{{ page_obj.paginator.count }} order{{ page_obj.paginator.count|pluralize }}</p>
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Order</th><th scope="col">Customer</th><th scope="col">Placed</th><th scope="col">Type</th><th scope="col" class="text-end">Total</th><th scope="col">Status</th><th scope="col">Payment</th></tr></thead>
+    <tbody>{% for order in page_obj %}
+      <tr>
+        <td data-label="Order"><a href="{% url 'orders:staff_detail' order.number %}" class="fw-semibold">{{ order.number }}</a></td>
+        <td data-label="Customer" class="leo-wrap">{{ order.full_name }}<span class="d-block small text-body-secondary">{{ order.phone }}</span></td>
+        <td data-label="Placed">{{ order.created_at|date:"j M Y, H:i" }}</td>
+        <td data-label="Type">{{ order.get_fulfilment_display }}</td>
+        <td data-label="Total" class="text-end">{{ order.total|money }}</td>
+        <td data-label="Status">{% include "orders/partials/_status_badge.html" %}</td>
+        <td data-label="Payment">{% include "orders/partials/_payment_badge.html" %}<span class="d-block small text-body-secondary">{{ order.get_payment_method_display }}</span></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No orders found.</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

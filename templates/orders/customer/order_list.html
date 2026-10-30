@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}My orders — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    <span class="leo-eyebrow">My account</span>
+    <h1 class="h2 mt-1 mb-3">My orders</h1>
+    {% include "accounts/customer/_nav.html" %}
+
+    {% if page_obj.object_list %}
+    <ul class="list-unstyled leo-order-list mt-4">
+      {% for order in page_obj %}
+      <li>
+        <a href="{% url 'orders:detail' order.number %}" class="leo-order-row">
+          <span class="leo-order-row__main">
+            <span class="fw-semibold">{{ order.number }}</span>
+            <span class="small text-body-secondary">{{ order.created_at|date:"j M Y" }} · {{ order.lines }} item{{ order.lines|pluralize }} · {{ order.get_fulfilment_display }}</span>
+          </span>
+          <span class="leo-order-row__badges">{% include "orders/partials/_status_badge.html" %} {% include "orders/partials/_payment_badge.html" %}</span>
+          <span class="leo-order-row__total">{{ order.total|money }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% include "partials/_pager.html" %}
+    {% else %}
+    <div class="leo-empty mt-4">
+      <i class="bi bi-receipt" aria-hidden="true"></i>
+      <h2 class="h5">No orders yet</h2>
+      <p>When you place an order, you can follow it here.</p>
+      <a href="{% url 'shop:home' %}" class="btn btn-leo-primary"><i class="bi bi-shop" aria-hidden="true"></i>Start shopping</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

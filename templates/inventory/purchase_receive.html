@@ -1,0 +1,40 @@
+{% extends "layouts/staff.html" %}
+{% load inventory_tags catalog_tags %}
+
+{% block title %}Receive {{ purchase.reference }} — {{ brand.name }}{% endblock %}
+{% block page_title %}Receive {{ purchase.reference }}{% endblock %}
+
+{% block page_content %}
+{% url 'inventory:purchase_detail' purchase.pk as detail_url %}
+{% include "inventory/partials/_breadcrumb.html" with section=purchase.reference section_url=detail_url current="Receive" %}
+<article class="leo-card leo-card--auto leo-confirm">
+  <div class="leo-card__body">
+    <h2 class="h5"><i class="bi bi-box-arrow-in-down me-2" aria-hidden="true"></i>Confirm goods received from {{ purchase.supplier.name }}</h2>
+    <p class="text-body-secondary">The following quantities will be added to stock. A purchase can be received only once; this cannot be undone (later corrections are made with stock adjustments).</p>
+    <div class="table-responsive">
+      <table class="table leo-table leo-table--stack leo-table--nowrap">
+        <thead><tr><th scope="col">Item</th><th scope="col" class="text-end">On invoice</th><th scope="col" class="text-end">Stock now</th><th scope="col" class="text-end">Adds</th><th scope="col" class="text-end">Stock after</th></tr></thead>
+        <tbody>{% for r in rows %}
+          <tr><td data-label="Item" class="leo-wrap">{{ r.line.item.display_name }}{% if r.error %}<span class="d-block text-danger small">{{ r.error }}</span>{% endif %}</td>
+            <td data-label="On invoice" class="text-end">{{ r.line.quantity|floatformat:"-3" }} {{ r.line.unit_label }}</td>
+            <td data-label="Stock now" class="text-end">{{ r.line.item.quantity_display }}</td>
+            <td data-label="Adds" class="text-end leo-qty--in">{% if r.add is not None %}{{ r.add|qty_signed:r.line.item }}{% else %}—{% endif %}</td>
+            <td data-label="Stock after" class="text-end fw-semibold">{% if r.after is not None %}{{ r.after|qty:r.line.item }}{% else %}—{% endif %}</td></tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-body-secondary">This purchase has no items.</td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+    <p class="mt-3">Purchase total: <strong>{{ purchase.total|money }}</strong></p>
+    <form method="post" class="d-flex flex-column flex-sm-row gap-2">
+      {% csrf_token %}
+      {% if rows and not has_errors %}
+        <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2-all" aria-hidden="true"></i>Confirm and add to stock</button>
+      {% else %}
+        {% include "partials/_alert.html" with level="warning" text="Fix the problems above (edit the draft) before receiving." %}
+      {% endif %}
+      <a href="{{ detail_url }}" class="btn btn-leo-outline">Back</a>
+    </form>
+  </div>
+</article>
+{% endblock %}

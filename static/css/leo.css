@@ -1,0 +1,958 @@
+/* ==========================================================================
+   LEO PRODUCTS — Brand stylesheet
+   Loaded after Bootstrap 5.3. Change brand colours in :root only.
+
+   Responsive breakpoints (same as Bootstrap):
+     xs  320–575px   (base styles, mobile first)
+     sm  576–767px   @media (min-width: 576px)
+     md  768–991px   @media (min-width: 768px)
+     lg  992–1199px  @media (min-width: 992px)
+     xl  1200px+     @media (min-width: 1200px)
+   ========================================================================== */
+
+/* 1. Design tokens
+   ------------------------------------------------------------------------ */
+:root {
+  --leo-green: #123d28;          /* primary: dark forest green */
+  --leo-green-2: #1f5c3d;        /* secondary green */
+  --leo-green-3: #2e7d55;        /* accents, focus */
+  --leo-green-tint: #e8f0eb;
+  --leo-gold: #c9a227;
+  --leo-gold-dark: #a8851a;
+  --leo-gold-tint: #f8f1dc;
+  --leo-white: #ffffff;
+  --leo-bg: #f7f5ef;             /* light warm neutral */
+  --leo-surface: #ffffff;
+  --leo-text: #1d2a22;
+  --leo-text-muted: #5b6b61;
+  --leo-border: #e2ddd0;
+  --leo-border-strong: #cfc7b3;
+
+  --leo-shadow-sm: 0 1px 2px rgba(18, 61, 40, 0.06), 0 1px 3px rgba(18, 61, 40, 0.08);
+  --leo-shadow-md: 0 4px 12px rgba(18, 61, 40, 0.10);
+  --leo-shadow-lg: 0 12px 28px rgba(18, 61, 40, 0.16);
+
+  --leo-radius-sm: 0.375rem;
+  --leo-radius: 0.75rem;
+  --leo-radius-lg: 1.25rem;
+  --leo-radius-pill: 50rem;
+
+  --leo-font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
+  --leo-font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --leo-space-section: 3rem;
+  --leo-transition: 0.25s ease;
+  --leo-touch-target: 44px;      /* minimum comfortable tap size */
+
+  /* Feed brand into Bootstrap's own variables */
+  --bs-body-font-family: var(--leo-font-body);
+  --bs-body-color: var(--leo-text);
+  --bs-body-bg: var(--leo-bg);
+  --bs-border-color: var(--leo-border);
+  --bs-link-color: var(--leo-green-2);
+  --bs-link-color-rgb: 31, 92, 61;
+  --bs-link-hover-color: var(--leo-green);
+  --bs-link-hover-color-rgb: 18, 61, 40;
+  --bs-primary: var(--leo-green);
+  --bs-primary-rgb: 18, 61, 40;
+  --bs-border-radius: var(--leo-radius-sm);
+  --bs-focus-ring-color: rgba(46, 125, 85, 0.3);
+}
+
+@media (min-width: 768px) {
+  :root { --leo-space-section: 4.5rem; }
+}
+
+/* 2. Base & typography
+   ------------------------------------------------------------------------ */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+main { flex: 1 0 auto; }
+
+h1, h2, h3, h4, .h1, .h2, .h3, .h4, .leo-heading {
+  font-family: var(--leo-font-heading);
+  font-weight: 700;
+  color: var(--leo-green);
+  line-height: 1.2;
+}
+
+h1 { font-size: clamp(2rem, 6vw, 3.25rem); }
+h2 { font-size: clamp(1.6rem, 4.5vw, 2.4rem); }
+h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
+
+h5, h6, .h5, .h6 { font-weight: 600; color: var(--leo-green); }
+
+img, svg, video { max-width: 100%; height: auto; }
+
+a { text-underline-offset: 0.2em; }
+
+::selection { background: var(--leo-gold-tint); color: var(--leo-green); }
+
+:focus-visible {
+  outline: 3px solid var(--leo-gold);
+  outline-offset: 2px;
+}
+
+.leo-eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--leo-gold-dark);
+}
+
+.leo-lead { font-size: 1.1rem; color: var(--leo-text-muted); }
+
+.leo-section { padding-block: var(--leo-space-section); }
+.leo-section--alt { background: var(--leo-surface); }
+
+.leo-divider {
+  width: 64px;
+  height: 3px;
+  border: 0;
+  margin: 1rem 0 1.5rem;
+  background: var(--leo-gold);
+  opacity: 1;
+}
+.text-center .leo-divider, .leo-error .leo-divider { margin-inline: auto; }
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 2000;
+  padding: 0.5rem 1rem;
+  background: var(--leo-gold);
+  color: var(--leo-green);
+  border-radius: var(--leo-radius-sm);
+  font-weight: 600;
+}
+.skip-link:focus { top: 1rem; }
+
+/* 3. Logo
+   ------------------------------------------------------------------------ */
+.leo-logo { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+/* The official logo is a square PNG with a white background. Shown whole
+   (object-fit: contain, never stretched) inside a white circle so it reads
+   cleanly on the dark green bars; all artwork lies within that circle. */
+.leo-logo__img {
+  display: block; width: auto; flex-shrink: 0;
+  aspect-ratio: 1 / 1; object-fit: contain;
+  border-radius: 50%; background: #fff;
+}
+.leo-logo--sm .leo-logo__img { height: 40px; }
+.leo-logo--md .leo-logo__img { height: 64px; }
+.leo-logo--lg .leo-logo__img { height: 120px; }
+.leo-logo--xl .leo-logo__img { height: 160px; }
+.leo-logo__text { display: flex; flex-direction: column; line-height: 1.1; }
+.leo-logo__name {
+  font-family: var(--leo-font-heading);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  color: inherit;
+}
+.leo-logo__tagline { font-size: 0.72rem; color: var(--leo-gold); letter-spacing: 0.03em; }
+
+/* 4. Navigation
+   ------------------------------------------------------------------------ */
+.leo-navbar {
+  background: var(--leo-green);
+  border-bottom: 3px solid var(--leo-gold);
+  padding-block: 0.5rem;
+}
+.leo-navbar .leo-logo { color: var(--leo-white); }
+.leo-navbar .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  min-height: var(--leo-touch-target);
+  display: flex;
+  align-items: center;
+  padding-inline: 0.9rem;
+  border-radius: var(--leo-radius-sm);
+  transition: color var(--leo-transition), background-color var(--leo-transition);
+}
+.leo-navbar .nav-link:hover,
+.leo-navbar .nav-link:focus-visible { color: var(--leo-gold); background: rgba(255, 255, 255, 0.06); }
+.leo-navbar .nav-link.active { color: var(--leo-gold); }
+.leo-navbar .navbar-toggler {
+  border-color: rgba(201, 162, 39, 0.6);
+  min-width: var(--leo-touch-target);
+  min-height: var(--leo-touch-target);
+}
+.leo-navbar .navbar-toggler:focus { box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.4); }
+.leo-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28201,162,39,1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+@media (max-width: 991.98px) {
+  .leo-navbar .navbar-collapse { padding-block: 0.5rem; }
+  /* The open mobile menu scrolls inside itself on short screens instead of
+     running off the bottom of the (sticky) bar. */
+  .leo-site-header .navbar-collapse { max-height: calc(100vh - 70px); max-height: calc(100dvh - 70px); overflow-y: auto; }
+}
+
+/* Sticky site header: the whole bar stays at the top while scrolling.
+   Sticky (not fixed) keeps it in the page flow, so content never slides
+   underneath it and no spacer is needed. Above page content (z 1020),
+   below Bootstrap dropdowns, off-canvas menus and modals. */
+.leo-site-header { position: sticky; top: 0; z-index: 1020; }
+/* Same-page links (#about, #roadmap) stop below the bar, not under it. */
+html:has(.leo-site-header) { scroll-padding-top: 84px; }
+
+/* Hide the tagline beside the small logo on very narrow phones */
+@media (max-width: 374.98px) {
+  .leo-navbar .leo-logo__tagline { display: none; }
+  .leo-navbar .leo-logo__name { font-size: 1rem; }
+}
+@media (max-width: 339.98px) {
+  .leo-navbar .leo-logo__name { font-size: 0.9rem; }
+}
+/* Logo + name, cart icon and menu button always share one row: the brand
+   may shrink (with "…" as a last resort) instead of pushing the menu down. */
+.leo-navbar > .container { flex-wrap: wrap; }
+.leo-navbar .navbar-brand { flex: 0 1 auto; min-width: 0; }
+.leo-navbar .leo-logo, .leo-navbar .leo-logo__text { min-width: 0; }
+.leo-navbar .leo-logo__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 991.98px) {
+  .leo-navbar .navbar-brand { max-width: calc(100% - 7.25rem); }  /* room for cart icon, menu button and margins */
+}
+
+/* 5. Buttons
+   ------------------------------------------------------------------------ */
+.btn { min-height: var(--leo-touch-target); display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; border-radius: var(--leo-radius-pill); padding-inline: 1.4rem; transition: all var(--leo-transition); }
+.btn-sm { min-height: 36px; padding-inline: 1rem; }
+
+.btn-leo-primary {
+  --bs-btn-color: var(--leo-white);
+  --bs-btn-bg: var(--leo-green);
+  --bs-btn-border-color: var(--leo-green);
+  --bs-btn-hover-color: var(--leo-white);
+  --bs-btn-hover-bg: var(--leo-green-2);
+  --bs-btn-hover-border-color: var(--leo-green-2);
+  --bs-btn-active-color: var(--leo-white);
+  --bs-btn-active-bg: #0d2e1e;
+  --bs-btn-active-border-color: #0d2e1e;
+  --bs-btn-disabled-color: var(--leo-white);
+  --bs-btn-disabled-bg: var(--leo-green);
+  --bs-btn-disabled-border-color: var(--leo-green);
+}
+.btn-leo-gold {
+  --bs-btn-color: var(--leo-green);
+  --bs-btn-bg: var(--leo-gold);
+  --bs-btn-border-color: var(--leo-gold);
+  --bs-btn-hover-color: var(--leo-green);
+  --bs-btn-hover-bg: #d6b240;
+  --bs-btn-hover-border-color: #d6b240;
+  --bs-btn-active-color: var(--leo-green);
+  --bs-btn-active-bg: var(--leo-gold-dark);
+  --bs-btn-active-border-color: var(--leo-gold-dark);
+}
+.btn-leo-outline {
+  --bs-btn-color: var(--leo-green);
+  --bs-btn-border-color: var(--leo-green);
+  --bs-btn-hover-color: var(--leo-white);
+  --bs-btn-hover-bg: var(--leo-green);
+  --bs-btn-hover-border-color: var(--leo-green);
+  --bs-btn-active-color: var(--leo-white);
+  --bs-btn-active-bg: var(--leo-green-2);
+  --bs-btn-active-border-color: var(--leo-green-2);
+}
+.btn-leo-outline-light {
+  --bs-btn-color: var(--leo-white);
+  --bs-btn-border-color: rgba(255, 255, 255, 0.7);
+  --bs-btn-hover-color: var(--leo-green);
+  --bs-btn-hover-bg: var(--leo-white);
+  --bs-btn-hover-border-color: var(--leo-white);
+  --bs-btn-active-color: var(--leo-green);
+  --bs-btn-active-bg: var(--leo-gold-tint);
+}
+@media (hover: hover) {
+  .btn-leo-primary:hover, .btn-leo-gold:hover { transform: translateY(-1px); box-shadow: var(--leo-shadow-md); }
+}
+
+/* 6. Cards
+   ------------------------------------------------------------------------ */
+.leo-card {
+  background: var(--leo-surface);
+  border: 1px solid var(--leo-border);
+  border-radius: var(--leo-radius);
+  box-shadow: var(--leo-shadow-sm);
+  overflow: hidden;
+  height: 100%;
+}
+.leo-card--auto { height: auto; }
+.leo-card__body { padding: 1.5rem; }
+.leo-card__icon {
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--leo-green-tint);
+  color: var(--leo-green);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+.leo-card__media { aspect-ratio: 4 / 3; overflow: hidden; background: var(--leo-gold-tint); }
+.leo-card__media img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.45s ease; }
+
+/* Interactive card: base for future product cards.
+   Mouse users get hover; touch users get the same feedback on tap (:active)
+   and keyboard users on focus. */
+.leo-card--interactive {
+  transition: transform var(--leo-transition), box-shadow var(--leo-transition), border-color var(--leo-transition);
+}
+.leo-card--interactive:focus-within,
+.leo-card--interactive:active {
+  border-color: var(--leo-gold);
+  box-shadow: var(--leo-shadow-md);
+}
+@media (hover: hover) and (pointer: fine) {
+  .leo-card--interactive:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--leo-shadow-lg);
+    border-color: var(--leo-gold);
+  }
+  .leo-card--interactive:hover .leo-card__media img { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* 7. Badges
+   ------------------------------------------------------------------------ */
+.leo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--leo-radius-pill);
+  background: var(--leo-green-tint);
+  color: var(--leo-green);
+  white-space: nowrap;
+}
+.leo-badge--gold { background: var(--leo-gold-tint); color: #7a5f0e; }
+.leo-badge--done { background: var(--leo-green); color: var(--leo-white); }
+
+/* 8. Forms
+   ------------------------------------------------------------------------ */
+.form-label { font-weight: 600; color: var(--leo-green); margin-bottom: 0.35rem; }
+.form-control, .form-select {
+  min-height: var(--leo-touch-target);
+  border-color: var(--leo-border-strong);
+  border-radius: var(--leo-radius-sm);
+  background-color: var(--leo-white);
+  font-size: 1rem;              /* 16px prevents iOS zoom on focus */
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--leo-green-3);
+  box-shadow: 0 0 0 0.25rem rgba(46, 125, 85, 0.18);
+}
+.form-check-input { width: 1.25em; height: 1.25em; }
+.form-check-input:checked { background-color: var(--leo-green); border-color: var(--leo-green); }
+.form-text { color: var(--leo-text-muted); }
+.invalid-feedback { font-weight: 500; }
+
+/* 9. Alerts / messages
+   ------------------------------------------------------------------------ */
+.alert {
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  border-radius: var(--leo-radius-sm);
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.alert .bi { font-size: 1.15rem; line-height: 1.4; }
+.alert-success { background: #edf6f0; border-color: #cfe4d6; border-left-color: var(--leo-green-3); color: #14432b; }
+.alert-info    { background: #eef5f8; border-color: #d3e5ec; border-left-color: #2f7a99; color: #1d4b5e; }
+.alert-warning { background: var(--leo-gold-tint); border-color: #eedfae; border-left-color: var(--leo-gold); color: #6b520a; }
+.alert-danger  { background: #fbeeee; border-color: #f0d2d2; border-left-color: #b3261e; color: #7a1a14; }
+.alert .btn-close { margin-left: auto; }
+
+/* 10. Tables (mobile friendly)
+   Wrap in .table-responsive for horizontal scrolling inside the card,
+   or add .leo-table--stack to turn rows into cards on phones.
+   ------------------------------------------------------------------------ */
+.leo-table { margin: 0; --bs-table-bg: var(--leo-surface); }
+.leo-table thead th {
+  background: var(--leo-green);
+  color: var(--leo-white);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 0;
+}
+.leo-table td, .leo-table th { padding: 0.85rem 1rem; vertical-align: middle; }
+.leo-table tbody tr:hover { --bs-table-bg: var(--leo-green-tint); }
+.table-responsive > .leo-table td { white-space: nowrap; }
+/* Keeps absolutely positioned children (e.g. .visually-hidden labels) inside the scroll area. */
+.table-responsive { position: relative; }
+/* Data tables scroll sideways on tablets instead of squeezing; on phones they stack. */
+@media (min-width: 576px) { .leo-table--nowrap td { white-space: nowrap; } }
+@media (max-width: 575.98px) {
+  .leo-table--stack td,
+  .table-responsive > .leo-table--stack td { white-space: normal; overflow-wrap: anywhere; }
+}
+@media (max-width: 575.98px) {
+  .leo-table--stack thead { display: none; }
+  .leo-table--stack tr { display: block; border-bottom: 1px solid var(--leo-border); padding: 0.5rem 0; }
+  .leo-table--stack td { display: flex; justify-content: space-between; gap: 1rem; border: 0; padding: 0.35rem 1rem; text-align: right; }
+  .leo-table--stack td::before { content: attr(data-label); font-weight: 600; color: var(--leo-green); text-align: left; flex-shrink: 0; white-space: nowrap; }
+}
+
+/* 11. Hero (home page)
+   ------------------------------------------------------------------------ */
+.leo-hero {
+  position: relative;
+  color: var(--leo-white);
+  background:
+    radial-gradient(circle at 85% 15%, rgba(201, 162, 39, 0.18), transparent 45%),
+    radial-gradient(circle at 10% 90%, rgba(46, 125, 85, 0.45), transparent 50%),
+    linear-gradient(160deg, var(--leo-green) 0%, #0c2a1b 100%);
+  padding-block: 3.5rem 4rem;
+  overflow: hidden;
+}
+.leo-hero h1 { color: var(--leo-white); }
+.leo-hero__tagline {
+  font-family: var(--leo-font-heading);
+  font-style: italic;
+  font-size: clamp(1.15rem, 3.5vw, 1.6rem);
+  color: var(--leo-gold);
+}
+.leo-hero__text { color: rgba(255, 255, 255, 0.82); max-width: 36rem; }
+.leo-hero__logo { filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.35)); }
+@media (min-width: 992px) {
+  .leo-hero { padding-block: 5.5rem 6rem; }
+}
+
+/* 12. Roadmap list
+   ------------------------------------------------------------------------ */
+.leo-roadmap { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+.leo-roadmap li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--leo-surface);
+  border: 1px solid var(--leo-border);
+  border-radius: var(--leo-radius-sm);
+}
+.leo-roadmap__phase { font-weight: 600; color: var(--leo-green); }
+.leo-roadmap__num { color: var(--leo-gold-dark); font-variant-numeric: tabular-nums; margin-right: 0.4rem; }
+@media (min-width: 768px) {
+  .leo-roadmap { grid-template-columns: 1fr 1fr; }
+}
+
+/* 13. Sidebar layout (foundation for the future dashboard)
+   On screens < 992px the sidebar is an off-canvas drawer;
+   from 992px it sits permanently beside the content.
+   ------------------------------------------------------------------------ */
+.leo-shell { display: flex; flex: 1 0 auto; min-width: 0; }
+/* .leo-sidebar wraps the .offcanvas-lg element, because Bootstrap forces
+   .offcanvas-lg to a transparent background on large screens. */
+.leo-sidebar .offcanvas-lg {
+  --bs-offcanvas-width: 270px;
+  --bs-offcanvas-bg: var(--leo-green);
+  --bs-offcanvas-color: var(--leo-white);
+}
+.leo-sidebar .offcanvas-header { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.leo-sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.82);
+  min-height: var(--leo-touch-target);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: var(--leo-radius-sm);
+  padding-inline: 0.9rem;
+}
+.leo-sidebar .nav-link:hover,
+.leo-sidebar .nav-link:focus-visible,
+.leo-sidebar .nav-link.active { background: rgba(255, 255, 255, 0.08); color: var(--leo-gold); }
+.leo-sidebar__heading { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); padding: 0 0.9rem; margin: 1rem 0 0.4rem; }
+.leo-shell__content { flex: 1; min-width: 0; padding: 1.25rem 1rem 2.5rem; }
+.leo-shell__toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+@media (min-width: 576px) {
+  .leo-shell__content { padding-inline: 1.5rem; }
+}
+@media (min-width: 992px) {
+  .leo-sidebar { width: 260px; flex-shrink: 0; background: var(--leo-green); color: var(--leo-white); }
+  .leo-sidebar .offcanvas-body { position: sticky; top: 0; padding: 1rem; }
+  .leo-shell__content { padding: 2rem 2.5rem 3rem; }
+}
+
+/* 14. Error pages
+   ------------------------------------------------------------------------ */
+.leo-error { padding-block: 3rem 4rem; text-align: center; }
+.leo-error__code {
+  font-family: var(--leo-font-heading);
+  font-size: clamp(4.5rem, 20vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--leo-gold);
+}
+
+/* 15. Footer
+   ------------------------------------------------------------------------ */
+.leo-footer {
+  background: var(--leo-green);
+  color: rgba(255, 255, 255, 0.78);
+  border-top: 3px solid var(--leo-gold);
+  padding-block: 2.5rem 1.5rem;
+  font-size: 0.92rem;
+}
+.leo-footer .leo-logo { color: var(--leo-white); }
+.leo-footer a { color: rgba(255, 255, 255, 0.85); text-decoration: none; }
+.leo-footer a:hover, .leo-footer a:focus-visible { color: var(--leo-gold); }
+.leo-footer h2 {
+  font-family: var(--leo-font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--leo-gold);
+}
+.leo-footer__bottom { border-top: 1px solid rgba(255, 255, 255, 0.12); margin-top: 2rem; padding-top: 1.25rem; font-size: 0.82rem; }
+
+/* 16. Style-guide swatches (development preview only)
+   ------------------------------------------------------------------------ */
+.leo-swatch { border-radius: var(--leo-radius-sm); border: 1px solid var(--leo-border); overflow: hidden; background: var(--leo-surface); }
+.leo-swatch__color { height: 64px; }
+.leo-swatch__label { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+.leo-swatch__label code { color: var(--leo-text-muted); }
+
+/* 17. Small page helpers
+   ------------------------------------------------------------------------ */
+.leo-hero .leo-eyebrow { color: var(--leo-gold); }
+.leo-hero__note { color: rgba(255, 255, 255, 0.6); }
+.leo-intro { max-width: 42rem; }
+
+/* ==========================================================================
+   Phase 02: accounts, portals and staff screens
+   ========================================================================== */
+
+/* 18. Auth pages (sign in, register, passwords)
+   ------------------------------------------------------------------------ */
+.leo-main--fill { display: flex; flex-direction: column; }
+.leo-auth { padding-block: 2rem 3rem; flex: 1 0 auto; }
+.leo-auth__card {
+  max-width: 440px;
+  margin-inline: auto;
+  background: var(--leo-surface);
+  border: 1px solid var(--leo-border);
+  border-top: 4px solid var(--leo-gold);
+  border-radius: var(--leo-radius);
+  box-shadow: var(--leo-shadow-md);
+  padding: 1.5rem 1.25rem;
+}
+.leo-auth__card--wide { max-width: 560px; }
+.leo-auth__links { text-align: center; margin-top: 1rem; font-size: 0.95rem; }
+.leo-auth__switch { text-align: center; margin: 1.25rem 0 0; font-size: 0.95rem; }
+.leo-auth--staff {
+  background:
+    radial-gradient(circle at 85% 10%, rgba(201, 162, 39, 0.16), transparent 45%),
+    linear-gradient(160deg, var(--leo-green) 0%, #0c2a1b 100%);
+}
+.leo-auth--staff .leo-auth__switch { color: rgba(255, 255, 255, 0.8); }
+.leo-auth--staff .leo-auth__switch a { color: var(--leo-gold); }
+@media (min-width: 576px) {
+  .leo-auth { padding-block: 3.5rem 4.5rem; }
+  .leo-auth__card { padding: 2.25rem 2.25rem 2rem; }
+}
+
+/* Form helpers */
+.leo-field { margin-bottom: 1rem; }
+.leo-required { color: #b3261e; }
+.leo-help ul { padding-left: 1.1rem; margin: 0.35rem 0 0; }
+.leo-help li { margin-bottom: 0.1rem; }
+.leo-form-card { max-width: 820px; }
+
+/* 19. Dropdown menus
+   ------------------------------------------------------------------------ */
+.leo-dropdown { border-color: var(--leo-border); box-shadow: var(--leo-shadow-md); border-radius: var(--leo-radius-sm); min-width: 13rem; }
+.leo-dropdown .dropdown-item { display: flex; align-items: center; gap: 0.6rem; min-height: var(--leo-touch-target); }
+.leo-dropdown .dropdown-item:active { background: var(--leo-green); }
+
+/* 20. Staff top bar
+   ------------------------------------------------------------------------ */
+.leo-topbar { padding-block: 0.4rem; }
+.leo-topbar__title { color: var(--leo-white); font-family: var(--leo-font-heading); font-weight: 600; font-size: 1.05rem; white-space: nowrap; }
+.leo-topbar__user {
+  color: var(--leo-white);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--leo-radius-pill);
+  min-height: 40px;
+  padding-inline: 0.8rem;
+}
+.leo-topbar__user:hover, .leo-topbar__user:focus-visible, .leo-topbar__user.show { color: var(--leo-gold); border-color: var(--leo-gold); }
+.leo-topbar__name { display: none; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 576px) { .leo-topbar__name { display: inline-block; vertical-align: bottom; } }
+.min-w-0 { min-width: 0; }
+
+/* 21. Roles & status
+   ------------------------------------------------------------------------ */
+.leo-role--owner    { background: var(--leo-green); color: var(--leo-white); }
+.leo-role--it_admin { background: #e3eef6; color: #1d4b6e; }
+.leo-role--manager  { background: var(--leo-green-tint); color: var(--leo-green); }
+.leo-role--cashier  { background: var(--leo-gold-tint); color: #7a5f0e; }
+.leo-role--customer { background: #f0eeea; color: var(--leo-text-muted); }
+
+.leo-status { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; font-weight: 600; }
+.leo-status::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 50%; }
+.leo-status--active { color: var(--leo-green-3); }
+.leo-status--active::before { background: var(--leo-green-3); }
+.leo-status--inactive { color: #9a3b33; }
+.leo-status--inactive::before { background: #c0564c; }
+
+/* 22. Account pages
+   ------------------------------------------------------------------------ */
+.leo-account { padding-top: 2rem; }
+.leo-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--leo-border);
+  scrollbar-width: none;
+}
+.leo-tabs::-webkit-scrollbar { display: none; }
+.leo-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: var(--leo-touch-target);
+  padding: 0 0.9rem;
+  color: var(--leo-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+.leo-tabs__link:hover, .leo-tabs__link:focus-visible { color: var(--leo-green); }
+.leo-tabs__link.active { color: var(--leo-green); border-bottom-color: var(--leo-gold); }
+
+.leo-dl { display: grid; grid-template-columns: 1fr; gap: 0.15rem 1rem; margin: 0; }
+.leo-dl dt { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--leo-text-muted); margin-top: 0.6rem; }
+.leo-dl dd { margin: 0; }
+/* Two columns only when the card itself is wide enough (not the screen). */
+.leo-card__body { container-type: inline-size; }
+@container (min-width: 460px) {
+  .leo-dl { grid-template-columns: 9rem 1fr; }
+  .leo-dl dt, .leo-dl dd { margin-top: 0; padding-block: 0.45rem; border-bottom: 1px solid var(--leo-border); }
+}
+
+.leo-timeline { list-style: none; padding: 0; margin: 1rem 0 0; border-left: 2px solid var(--leo-border); }
+.leo-timeline li { position: relative; padding: 0 0 1rem 1.1rem; }
+.leo-timeline li::before { content: ""; position: absolute; left: -6px; top: 0.4rem; width: 10px; height: 10px; border-radius: 50%; background: var(--leo-gold); }
+
+/* 23. Dashboards
+   ------------------------------------------------------------------------ */
+.leo-welcome { border-left: 4px solid var(--leo-gold); }
+.leo-checklist { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; }
+.leo-checklist li { position: relative; padding-left: 1.6rem; }
+.leo-checklist li::before { content: "\F272"; font-family: "bootstrap-icons"; position: absolute; left: 0; color: var(--leo-green-3); }
+.leo-upcoming { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+.leo-upcoming li { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border: 1px dashed var(--leo-border-strong); border-radius: var(--leo-radius-sm); color: var(--leo-text-muted); }
+@media (min-width: 768px) { .leo-upcoming { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1200px) { .leo-upcoming { grid-template-columns: 1fr 1fr 1fr; } }
+.leo-staff .leo-shell__toolbar { flex-wrap: wrap; }
+
+/* ==========================================================================
+   Phase 03: catalogue (products, categories, variations)
+   ========================================================================== */
+
+/* 24. Statistic tiles (values always come from the database)
+   ------------------------------------------------------------------------ */
+.leo-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+@media (min-width: 768px) { .leo-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .leo-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.leo-stat {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  padding: 1rem 1.1rem;
+  background: var(--leo-surface);
+  border: 1px solid var(--leo-border);
+  border-left: 4px solid var(--leo-gold);
+  border-radius: var(--leo-radius-sm);
+  box-shadow: var(--leo-shadow-sm);
+  color: inherit; text-decoration: none;
+  transition: border-color var(--leo-transition), box-shadow var(--leo-transition), transform var(--leo-transition);
+}
+.leo-stat:focus-visible, .leo-stat:active { border-color: var(--leo-green-3); box-shadow: var(--leo-shadow-md); }
+@media (hover: hover) and (pointer: fine) {
+  .leo-stat:hover { border-color: var(--leo-green-3); box-shadow: var(--leo-shadow-md); transform: translateY(-2px); }
+}
+.leo-stat__label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--leo-text-muted); }
+.leo-stat__value { font-family: var(--leo-font-heading); font-size: 2rem; font-weight: 700; color: var(--leo-green); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.leo-stat__note { font-size: 0.8rem; color: var(--leo-text-muted); }
+
+/* 25. Product cards & grid
+   ------------------------------------------------------------------------ */
+.leo-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 1rem; }
+.leo-product-card { position: relative; display: flex; flex-direction: column; }
+.leo-product-card .leo-card__media { aspect-ratio: 4 / 3; background: var(--leo-gold-tint); }
+.leo-product-card .leo-card__media img { object-fit: cover; }
+.leo-product-card .leo-card__media img.leo-img--placeholder { object-fit: contain; }
+.leo-product-card .leo-card__body { padding: 1rem; flex: 1; }
+.leo-product-card h3 a { color: var(--leo-green); transition: color var(--leo-transition); }
+.leo-product-card:focus-within h3 a, .leo-product-card:active h3 a { color: var(--leo-green-3); }
+@media (hover: hover) and (pointer: fine) {
+  .leo-product-card:hover h3 a { color: var(--leo-green-3); }
+}
+.leo-card__media--square { aspect-ratio: 1 / 1; background: var(--leo-gold-tint); }
+.leo-card__media--square img { object-fit: contain; }
+
+/* Product status badges */
+.leo-pstatus--active   { background: var(--leo-green); color: var(--leo-white); }
+.leo-pstatus--draft    { background: #eef1f4; color: #44515c; }
+.leo-pstatus--inactive { background: #f6e3e1; color: #8a2f27; }
+
+/* 26. Thumbnails, images and image upload field
+   ------------------------------------------------------------------------ */
+.leo-thumb { max-width: none; width: 48px; height: 48px; object-fit: cover; border-radius: var(--leo-radius-sm); border: 1px solid var(--leo-border); background: var(--leo-gold-tint); flex-shrink: 0; }
+.leo-thumb--sm { width: 32px; height: 32px; }
+.leo-thumb-cell { width: 64px; }
+@media (max-width: 575.98px) { .leo-table--stack td.leo-thumb-cell { justify-content: flex-start; } .leo-table--stack td.leo-thumb-cell::before { display: none; } }
+.leo-image-field__row { display: flex; flex-direction: column; gap: 0.75rem; }
+@media (min-width: 576px) { .leo-image-field__row { flex-direction: row; align-items: flex-start; } }
+.leo-image-field__preview { flex-shrink: 0; }
+.leo-image-preview { width: 140px; height: 105px; object-fit: cover; border-radius: var(--leo-radius-sm); border: 1px solid var(--leo-border); background: var(--leo-gold-tint); }
+.leo-image-preview.leo-img--placeholder { object-fit: contain; }
+.leo-image-field__controls { flex: 1; min-width: 0; }
+
+/* 27. Lists, categories, forms, pager
+   ------------------------------------------------------------------------ */
+.leo-mini-list li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; padding: 0.6rem 0; border-bottom: 1px solid var(--leo-border); }
+.leo-mini-list li:last-child { border-bottom: 0; }
+.leo-row--muted { opacity: 0.6; }
+.leo-category__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--leo-border); background: linear-gradient(0deg, var(--leo-surface), var(--leo-gold-tint)); }
+.leo-category--inactive .leo-category__head { background: #f0eeea; }
+.leo-category__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.leo-category__subs { list-style: none; margin: 0; padding: 0 1.25rem; }
+.leo-category__subs li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--leo-border); }
+.leo-category__subs li:last-child { border-bottom: 0; }
+.leo-category__subname { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; flex: 1 1 12rem; min-width: 0; }
+@media (min-width: 768px) { .leo-category__subs .leo-category__actions { margin-left: auto; } }
+.leo-fieldset { border: 0; border-top: 1px solid var(--leo-border); padding: 1rem 0 0; margin: 0 0 0.5rem; min-width: 0; }
+.leo-fieldset legend { float: none; width: auto; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--leo-gold-dark); padding: 0; margin-bottom: 0.75rem; }
+.leo-breadcrumb .breadcrumb { font-size: 0.88rem; flex-wrap: nowrap; overflow: hidden; }
+.leo-breadcrumb .breadcrumb-item { white-space: nowrap; flex-shrink: 0; }
+/* Only the last crumb shortens (with "…"), so separators never overlap text. */
+.leo-breadcrumb .breadcrumb-item.active { min-width: 0; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
+.leo-pager { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+
+/* Long text columns may wrap even in otherwise no-wrap tables. */
+@media (min-width: 576px) { .leo-table--nowrap td.leo-wrap { white-space: normal; min-width: 12rem; } }
+
+/* ==========================================================================
+   Phase 04: inventory, suppliers, purchases
+   ========================================================================== */
+.leo-stock--ok   { background: var(--leo-green-tint); color: var(--leo-green); }
+.leo-stock--low  { background: var(--leo-gold-tint); color: #7a5f0e; }
+.leo-stock--out  { background: #f6e3e1; color: #8a2f27; }
+.leo-stock--over { background: #e3eef6; color: #1d4b6e; }
+.leo-qty--in  { color: var(--leo-green-3); }
+.leo-qty--out { color: #b3261e; }
+
+.leo-stock-hero__value { font-family: var(--leo-font-heading); font-size: clamp(2rem, 7vw, 2.8rem); font-weight: 700; color: var(--leo-green); margin: 0.25rem 0 0.5rem; line-height: 1.1; }
+.leo-confirm { border-top: 4px solid var(--leo-gold); max-width: 820px; }
+
+/* Item type chooser */
+.leo-choice-group { display: grid; gap: 0.75rem; }
+@media (min-width: 768px) { .leo-choice-group { grid-template-columns: 1fr 1fr; } }
+.leo-choice { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid var(--leo-border-strong); border-radius: var(--leo-radius-sm); cursor: pointer; transition: border-color var(--leo-transition), background-color var(--leo-transition); }
+.leo-choice .form-check-input { margin-top: 0.2rem; flex-shrink: 0; }
+.leo-choice:has(input:checked) { border-color: var(--leo-green-3); background: var(--leo-green-tint); }
+
+/* Purchase lines */
+.leo-lines { display: grid; gap: 0.75rem; }
+.leo-line { padding: 0.9rem 1rem 0.25rem; border: 1px solid var(--leo-border); border-radius: var(--leo-radius-sm); background: var(--leo-bg); }
+.leo-line--removed { opacity: 0.5; }
+.leo-line__end { padding-bottom: 0.75rem; }
+.leo-line__remove { display: inline-flex; align-items: center; gap: 0.35rem; min-height: var(--leo-touch-target); cursor: pointer; color: #9a3b33; }
+.leo-line__count { display: inline-block; padding-top: 2.3rem; }
+@media (min-width: 992px) { .leo-line__end { padding-top: 2rem; } }
+
+/* ==========================================================================
+   Phase 05: customer storefront and cart
+   ========================================================================== */
+
+/* Navbar cart icon (always visible, also on phones) */
+.leo-cart-link {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: var(--leo-touch-target); height: var(--leo-touch-target);
+  color: var(--leo-white); font-size: 1.3rem; border-radius: var(--leo-radius-sm);
+  text-decoration: none; transition: color var(--leo-transition), background-color var(--leo-transition);
+}
+.leo-cart-link:hover, .leo-cart-link:focus-visible, .leo-cart-link.active { color: var(--leo-gold); background: rgba(255, 255, 255, 0.06); }
+.leo-cart-link__count {
+  position: absolute; top: 2px; right: 0; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem;
+  border-radius: var(--leo-radius-pill); background: var(--leo-gold); color: var(--leo-green);
+  font-size: 0.72rem; font-weight: 700; line-height: 1.25rem; text-align: center;
+}
+
+/* Shop header band */
+.leo-shop-hero { background: linear-gradient(160deg, var(--leo-green) 0%, #0c2a1b 100%); color: var(--leo-white); padding-block: 1.75rem 2rem; }
+.leo-shop-hero h1 { color: var(--leo-white); }
+.leo-shop-hero .leo-eyebrow { color: var(--leo-gold); }
+.leo-shop-hero__text { color: rgba(255, 255, 255, 0.8); font-style: italic; }
+.leo-breadcrumb--light .breadcrumb-item, .leo-breadcrumb--light .breadcrumb-item a { color: rgba(255, 255, 255, 0.8); }
+.leo-breadcrumb--light .breadcrumb-item.active { color: var(--leo-gold); }
+.leo-breadcrumb--light .breadcrumb-item + .breadcrumb-item::before { color: rgba(255, 255, 255, 0.5); }
+
+/* Search + sort */
+.leo-shop-toolbar { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+@media (min-width: 576px) { .leo-shop-toolbar { grid-template-columns: 1fr 13rem auto; } }
+
+/* Category chips */
+.leo-chips, .leo-subchips { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: thin; }
+.leo-chip {
+  flex-shrink: 0; display: inline-flex; align-items: center; min-height: 40px; padding: 0 1rem;
+  border: 1px solid var(--leo-border-strong); border-radius: var(--leo-radius-pill); background: var(--leo-surface);
+  color: var(--leo-green); font-weight: 600; font-size: 0.9rem; text-decoration: none; white-space: nowrap;
+  transition: background-color var(--leo-transition), color var(--leo-transition), border-color var(--leo-transition);
+}
+.leo-chip:hover, .leo-chip:focus-visible { border-color: var(--leo-green); }
+.leo-chip.active { background: var(--leo-green); border-color: var(--leo-green); color: var(--leo-white); }
+.leo-chip--sm { min-height: 34px; font-size: 0.82rem; font-weight: 500; padding: 0 0.85rem; }
+
+/* Sections and grid */
+.leo-shop-section { margin-top: 2rem; }
+.leo-shop-section__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--leo-gold); }
+.leo-shop-section .leo-subchips { margin-bottom: 1rem; }
+.leo-shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+@media (min-width: 768px) { .leo-shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; } }
+@media (min-width: 1200px) { .leo-shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; } }
+
+/* Storefront product card */
+.leo-shop-card { display: flex; flex-direction: column; }
+.leo-shop-card .leo-card__media { display: block; aspect-ratio: 1 / 1; background: var(--leo-gold-tint); }
+.leo-shop-card .leo-card__media img { object-fit: cover; }
+.leo-shop-card .leo-card__media img.leo-img--placeholder { object-fit: contain; }
+.leo-shop-card .leo-card__body { padding: 0.75rem; display: flex; flex-direction: column; flex: 1; }
+.leo-shop-card__cat { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--leo-gold-dark); margin: 0 0 0.2rem; }
+.leo-shop-card__name { margin-bottom: 0.25rem; line-height: 1.3; }
+.leo-shop-card__name a { color: var(--leo-green); text-decoration: none; }
+.leo-shop-card__name a:hover, .leo-shop-card__name a:focus-visible { text-decoration: underline; }
+.leo-shop-card__price { font-weight: 700; color: var(--leo-green); margin-bottom: 0.6rem; }
+.leo-shop-card__form { margin-top: auto; }
+.leo-shop-card .btn-sm { padding-inline: 0.6rem; }
+/* Buttons stack on narrow cards (2-column phones), sit side by side on wider cards. */
+.leo-shop-card__actions { display: grid; grid-template-columns: 1fr; gap: 0.4rem; }
+@container (min-width: 200px) { .leo-shop-card__actions { grid-template-columns: 1fr auto; } }
+@media (min-width: 576px) { .leo-shop-card .leo-card__body { padding: 1rem; } }
+
+/* Empty / no results */
+.leo-empty { text-align: center; padding: 3rem 1rem; background: var(--leo-surface); border: 1px dashed var(--leo-border-strong); border-radius: var(--leo-radius); margin-top: 1rem; }
+.leo-empty > .bi { font-size: 2.5rem; color: var(--leo-gold); display: block; margin-bottom: 0.5rem; }
+.leo-empty p { color: var(--leo-text-muted); max-width: 30rem; margin-inline: auto; }
+
+/* Product page */
+.leo-product-gallery { background: var(--leo-surface); border: 1px solid var(--leo-border); border-radius: var(--leo-radius); overflow: hidden; aspect-ratio: 1 / 1; }
+.leo-product-gallery__img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.leo-product-gallery__img[hidden] { display: none; }
+.leo-product-price { font-family: var(--leo-font-heading); font-size: clamp(1.6rem, 5vw, 2.1rem); font-weight: 700; color: var(--leo-green); }
+.leo-avail { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; color: var(--leo-green-3); }
+.leo-avail--low { color: #8a6a0b; }
+.leo-avail--out { color: #9a3b33; }
+.leo-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.5rem; }
+.leo-option {
+  position: relative; display: flex; flex-direction: column; gap: 0.1rem; padding: 0.7rem 0.85rem; min-height: var(--leo-touch-target);
+  border: 2px solid var(--leo-border-strong); border-radius: var(--leo-radius-sm); background: var(--leo-surface); cursor: pointer;
+  transition: border-color var(--leo-transition), background-color var(--leo-transition);
+}
+.leo-option:hover { border-color: var(--leo-green-3); }
+.leo-option:has(input:checked) { border-color: var(--leo-green); background: var(--leo-green-tint); }
+.leo-option:has(input:focus-visible) { outline: 3px solid var(--leo-gold); outline-offset: 2px; }
+.leo-option__size { font-weight: 700; color: var(--leo-green); }
+.leo-option__price { font-size: 0.88rem; color: var(--leo-text-muted); }
+.leo-option__note { font-size: 0.75rem; font-weight: 600; color: #9a3b33; }
+.leo-option.is-disabled { opacity: 0.55; cursor: not-allowed; background: #f3f1ec; }
+.leo-option.is-disabled .leo-option__size { text-decoration: line-through; }
+.leo-qty { width: 7rem; }
+.leo-product-desc { border-top: 1px solid var(--leo-border); padding-top: 1rem; }
+
+/* Cart */
+.leo-cart-list { border: 1px solid var(--leo-border); border-radius: var(--leo-radius); background: var(--leo-surface); overflow: hidden; }
+.leo-cart-line { display: grid; grid-template-columns: 64px 1fr auto; grid-template-areas: "img info total" "img actions actions"; gap: 0.5rem 0.85rem; padding: 1rem; border-bottom: 1px solid var(--leo-border); align-items: start; }
+.leo-cart-line:last-child { border-bottom: 0; }
+.leo-cart-line__img { grid-area: img; display: block; width: 64px; height: 64px; border-radius: var(--leo-radius-sm); overflow: hidden; background: var(--leo-gold-tint); }
+.leo-cart-line__img img { width: 100%; height: 100%; object-fit: cover; max-width: none; }
+.leo-cart-line__info { grid-area: info; min-width: 0; }
+.leo-cart-line__actions { grid-area: actions; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.leo-cart-line__total { grid-area: total; font-weight: 700; color: var(--leo-green); white-space: nowrap; }
+.leo-cart-line.is-unavailable { background: #fbf4f3; }
+.leo-cart-qty { display: flex; gap: 0.4rem; align-items: center; }
+.leo-cart-qty .form-control { width: 5rem; }
+.leo-cart-remove { color: #9a3b33; text-decoration: none; min-height: 36px; }
+.leo-text-warning { color: #8a6a0b; }
+@media (min-width: 768px) {
+  .leo-cart-line { grid-template-columns: 80px 1fr auto; }
+  .leo-cart-line__img { width: 80px; height: 80px; }
+}
+/* One row per line only when there is room for the name beside the controls. */
+@media (min-width: 1200px) {
+  .leo-cart-line { grid-template-columns: 80px 1fr auto auto; grid-template-areas: "img info actions total"; align-items: center; }
+  .leo-cart-line__total { min-width: 7rem; text-align: right; }
+}
+.leo-cart-summary { position: sticky; top: 90px; }
+.leo-cart-totals { display: grid; grid-template-columns: 1fr auto; gap: 0.4rem 1rem; margin: 0 0 1rem; }
+.leo-cart-totals dt { font-weight: 500; color: var(--leo-text-muted); }
+.leo-cart-totals dd { margin: 0; text-align: right; font-weight: 600; }
+.leo-cart-totals__grand { border-top: 1px solid var(--leo-border); padding-top: 0.6rem; font-size: 1.15rem; color: var(--leo-green) !important; font-weight: 700 !important; }
+
+/* Checkout & orders (Phase 06) */
+.leo-steps { display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; list-style: none; padding: 0; margin: 0 0 1rem; font-size: 0.85rem; color: var(--leo-text-muted); }
+.leo-steps li { display: inline-flex; align-items: center; gap: 0.5rem; }
+.leo-steps li + li::before { content: "\203A"; color: var(--leo-border-strong); }
+.leo-steps .is-current { font-weight: 700; color: var(--leo-green); }
+.leo-steps .is-done a { color: var(--leo-green-3); }
+
+/* Status colours: neutral while waiting, gold while being worked on, green when done, red when stopped. */
+.leo-ostatus--pending, .leo-paystatus--pending { background: #eef0ef; color: #3f4a44; }
+.leo-ostatus--confirmed, .leo-ostatus--processing,
+.leo-ostatus--ready_for_pickup, .leo-ostatus--out_for_delivery,
+.leo-paystatus--pending_verification, .leo-paystatus--refund_due { background: var(--leo-gold-tint); color: #7a5f0e; }
+.leo-ostatus--delivered, .leo-paystatus--paid { background: var(--leo-green-tint); color: var(--leo-green); }
+.leo-ostatus--completed { background: var(--leo-green); color: var(--leo-white); }
+.leo-ostatus--cancelled, .leo-paystatus--failed, .leo-paystatus--rejected { background: #fbe9e7; color: #9a3b33; }
+.leo-paystatus--refunded { background: #eef0ef; color: #5b6b61; }
+
+.leo-confirmation { display: flex; gap: 1rem; align-items: flex-start; padding: 1.25rem; border-radius: var(--leo-radius); background: var(--leo-green-tint); border: 1px solid var(--leo-green-3); }
+.leo-confirmation > .bi { font-size: 2rem; line-height: 1; color: var(--leo-green-3); flex-shrink: 0; }
+.leo-pay-box { border-color: var(--leo-gold); background: #fffdf7; border-radius: var(--leo-radius); }
+form.leo-pay-box { border: 1px solid var(--leo-gold); }
+.leo-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.03em; overflow-wrap: anywhere; }
+.leo-bank dd { overflow-wrap: anywhere; }
+.leo-payment { padding: 0.85rem 0; border-top: 1px solid var(--leo-border); }
+.leo-payment:first-of-type { border-top: 0; }
+
+.leo-order-list { border: 1px solid var(--leo-border); border-radius: var(--leo-radius); background: var(--leo-surface); overflow: hidden; }
+.leo-order-list li + li { border-top: 1px solid var(--leo-border); }
+.leo-order-row { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "main total" "badges badges"; gap: 0.5rem 1rem; padding: 1rem; color: inherit; text-decoration: none; align-items: center; }
+.leo-order-row:hover, .leo-order-row:focus-visible { background: var(--leo-green-tint); }
+.leo-order-row__main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+.leo-order-row__badges { grid-area: badges; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.leo-order-row__total { grid-area: total; font-weight: 700; color: var(--leo-green); white-space: nowrap; }
+@media (min-width: 768px) {
+  .leo-order-row { grid-template-columns: 1fr auto 8rem; grid-template-areas: "main badges total"; }
+  .leo-order-row__total { text-align: right; }
+}
+
+.leo-stats--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px) { .leo-stats--compact { grid-template-columns: repeat(2, minmax(0, 14rem)); } }
+.leo-stats--compact .leo-stat__value { font-size: 1.6rem; }

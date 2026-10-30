@@ -1,0 +1,8 @@
+{% comment %}Previous/next pager that keeps the current filters. Needs page_obj and querystring.{% endcomment %}
+{% if page_obj.has_other_pages %}
+<nav class="leo-pager" aria-label="Pages">
+  {% if page_obj.has_previous %}<a class="btn btn-leo-outline btn-sm" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left" aria-hidden="true"></i>Previous</a>{% else %}<span></span>{% endif %}
+  <span class="small text-body-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a class="btn btn-leo-outline btn-sm" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page_obj.next_page_number }}">Next<i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}

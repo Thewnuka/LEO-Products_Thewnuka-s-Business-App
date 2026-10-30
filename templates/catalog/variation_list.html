@@ -1,0 +1,14 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Variations of {{ product.name }} — {{ brand.name }}{% endblock %}
+{% block page_title %}Variations{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'catalog:variation_create' product.pk %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">Add variation</span><span class="d-sm-none">Add</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% url 'catalog:product_detail' product.pk as product_url %}
+{% include "catalog/partials/_breadcrumb.html" with section=product.name section_url=product_url current="Variations" %}
+<p class="text-body-secondary">Each variation is one size of <strong>{{ product.name }}</strong> with its own SKU and prices (LKR). Variations are never deleted; deactivate them instead.</p>
+{% include "catalog/partials/_variation_table.html" with manage=True %}
+{% endblock %}

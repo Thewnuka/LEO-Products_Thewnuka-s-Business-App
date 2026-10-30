@@ -1,0 +1,54 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Staff accounts — {{ brand.name }}{% endblock %}
+{% block page_title %}Staff accounts{% endblock %}
+{% block page_actions %}
+  {% if can_create %}
+    <a href="{% url 'accounts:staff_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-person-plus" aria-hidden="true"></i><span class="d-none d-sm-inline">New staff account</span><span class="d-sm-none">New</span></a>
+  {% endif %}
+{% endblock %}
+
+{% block page_content %}
+<form method="get" class="leo-card leo-card--auto mb-4" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-xl-5">{% include "partials/_form_field.html" with field=filter_form.q %}</div>
+    <div class="col-12 col-sm-6 col-md-4 col-xl-3">{% include "partials/_form_field.html" with field=filter_form.role %}</div>
+    <div class="col-12 col-sm-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.status %}</div>
+    <div class="col-12 col-md-4 col-xl-2 d-grid leo-field"><button type="submit" class="btn btn-leo-outline"><i class="bi bi-funnel" aria-hidden="true"></i>Filter</button></div>
+  </div>
+</form>
+
+<div class="leo-card leo-card--auto">
+  {% if page_obj.object_list %}
+  <div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead>
+      <tr><th scope="col">Name</th><th scope="col">Username</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+    </thead>
+    <tbody>
+      {% for member in page_obj %}
+      <tr>
+        <td data-label="Name" class="fw-semibold">{{ member.get_full_name|default:"—" }}{% if member.is_primary_owner %} <i class="bi bi-shield-check text-success" title="Primary owner" aria-label="Primary owner"></i>{% endif %}</td>
+        <td data-label="Username">{{ member.username }}</td>
+        <td data-label="Email">{{ member.email|default:"—" }}</td>
+        <td data-label="Role">{% include "partials/_role_badge.html" with person=member %}</td>
+        <td data-label="Status">{% include "accounts/staff/_status.html" %}</td>
+        <td data-label="" class="text-end"><a href="{% url 'accounts:staff_detail' member.pk %}" class="btn btn-leo-outline btn-sm">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="leo-card__body text-center text-body-secondary">No staff accounts match your search.</div>
+  {% endif %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Pages">
+  {% if page_obj.has_previous %}<a class="btn btn-leo-outline btn-sm" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}
+  <span class="small text-body-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a class="btn btn-leo-outline btn-sm" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

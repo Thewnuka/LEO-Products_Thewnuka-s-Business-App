@@ -1,0 +1,119 @@
+{% extends "layouts/staff.html" %}
+{% load inventory_tags catalog_tags %}
+
+{% block title %}Inventory — {{ brand.name }}{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_actions %}
+  {% if can.MANAGE_PURCHASES %}<a href="{% url 'inventory:purchase_create' %}" class="btn btn-leo-gold btn-sm"><i class="bi bi-receipt" aria-hidden="true"></i><span class="d-none d-sm-inline">New purchase</span></a>{% endif %}
+  <a href="{% url 'inventory:item_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">Track new item</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% comment %}Every figure on this page is counted from the database on each visit.{% endcomment %}
+<section aria-label="Inventory statistics" class="leo-stats mb-4">
+  <a class="leo-stat" href="{% url 'inventory:item_list' %}?active=yes">
+    <span class="leo-stat__label">Stock items</span><span class="leo-stat__value">{{ stats.total_items }}</span>
+    <span class="leo-stat__note">{{ stats.raw_items }} raw · {{ stats.finished_items }} finished</span>
+  </a>
+  <a class="leo-stat" href="{% url 'inventory:item_list' %}?state=LOW&amp;active=yes">
+    <span class="leo-stat__label">Low stock</span><span class="leo-stat__value">{{ stats.low_stock }}</span>
+    <span class="leo-stat__note">at or below reorder level</span>
+  </a>
+  <a class="leo-stat" href="{% url 'inventory:item_list' %}?state=OUT&amp;active=yes">
+    <span class="leo-stat__label">Out of stock</span><span class="leo-stat__value">{{ stats.out_of_stock }}</span>
+  </a>
+  {% if can.MANAGE_SUPPLIERS %}
+  <a class="leo-stat" href="{% url 'inventory:supplier_list' %}?active=yes">
+    <span class="leo-stat__label">Active suppliers</span><span class="leo-stat__value">{{ stats.active_suppliers }}</span>
+  </a>
+  {% endif %}
+  {% if can.MANAGE_PURCHASES %}
+  <a class="leo-stat" href="{% url 'inventory:purchase_list' %}?status=DRAFT">
+    <span class="leo-stat__label">Draft purchases</span><span class="leo-stat__value">{{ stats.draft_purchases }}</span>
+    <span class="leo-stat__note">received in 30 days: {{ stats.received_30d_total|money }}</span>
+  </a>
+  {% endif %}
+  <a class="leo-stat" href="{% url 'inventory:movement_list' %}">
+    <span class="leo-stat__label">Movements (30 days)</span><span class="leo-stat__value">{{ stats.movements_30d }}</span>
+  </a>
+</section>
+
+{% if stats.untracked_variations %}
+  {% include "partials/_alert.html" with level="info" text=stats.untracked_variations|stringformat:"d"|add:" active product variation(s) do not have stock tracking yet. Use “Track new item” to add them with their opening stock." %}
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+          <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning" aria-hidden="true"></i>Low-stock alerts</h2>
+          <a href="{% url 'inventory:item_list' %}?state=ATTENTION&amp;active=yes&amp;sort=qty" class="small">See all</a>
+        </div>
+        {% if alerts %}
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for item in alerts %}
+          <li>
+            <span class="min-w-0"><a href="{% url 'inventory:item_detail' item.pk %}" class="fw-semibold">{{ item.display_name }}</a>
+              <span class="d-block small text-body-secondary">{{ item.quantity_display }} left · reorder at {{ item.reorder_level|qty:item }}</span></span>
+            {% include "inventory/partials/_state_badge.html" with state=item.stock_state %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-body-secondary mb-0">No items are at or below their reorder level.</p>
+        {% endif %}
+      </div>
+    </article>
+
+  </div>
+
+  <div class="col-12 col-xl-5">
+    {% if can.MANAGE_PURCHASES %}
+    <article class="leo-card leo-card--auto mb-4">
+      <div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h5 mb-0">Recent purchases</h2>
+          <a href="{% url 'inventory:purchase_list' %}" class="small">All purchases</a>
+        </div>
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for p in recent_purchases %}
+          <li>
+            <span><a href="{% url 'inventory:purchase_detail' p.pk %}" class="fw-semibold">{{ p.reference }}</a>
+              <span class="d-block small text-body-secondary">{{ p.supplier.name }} · {{ p.purchase_date|date:"j M Y" }} · {{ p.total|money }}</span></span>
+            {% include "inventory/partials/_purchase_status.html" with status=p.status label=p.get_status_display %}
+          </li>
+          {% empty %}
+          <li class="text-body-secondary">No purchases yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </article>
+    {% endif %}
+
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <h2 class="h5">Stock adjustments (last 30 days)</h2>
+        {% if stats.adjustments_30d %}
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for a in stats.adjustments_30d %}
+          <li><a href="{% url 'inventory:movement_list' %}?movement_type={{ a.code }}">{{ a.type }}</a><span class="fw-semibold">{{ a.count }}</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-body-secondary mb-0">No manual adjustments in the last 30 days.</p>
+        {% endif %}
+        <p class="small text-body-secondary mt-3 mb-0">Purchases record the cost of goods only. Transport, electricity, rent and other operating costs are expenses, managed in a later phase.</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h5 mb-0">Recent stock movements</h2>
+      <a href="{% url 'inventory:movement_list' %}" class="small">Full history</a>
+    </div>
+    {% include "inventory/partials/_movement_table.html" with movements=recent_movements show_item=True %}
+  </div>
+</div>
+{% endblock %}

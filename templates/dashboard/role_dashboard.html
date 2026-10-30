@@ -1,0 +1,81 @@
+{% extends "layouts/staff.html" %}
+{% comment %}
+  Placeholder dashboard shared by all staff roles (content comes from the
+  view). No figures are shown until the modules that produce them exist.
+{% endcomment %}
+
+{% block title %}{{ dashboard_title }} — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ dashboard_title }}{% endblock %}
+
+{% block page_content %}
+{% if viewing_other_role %}
+  {% include "partials/_alert.html" with level="info" text="You are viewing another role's dashboard as Owner." %}
+{% endif %}
+
+<article class="leo-card leo-card--auto leo-welcome mb-4">
+  <div class="leo-card__body d-flex flex-column flex-md-row gap-3 align-items-md-center">
+    <span class="leo-card__icon mb-0"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
+    <div>
+      <h2 class="h4 mb-1">Welcome, {{ user.first_name|default:user.username }}</h2>
+      <p class="mb-0 text-body-secondary">{{ summary }}</p>
+    </div>
+  </div>
+</article>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-6">
+    <article class="leo-card">
+      <div class="leo-card__body">
+        <h2 class="h5"><i class="bi bi-list-check me-2" aria-hidden="true"></i>Role responsibilities</h2>
+        <ul class="leo-checklist">
+          {% for item in responsibilities %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+    </article>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <article class="leo-card">
+      <div class="leo-card__body">
+        <h2 class="h5"><i class="bi bi-lightning-charge me-2" aria-hidden="true"></i>Available now</h2>
+        <div class="d-grid gap-2 mt-3">
+          {% if can.VIEW_ORDERS %}
+            <a href="{% url 'orders:staff_list' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-bag-check" aria-hidden="true"></i>Customer orders &amp; payments</a>
+          {% endif %}
+          {% if can.MANAGE_BUSINESS_SETTINGS %}
+            <a href="{% url 'orders:settings' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-sliders" aria-hidden="true"></i>Delivery &amp; payment settings</a>
+          {% endif %}
+          {% if can.MANAGE_CATALOG %}
+            <a href="{% url 'catalog:dashboard' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-box-seam" aria-hidden="true"></i>Product catalogue</a>
+          {% endif %}
+          {% if can.MANAGE_INVENTORY %}
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-boxes" aria-hidden="true"></i>Inventory &amp; stock</a>
+          {% endif %}
+          {% if can.MANAGE_PURCHASES %}
+            <a href="{% url 'inventory:purchase_list' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-receipt" aria-hidden="true"></i>Purchases &amp; suppliers</a>
+          {% endif %}
+          {% if can.VIEW_STAFF %}
+            <a href="{% url 'accounts:staff_list' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-people" aria-hidden="true"></i>Staff accounts</a>
+          {% endif %}
+          <a href="{% url 'accounts:staff_profile' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-person-badge" aria-hidden="true"></i>My profile</a>
+          <a href="{% url 'accounts:password_change' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-key" aria-hidden="true"></i>Change password</a>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div class="col-12">
+    <article class="leo-card leo-card--auto">
+      <div class="leo-card__body">
+        <h2 class="h5"><i class="bi bi-signpost-split me-2" aria-hidden="true"></i>Coming in later phases</h2>
+        <p class="text-body-secondary small">These modules are not available yet. They will appear on this dashboard when they are built.</p>
+        <ul class="leo-upcoming">
+          {% for module, phase in upcoming %}
+            <li><span>{{ module }}</span><span class="leo-badge leo-badge--gold">Phase {{ phase }}</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}

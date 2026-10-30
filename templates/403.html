@@ -1,0 +1,12 @@
+{% extends "errors/_error_base.html" %}
+{% block error_title_text %}Access denied{% endblock %}
+{% block error_code %}403{% endblock %}
+{% block error_title %}Access denied{% endblock %}
+{% block error_message %}You don't have permission to view this page.{% endblock %}
+{% block error_actions %}
+  {% if user.is_authenticated %}
+    <a href="{{ user.portal_home_url }}" class="btn btn-leo-primary">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i> Go to my {% if user.is_staff_member %}dashboard{% else %}account{% endif %}
+    </a>
+  {% endif %}
+{% endblock %}

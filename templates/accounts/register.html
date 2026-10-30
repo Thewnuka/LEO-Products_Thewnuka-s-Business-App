@@ -1,0 +1,30 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}Create account — {{ brand.name }}{% endblock %}
+{% block auth_card_class %}leo-auth__card--wide{% endblock %}
+{% block auth_eyebrow %}Customer account{% endblock %}
+{% block auth_title %}Create your account{% endblock %}
+{% block auth_subtitle %}It only takes a minute.{% endblock %}
+
+{% block auth_body %}
+{# Browser checks (required, email, minlength=6) run first; the server checks everything again. #}
+<form method="post">
+  {% csrf_token %}
+  {% include "partials/_form_errors.html" %}
+  <div class="row g-0 gx-sm-3">
+    <div class="col-12 col-sm-6">{% include "partials/_form_field.html" with field=form.first_name %}</div>
+    <div class="col-12 col-sm-6">{% include "partials/_form_field.html" with field=form.last_name %}</div>
+  </div>
+  {% include "partials/_form_field.html" with field=form.email %}
+  {% include "partials/_form_field.html" with field=form.phone_number %}
+  {% include "partials/_form_field.html" with field=form.password1 %}
+  {% include "partials/_form_field.html" with field=form.password2 %}
+  <button type="submit" class="btn btn-leo-primary w-100 mt-2">
+    <i class="bi bi-person-plus" aria-hidden="true"></i> Create account
+  </button>
+</form>
+<hr class="my-4">
+<p class="text-center mb-0">
+  Already have an account? <a href="{% url 'accounts:customer_login' %}" class="fw-semibold">Sign in</a>
+</p>
+{% endblock %}

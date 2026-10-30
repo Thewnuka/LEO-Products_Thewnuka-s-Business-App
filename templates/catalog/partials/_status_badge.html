@@ -1,0 +1,2 @@
+{% comment %}{% include "catalog/partials/_status_badge.html" with status=product.status label=product.get_status_display %}{% endcomment %}
+<span class="leo-badge leo-pstatus leo-pstatus--{{ status|lower }}">{{ label }}</span>

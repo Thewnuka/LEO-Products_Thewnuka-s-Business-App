@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}Review your order — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section pt-4">
+  <div class="container">
+    <ol class="leo-steps" aria-label="Checkout steps">
+      <li class="is-done"><a href="{% url 'shop:cart' %}">Cart</a></li>
+      <li class="is-done"><a href="{% url 'orders:checkout' %}">Details</a></li>
+      <li class="is-current" aria-current="step">Review &amp; place order</li>
+    </ol>
+    <h1 class="h2 mb-3">Review your order</h1>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-7">
+        <article class="leo-card leo-card--auto mb-4">
+          <div class="leo-card__body">
+            <h2 class="h5">Items</h2>
+            <ul class="list-unstyled leo-mini-list mb-0">
+              {% for line in quote.lines %}
+              <li><span>{{ line.item.quantity }} × {{ line.item.variation.product.name }} <span class="small text-body-secondary">({{ line.item.variation.display_name }}, {{ line.unit_price|money }} each)</span></span>
+                  <span class="fw-semibold">{{ line.line_total|money }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </article>
+        <article class="leo-card leo-card--auto">
+          <div class="leo-card__body">
+            <div class="d-flex justify-content-between align-items-start gap-2"><h2 class="h5">Delivery &amp; payment</h2><a href="{% url 'orders:checkout' %}" class="btn btn-leo-outline btn-sm">Change</a></div>
+            <dl class="leo-dl">
+              <dt>Name</dt><dd>{{ details.full_name }}</dd>
+              <dt>Contact</dt><dd>{{ details.phone }}</dd>
+              {% if details.fulfilment == "DELIVERY" %}
+                <dt>Delivery to</dt><dd>{{ details.address_line1 }}{% if details.address_line2 %}, {{ details.address_line2 }}{% endif %}, {{ details.city }}<br><span class="small text-body-secondary">{{ details.delivery_zone.name }}</span></dd>
+              {% else %}
+                <dt>Pickup</dt><dd>Store pickup{% if config.pickup_address %}<br><span class="small">{{ config.pickup_address|linebreaksbr }}</span>{% endif %}</dd>
+              {% endif %}
+              {% if details.delivery_instructions %}<dt>Instructions</dt><dd>{{ details.delivery_instructions|linebreaksbr }}</dd>{% endif %}
+              <dt>Payment</dt><dd>{% if details.payment_method == "CASH" %}Cash on {% if details.fulfilment == "DELIVERY" %}delivery{% else %}pickup{% endif %}{% elif details.payment_method == "BANK_TRANSFER" %}Bank transfer (account details shown after you place the order){% else %}Online payment{% endif %}</dd>
+            </dl>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-lg-5">
+        <aside class="leo-card leo-card--auto leo-cart-summary" aria-label="Order total">
+          <div class="leo-card__body">
+            <h2 class="h5">Order total</h2>
+            {% include "orders/partials/_totals.html" with subtotal=quote.subtotal delivery_fee=quote.delivery_fee total=quote.total is_delivery=details.delivery_zone zone_name=details.delivery_zone.name %}
+            <form method="post" id="placeOrder" data-once>
+              {% csrf_token %}
+              <input type="hidden" name="token" value="{{ state.token }}">
+              <button type="submit" class="btn btn-leo-gold btn-lg w-100"><i class="bi bi-bag-check" aria-hidden="true"></i>Place order · {{ quote.total|money }}</button>
+            </form>
+            <p class="small text-body-secondary mt-3 mb-0">By placing your order, the items are set aside for you.
+              {% if details.payment_method == "CASH" %}You pay in cash when you {% if details.fulfilment == "DELIVERY" %}receive{% else %}collect{% endif %} your order.{% elif details.payment_method == "BANK_TRANSFER" %}Your order is confirmed once we've checked your bank transfer.{% else %}You'll be taken to the secure payment page next.{% endif %}</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

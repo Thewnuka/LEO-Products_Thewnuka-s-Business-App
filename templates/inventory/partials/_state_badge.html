@@ -1,0 +1,6 @@
+{% comment %}{% include "inventory/partials/_state_badge.html" with state=item.state %}{% endcomment %}
+{% if state == "OUT" %}<span class="leo-badge leo-stock leo-stock--out"><i class="bi bi-x-circle" aria-hidden="true"></i>Out of stock</span>
+{% elif state == "BELOW_MIN" %}<span class="leo-badge leo-stock leo-stock--out"><i class="bi bi-exclamation-octagon" aria-hidden="true"></i>Below minimum</span>
+{% elif state == "LOW" %}<span class="leo-badge leo-stock leo-stock--low"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Low stock</span>
+{% elif state == "OVER" %}<span class="leo-badge leo-stock leo-stock--over">Above maximum</span>
+{% else %}<span class="leo-badge leo-stock leo-stock--ok">In stock</span>{% endif %}

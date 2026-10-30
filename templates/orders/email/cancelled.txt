@@ -1,0 +1,6 @@
+{% autoescape off %}Hello {{ order.full_name }},
+
+Your order {{ order.number }} was cancelled.
+Reason: {{ order.cancel_reason }}
+{% if order.payment_status == "REFUND_DUE" %}You have already paid for this order; we will arrange your refund and contact you.{% endif %}
+{% include "orders/email/_footer.txt" %}{% endautoescape %}

@@ -1,0 +1,64 @@
+{% extends "layouts/staff.html" %}
+{% load inventory_tags %}
+
+{% block title %}Stock items — {{ brand.name }}{% endblock %}
+{% block page_title %}Stock items{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'inventory:item_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i><span class="d-none d-sm-inline">Track new item</span><span class="d-sm-none">New</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% include "inventory/partials/_breadcrumb.html" with section="Stock items" %}
+
+<form method="get" class="leo-card leo-card--auto mb-3" role="search" aria-label="Search and filter stock">
+  <div class="leo-card__body">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.q %}</div>
+      <div class="col-12 col-sm-6 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.state %}</div>
+      <div class="col-12 col-sm-6 col-lg-4">{% include "partials/_form_field.html" with field=filter_form.kind %}</div>
+      <div class="col-12 col-sm-6 col-lg-3">{% include "partials/_form_field.html" with field=filter_form.category %}</div>
+      <div class="col-12 col-sm-6 col-lg-3">{% include "partials/_form_field.html" with field=filter_form.unit %}</div>
+      <div class="col-12 col-sm-6 col-lg-2">{% include "partials/_form_field.html" with field=filter_form.active %}</div>
+      <div class="col-12 col-sm-6 col-lg-2">{% include "partials/_form_field.html" with field=filter_form.sort %}</div>
+      <div class="col-12 col-lg-2 leo-field d-flex gap-2">
+        <button type="submit" class="btn btn-leo-primary flex-grow-1"><i class="bi bi-search" aria-hidden="true"></i>Apply</button>
+        {% if active_filter_count %}<a href="{% url 'inventory:item_list' %}" class="btn btn-leo-outline">Clear</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+
+<p class="small text-body-secondary" aria-live="polite">{{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}</p>
+
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto">
+  <div class="table-responsive">
+    <table class="table leo-table leo-table--stack leo-table--nowrap">
+      <thead><tr>
+        <th scope="col">Item</th><th scope="col">Type</th><th scope="col" class="text-end">In stock</th>
+        <th scope="col" class="text-end">Reorder at</th><th scope="col">Status</th><th scope="col">Last change</th><th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr></thead>
+      <tbody>
+      {% for item in page_obj %}
+        <tr{% if not item.is_active %} class="leo-row--muted"{% endif %}>
+          <td data-label="Item" class="leo-wrap"><a href="{% url 'inventory:item_detail' item.pk %}" class="fw-semibold">{{ item.display_name }}</a>
+            {% if item.variation %}<span class="d-block small text-body-secondary"><code>{{ item.variation.sku }}</code></span>{% endif %}</td>
+          <td data-label="Type">{% if item.is_finished %}Finished{% else %}Raw material{% endif %}</td>
+          <td data-label="In stock" class="text-end fw-semibold">{{ item.quantity_display }}</td>
+          <td data-label="Reorder at" class="text-end">{{ item.reorder_level|qty:item }}</td>
+          <td data-label="Status">{% if item.is_active %}{% include "inventory/partials/_state_badge.html" with state=item.stock_state %}{% else %}<span class="leo-status leo-status--inactive">Inactive</span>{% endif %}</td>
+          <td data-label="Last change">{{ item.last_movement_at|date:"j M Y"|default:"—" }}</td>
+          <td data-label="" class="text-end"><a href="{% url 'inventory:item_adjust' item.pk %}" class="btn btn-leo-outline btn-sm">Adjust</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">
+  {% if active_filter_count %}No items match these filters.{% else %}No stock is tracked yet. <a href="{% url 'inventory:item_create' %}">Track your first item</a>.{% endif %}
+</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

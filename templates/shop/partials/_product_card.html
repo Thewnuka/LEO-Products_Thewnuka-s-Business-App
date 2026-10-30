@@ -1,0 +1,35 @@
+{% load catalog_tags %}
+{% comment %}
+  Storefront product card. Hover lift/zoom on mouse devices, same highlight on tap/focus (leo.css).
+  Needs product.card_options (purchasable variations) and show_cart (from the cart context processor).
+{% endcomment %}
+<article class="leo-card leo-card--interactive leo-shop-card">
+  <a href="{% url 'shop:product' product.slug %}" class="leo-card__media" tabindex="-1" aria-hidden="true">{% catalog_image product.image product.name %}</a>
+  <div class="leo-card__body">
+    <p class="leo-shop-card__cat">{{ product.subcategory.name|default:product.category.name }}</p>
+    <h3 class="h6 leo-shop-card__name"><a href="{% url 'shop:product' product.slug %}">{{ product.name }}</a></h3>
+    <p class="leo-shop-card__price">{% if product.card_options|length > 1 %}<span class="small text-body-secondary">From</span> {% endif %}{{ product.from_price|money }}</p>
+    {% if show_cart and product.card_options %}
+    <form method="post" action="{% url 'shop:cart_add' %}" class="leo-shop-card__form">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input type="hidden" name="quantity" value="1">
+      {% if product.card_options|length == 1 %}
+        {% with v=product.card_options.0 %}<input type="hidden" name="variation" value="{{ v.pk }}">
+        <p class="small text-body-secondary mb-2">{{ v.display_name }}</p>{% endwith %}
+      {% else %}
+        <label class="visually-hidden" for="opt-{{ product.pk }}">Choose an option for {{ product.name }}</label>
+        <select name="variation" id="opt-{{ product.pk }}" class="form-select form-select-sm mb-2">
+          {% for v in product.card_options %}<option value="{{ v.pk }}">{{ v.display_name }} · {{ v.selling_price|money }}</option>{% endfor %}
+        </select>
+      {% endif %}
+      <div class="leo-shop-card__actions">
+        <button type="submit" class="btn btn-leo-primary btn-sm"><i class="bi bi-bag-plus" aria-hidden="true"></i>Add to cart</button>
+        <a href="{% url 'shop:product' product.slug %}" class="btn btn-leo-outline btn-sm" aria-label="View details of {{ product.name }}">Details</a>
+      </div>
+    </form>
+    {% else %}
+      <a href="{% url 'shop:product' product.slug %}" class="btn btn-leo-outline btn-sm w-100">View details</a>
+    {% endif %}
+  </div>
+</article>

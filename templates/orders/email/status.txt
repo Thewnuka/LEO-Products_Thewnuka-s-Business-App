@@ -1,0 +1,5 @@
+{% autoescape off %}Hello {{ order.full_name }},
+
+Your order {{ order.number }} is now: {{ order.get_status_display }}.
+{% if order.status == "READY_FOR_PICKUP" %}It is ready to collect.{% elif order.status == "OUT_FOR_DELIVERY" %}It is on its way to you.{% endif %}
+{% include "orders/email/_footer.txt" %}{% endautoescape %}

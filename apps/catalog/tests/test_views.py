@@ -26,9 +26,9 @@ class CatalogPermissionTests(CatalogTestCase):
             ("post", reverse("catalog:variation_toggle", args=[product.pk, variation.pk])),
             ("get", reverse("catalog:category_list")),
             ("get", reverse("catalog:category_create")),
-            ("get", reverse("catalog:category_update", args=[self.black_tea.pk])),
-            ("post", reverse("catalog:category_toggle", args=[self.black_tea.pk])),
-            ("post", reverse("catalog:category_delete", args=[self.black_tea.pk])),
+            ("get", reverse("catalog:category_update", args=[self.tea_packets.pk])),
+            ("post", reverse("catalog:category_toggle", args=[self.tea_packets.pk])),
+            ("post", reverse("catalog:category_delete", args=[self.tea_packets.pk])),
             ("get", reverse("catalog:unit_list")),
             ("get", reverse("catalog:unit_create")),
             ("get", reverse("catalog:unit_update", args=[self.gram.pk])),
@@ -43,7 +43,7 @@ class CatalogPermissionTests(CatalogTestCase):
                 with self.subTest(role=user.role, url=url):
                     response = getattr(self.client, method)(url, {"status": "ACTIVE"} if method == "post" else None)
                     self.assertEqual(response.status_code, 403)
-        self.assertTrue(Category.objects.get(pk=self.black_tea.pk).is_active)
+        self.assertTrue(Category.objects.get(pk=self.tea_packets.pk).is_active)
         self.assertTrue(Unit.objects.get(pk=self.gram.pk).is_active)
         self.assertTrue(ProductVariation.objects.get().is_active)
 
@@ -87,7 +87,7 @@ class CategoryViewTests(CatalogTestCase):
 
     def test_duplicate_category_shows_error(self):
         self.client.force_login(self.owner)
-        r = self.client.post(reverse("catalog:category_create"), {"name": "ginger TEA", "parent": self.leo_tea.pk, "sort_order": 0})
+        r = self.client.post(reverse("catalog:category_create"), {"name": "tea BAGS", "parent": self.leo_tea.pk, "sort_order": 0})
         self.assertEqual(r.status_code, 200)
         self.assertIn("name", r.context["form"].errors)
 
@@ -103,10 +103,10 @@ class CategoryViewTests(CatalogTestCase):
 
     def test_delete_only_when_empty(self):
         self.client.force_login(self.owner)
-        make_product(category=self.leo_tea, subcategory=self.black_tea)
-        r = self.client.post(reverse("catalog:category_delete", args=[self.black_tea.pk]))
-        self.assertRedirects(r, reverse("catalog:category_update", args=[self.black_tea.pk]))
-        self.assertTrue(Category.objects.filter(pk=self.black_tea.pk).exists())
+        make_product(category=self.leo_tea, subcategory=self.tea_packets)
+        r = self.client.post(reverse("catalog:category_delete", args=[self.tea_packets.pk]))
+        self.assertRedirects(r, reverse("catalog:category_update", args=[self.tea_packets.pk]))
+        self.assertTrue(Category.objects.filter(pk=self.tea_packets.pk).exists())
         empty = Category.objects.create(name="Temporary")
         self.client.post(reverse("catalog:category_delete", args=[empty.pk]))
         self.assertFalse(Category.objects.filter(pk=empty.pk).exists())
@@ -117,7 +117,7 @@ class ProductViewTests(CatalogTestCase):
     def test_create_product_then_redirect_to_variations(self):
         self.client.force_login(self.manager)
         r = self.client.post(reverse("catalog:product_create"), {
-            "name": "Premium Black Tea", "category": self.leo_tea.pk, "subcategory": self.black_tea.pk,
+            "name": "Premium Black Tea", "category": self.leo_tea.pk, "subcategory": self.tea_packets.pk,
             "description": "Strong and bright.", "status": "DRAFT", "image": image_file("tea.jpg", "JPEG"),
         })
         product = Product.objects.get(name="Premium Black Tea")
@@ -232,7 +232,7 @@ class VariationViewTests(CatalogTestCase):
         self.assertEqual(self.product.variations.count(), 1)
 
     def test_count_and_piece_variations_through_form(self):
-        bags_product = make_product("Ginger Tea Bags", category=self.tea_bags)
+        bags_product = make_product("Ginger Tea Bags", category=self.leo_tea, subcategory=self.tea_bags)
         self.url = reverse("catalog:variation_create", args=[bags_product.pk])
         self.post(measurement_type="COUNT", unit=self.bags.pk, quantity="25", selling_price="600")
         sweets = make_product("Kokis Box", category=self.sweets, subcategory=self.kokis)
@@ -299,9 +299,9 @@ class SearchFilterPaginationTests(CatalogTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         for i in range(15):
-            p = make_product(f"Black Tea {i:02d}", category=cls.leo_tea, subcategory=cls.black_tea)
+            p = make_product(f"Black Tea {i:02d}", category=cls.leo_tea, subcategory=cls.tea_packets)
             make_variation(p, "200", price=str(100 + i))
-        cls.bags_product = make_product("Ginger Bags", category=cls.tea_bags)
+        cls.bags_product = make_product("Ginger Bags", category=cls.leo_tea, subcategory=cls.tea_bags)
         cls.bag_variation = make_variation(cls.bags_product, "25", cls.bags, price="50", measurement=MeasurementType.COUNT, sku="LEO-GINGER-25")
         make_variation(cls.bags_product, "50", cls.bags, price="90", measurement=MeasurementType.COUNT)
         cls.bags_product.status = Product.Status.ACTIVE
@@ -319,8 +319,8 @@ class SearchFilterPaginationTests(CatalogTestCase):
         self.assertEqual(self.names(self.get(q="leo-ginger")), ["Ginger Bags"])
 
     def test_filters(self):
-        self.assertEqual(self.names(self.get(category=self.tea_bags.pk)), ["Ginger Bags"])
-        self.assertEqual(self.get(subcategory=self.black_tea.pk).context["page_obj"].paginator.count, 15)
+        self.assertEqual(self.names(self.get(subcategory=self.tea_bags.pk)), ["Ginger Bags"])
+        self.assertEqual(self.get(subcategory=self.tea_packets.pk).context["page_obj"].paginator.count, 15)
         self.assertEqual(self.names(self.get(status="ACTIVE")), ["Ginger Bags"])
         self.assertEqual(self.names(self.get(measurement="COUNT")), ["Ginger Bags"])
         self.assertEqual(self.get(measurement="WEIGHT").context["page_obj"].paginator.count, 15)

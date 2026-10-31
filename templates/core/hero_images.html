@@ -1,0 +1,136 @@
+{% extends "layouts/staff.html" %}
+{% load static %}
+
+{% block title %}Home page images — {{ brand.name }}{% endblock %}
+{% block page_title %}Home page images{% endblock %}
+{% block page_actions %}<a href="{% url 'core:home' %}" target="_blank" rel="noopener" class="btn btn-leo-outline btn-sm"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="d-none d-sm-inline">View home page</span></a>{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary mb-4 leo-hero-admin__intro">
+  The photos at the top of the home page: one background and three slanted boxes on the right.
+  The boxes change one at a time ({{ order_label }}, then again), every {{ interval }} seconds.
+  A box with only one image stays still. Changes appear on the home page as soon as you save.
+</p>
+
+{# ---------------- Background ---------------- #}
+<section class="leo-card leo-card--auto mb-4" aria-labelledby="bg-title">
+  <div class="leo-card__body">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <h2 id="bg-title" class="h5 mb-0">Background photo</h2>
+      {% if live.background_is_sample %}<span class="badge text-bg-secondary">Sample image</span>{% else %}<span class="badge text-bg-success">Your upload</span>{% endif %}
+    </div>
+    <div class="row g-4 align-items-start">
+      <div class="col-12 col-lg-6">
+        <div class="leo-hero-admin__bg" style="background-image: url('{{ live.background }}'); background-position: {{ live.background_focus }};" role="img" aria-label="Current home page background"></div>
+        <p class="small text-body-secondary mt-2 mb-0">The dark green shading is added on the home page so the text stays easy to read.</p>
+      </div>
+      <div class="col-12 col-lg-6">
+        {% with form=background_form %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="background">
+          {% include "partials/_form_errors.html" %}
+          <div class="leo-field leo-image-field">
+            <label class="form-label" for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
+            <div class="leo-image-field__row">
+              <div class="leo-image-field__preview">
+                <img class="leo-image-preview leo-img--placeholder" src="{% static 'images/leo-logo.png' %}" alt="No new photo chosen yet" width="140" height="105">
+              </div>
+              <div class="leo-image-field__controls">
+                {{ form.image }}
+                {% for error in form.image.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                <div class="form-text">{{ form.image.help_text }}</div>
+              </div>
+            </div>
+          </div>
+          {% include "partials/_form_field.html" with field=form.focus %}
+          <button type="submit" class="btn btn-leo-primary"><i class="bi bi-upload" aria-hidden="true"></i>Save background</button>
+        </form>
+        {% endwith %}
+        {% if not live.background_is_sample %}
+        <form method="post" class="mt-2" data-confirm="Remove your background photo? The sample background will be shown instead.">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="remove_background">
+          <button type="submit" class="btn btn-link link-danger px-0"><i class="bi bi-trash" aria-hidden="true"></i> Remove uploaded background</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------- Boxes ---------------- #}
+{% for box in boxes %}
+<section class="leo-card leo-card--auto mb-4" id="box-{{ box.number }}" aria-labelledby="box-{{ box.number }}-title">
+  <div class="leo-card__body">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+      <h2 id="box-{{ box.number }}-title" class="h5 mb-0">{{ box.label }}</h2>
+      {% if box.card.is_sample %}<span class="badge text-bg-secondary">Showing sample images</span>{% else %}<span class="badge text-bg-success">{{ box.items|length }} uploaded</span>{% endif %}
+    </div>
+    <p class="small text-body-secondary">
+      Upright (portrait) photos fit best. Up to {{ max_per_box }} images; they are shown in position order.
+      {% if box.card.is_sample %}Your first upload replaces the sample images in this box.{% endif %}
+    </p>
+
+    {% if box.card.is_sample %}
+    <ul class="leo-hero-admin__samples list-unstyled d-flex flex-wrap gap-2 mb-3" aria-label="Sample images now shown in {{ box.label }}">
+      {% for img in box.card.images %}<li><img src="{{ img.src }}" alt="{{ img.alt }}" width="72" height="96" loading="lazy"></li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% for entry in box.items %}{% with item=entry.item form=entry.form %}
+    <div class="leo-hero-admin__item">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="pk" value="{{ item.pk }}">
+        <div class="leo-image-field leo-hero-admin__row">
+          <div class="leo-image-field__preview">
+            <img class="leo-image-preview leo-hero-admin__thumb" src="{{ item.image.url }}" alt="{{ item.alt_text }}" width="96" height="128" loading="lazy">
+          </div>
+          <div class="leo-image-field__controls">
+            <div class="row g-0 gx-2">
+              <div class="col-12 col-md-8">{% include "partials/_form_field.html" with field=form.alt_text %}</div>
+              <div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=form.sort_order %}</div>
+              <div class="col-12">{% include "partials/_form_field.html" with field=form.image %}</div>
+            </div>
+            <button type="submit" class="btn btn-leo-primary btn-sm"><i class="bi bi-check2" aria-hidden="true"></i>Save</button>
+          </div>
+        </div>
+      </form>
+      <form method="post" class="leo-hero-admin__remove" data-confirm="Remove this image from {{ box.label }}?">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="pk" value="{{ item.pk }}">
+        <button type="submit" class="btn btn-link link-danger btn-sm px-0"><i class="bi bi-trash" aria-hidden="true"></i> Remove</button>
+      </form>
+    </div>
+    {% endwith %}{% endfor %}
+
+    {% if box.full %}
+      <p class="small mb-0"><i class="bi bi-info-circle" aria-hidden="true"></i> This box is full. Remove an image to add another.</p>
+    {% else %}{% with form=box.add_form %}
+    <form method="post" enctype="multipart/form-data" novalidate class="leo-hero-admin__add">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <input type="hidden" name="box_number" value="{{ box.number }}">
+      {{ form.box }}
+      <h3 class="h6">Add an image to {{ box.label }}</h3>
+      <div class="leo-image-field leo-hero-admin__row">
+        <div class="leo-image-field__preview">
+          <img class="leo-image-preview leo-hero-admin__thumb leo-img--placeholder" src="{% static 'images/leo-logo.png' %}" alt="No photo chosen yet" width="96" height="128">
+        </div>
+        <div class="leo-image-field__controls">
+          {% include "partials/_form_field.html" with field=form.image %}
+          {% include "partials/_form_field.html" with field=form.alt_text %}
+          <button type="submit" class="btn btn-leo-gold btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Add image</button>
+        </div>
+      </div>
+    </form>
+    {% endwith %}{% endif %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/catalog.js' %}"></script>{% endblock %}

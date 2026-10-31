@@ -47,6 +47,33 @@
         <p class="small text-body-secondary mt-2 mb-0">A product can only be made Active when it has at least one active variation. Products are never deleted; set them to Inactive to archive them.</p>
       </div>
     </article>
+
+    <article class="leo-card leo-card--auto mt-4" aria-labelledby="shop-title">
+      <div class="leo-card__body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+          <h2 class="h6 mb-0" id="shop-title">Online shop</h2>
+          {% if shop.state != "hidden" %}<a href="{% url 'shop:product' product.slug %}" target="_blank" rel="noopener" class="small"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> View in shop</a>{% endif %}
+        </div>
+        <p class="mb-2 leo-shop-state leo-shop-state--{{ shop.state }}">
+          <i class="bi {% if shop.state == 'buyable' %}bi-check-circle{% elif shop.state == 'out' %}bi-exclamation-triangle{% else %}bi-eye-slash{% endif %}" aria-hidden="true"></i>
+          {{ shop.note }}
+        </p>
+        {% if shop.variations %}
+        <ul class="list-unstyled small mb-0">
+          {% for v in shop.variations %}
+          <li class="d-flex flex-wrap justify-content-between gap-2 py-1 border-top">
+            <span>{{ v.display_name }}</span>
+            <span>
+              {% if v.available > 0 %}{{ v.available }} in stock
+              {% elif v.stock_item %}Out of stock{% if can.MANAGE_INVENTORY %} · <a href="{% url 'inventory:item_detail' v.stock_item.pk %}">add stock</a>{% endif %}
+              {% else %}No stock record{% if can.MANAGE_INVENTORY %} · <a href="{% url 'inventory:item_create' %}?variation={{ v.pk }}">start tracking stock</a>{% endif %}{% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </article>
   </div>
 </div>
 

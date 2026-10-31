@@ -224,7 +224,8 @@ class ExpenseReceiptView(CapabilityRequiredMixin, View):
             raise Http404
         content_type = expense.receipt_content_type or mimetypes.guess_type(expense.receipt.name)[0] or "application/octet-stream"
         response = FileResponse(expense.receipt.open("rb"), content_type=content_type)
-        response["Content-Disposition"] = f'inline; filename="{expense.reference}{"." + expense.receipt.name.rsplit(".", 1)[-1]}"'
+        disposition = "attachment" if content_type == "application/pdf" else "inline"  # PDFs download
+        response["Content-Disposition"] = f'{disposition}; filename="{expense.reference}.{expense.receipt.name.rsplit(".", 1)[-1]}"'
         response["Cache-Control"] = "private, no-store"
         return response
 

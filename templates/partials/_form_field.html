@@ -2,6 +2,7 @@
   One form field with label, errors and help text.
     {% include "partials/_form_field.html" with field=form.email %}
   Widget classes (form-control, is-invalid) are added by BootstrapFormMixin.
+  Password fields get a show/hide button (leo.js reveals it; without JavaScript it stays hidden).
 {% endcomment %}
 <div class="leo-field">
   {% if field.widget_type == "checkbox" %}
@@ -13,7 +14,17 @@
     <label class="form-label" for="{{ field.id_for_label }}">
       {{ field.label }}{% if field.field.required %}<span class="leo-required" aria-hidden="true"> *</span>{% endif %}
     </label>
+    {% if field.widget_type == "password" %}
+    <div class="leo-password">
+      {{ field }}
+      <button type="button" class="btn leo-password__toggle" data-password-toggle="{{ field.id_for_label }}"
+              aria-controls="{{ field.id_for_label }}" aria-pressed="false" aria-label="Show password" title="Show password" hidden>
+        <i class="bi bi-eye" aria-hidden="true"></i>
+      </button>
+    </div>
+    {% else %}
     {{ field }}
+    {% endif %}
   {% endif %}
   {% for error in field.errors %}
     <div class="invalid-feedback d-block" id="{{ field.auto_id }}_error">{{ error }}</div>

@@ -27,8 +27,8 @@ def activate(product):
 
 class ShopTestCase(AccountsTestCase):
     """
-    Black Tea (LEO TEA › Black Tea): 200g LKR 500 (stock 10), 400g LKR 900 (stock 0), 1kg LKR 2000 (not tracked)
-    Ginger Tea Bags (TEA BAGS): 25 bags LKR 450 (stock 3), wholesale LKR 399
+    Black Tea (LEO TEA › Tea Packets): 200g LKR 500 (stock 10), 400g LKR 900 (stock 0), 1kg LKR 2000 (not tracked)
+    Ginger Tea Bags (LEO TEA › Tea Bags): 25 bags LKR 450 (stock 3), wholesale LKR 399
     Kokis (LEO SWEETS › Kokis): 10 pieces LKR 300 (stock 20)
     Draft Tea (draft, has stock) – must never appear
     """
@@ -39,8 +39,8 @@ class ShopTestCase(AccountsTestCase):
         cls.g, cls.kg = Unit.objects.get(symbol="g"), Unit.objects.get(symbol="kg")
         cls.bags, cls.pieces = Unit.objects.get(symbol="bags"), Unit.objects.get(symbol="pieces")
         cls.leo_tea = Category.objects.get(name="LEO TEA", parent=None)
-        cls.black_sub = Category.objects.get(name="Black Tea", parent=cls.leo_tea)
-        cls.tea_bags = Category.objects.get(name="TEA BAGS", parent=None)
+        cls.black_sub = Category.objects.get(name="Tea Packets", parent=cls.leo_tea)
+        cls.tea_bags = Category.objects.get(name="Tea Bags", parent=cls.leo_tea)
         cls.sweets = Category.objects.get(name="LEO SWEETS", parent=None)
         cls.kokis_sub = Category.objects.get(name="Kokis", parent=cls.sweets)
         W, C, P = MeasurementType.WEIGHT, MeasurementType.COUNT, MeasurementType.PIECE
@@ -52,7 +52,7 @@ class ShopTestCase(AccountsTestCase):
         cls.b1kg = add_variation(cls.black, "1", cls.kg, W, "2000")  # no stock record
         activate(cls.black)
 
-        cls.ginger = Product.objects.create(name="Ginger Tea Bags", category=cls.tea_bags)
+        cls.ginger = Product.objects.create(name="Ginger Tea Bags", category=cls.leo_tea, subcategory=cls.tea_bags)
         cls.g25 = add_variation(cls.ginger, "25", cls.bags, C, "450", stock=3, user=cls.owner, wholesale_price=D("399"))
         activate(cls.ginger)
 

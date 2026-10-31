@@ -137,6 +137,16 @@ a { text-underline-offset: 0.2em; }
 }
 .skip-link:focus { top: 1rem; }
 
+/* Page width (customer pages). Bootstrap's .container jumps between fixed widths
+   (720px on a 991px-wide tablet, 1140px on a 1366px laptop), leaving wide empty
+   margins. Instead the content fills the screen with balanced side padding,
+   up to a comfortable maximum on very wide screens. The staff portal uses its own
+   full-width layout and is not affected. */
+.container {
+  max-width: 1600px;
+  padding-inline: clamp(1rem, 3.5vw, 3rem);
+}
+
 /* 3. Logo
    ------------------------------------------------------------------------ */
 .leo-logo { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
@@ -439,6 +449,135 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
   .leo-hero { padding-block: 5.5rem 6rem; }
 }
 
+/* Photo hero: the background image (--leo-hero-bg, set from the Owner's
+   "Home page images" page) sits under a forest-green shade that is darkest
+   behind the text. Images: apps/core/hero.py. */
+.leo-hero--photo {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(201, 162, 39, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(10, 36, 23, 0.92) 0%, rgba(14, 48, 32, 0.8) 45%, rgba(10, 36, 23, 0.94) 100%),
+    var(--leo-hero-bg, none) var(--leo-hero-focus, center) / cover no-repeat,
+    var(--leo-green);
+  padding-block: 2.5rem 3.5rem;
+}
+.leo-hero--photo::after {           /* thin gold line where the hero meets the page */
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--leo-gold), transparent);
+  opacity: 0.7;
+}
+.leo-hero--photo h1,
+.leo-hero--photo .leo-hero__tagline,
+.leo-hero--photo .leo-hero__text { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45); }
+.leo-hero--photo .leo-hero__text { color: rgba(255, 255, 255, 0.9); }
+@media (min-width: 992px) {
+  .leo-hero--photo {
+    background:
+      radial-gradient(circle at 80% 20%, rgba(201, 162, 39, 0.14), transparent 40%),
+      linear-gradient(90deg, rgba(10, 36, 23, 0.96) 0%, rgba(18, 61, 40, 0.88) 38%, rgba(18, 61, 40, 0.45) 68%, rgba(18, 61, 40, 0.15) 100%),
+      var(--leo-hero-bg, none) var(--leo-hero-focus, center) / cover no-repeat,
+      var(--leo-green);
+    padding-block: 5rem 5.5rem;
+  }
+}
+
+/* Three slanted image cards (right side of the hero). */
+.leo-hero__visual { position: relative; }
+.leo-hero-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  height: 220px;
+  max-width: 420px;
+  margin-inline: auto;
+  padding-inline: 0.75rem;
+}
+.leo-hero-card {
+  position: relative;
+  flex: 1 1 0;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  background: #0c2a1b;
+  transform: skewX(-8deg);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(201, 162, 39, 0.35);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.leo-hero-card--2 { transform: skewX(-8deg) translateY(-16px); }
+.leo-hero-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: skewX(8deg) scale(1.22);   /* undo the slant so photos look straight */
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.leo-hero-card img.is-active { opacity: 1; }
+.leo-hero-card::after {             /* soft shine across the top of each card */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.18) 0%, transparent 35%, rgba(0, 0, 0, 0.18) 100%);
+  pointer-events: none;
+}
+/* The official logo sits as a badge overlapping the bottom of the cards. */
+.leo-hero__visual .leo-logo {
+  position: relative;
+  z-index: 2;
+  margin-top: -56px;
+}
+.leo-hero__visual .leo-logo__img {
+  height: 112px;
+  border: 3px solid var(--leo-gold);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 576px) {
+  .leo-hero-cards { height: 260px; max-width: 470px; gap: 0.8rem; }
+}
+@media (min-width: 992px) {
+  .leo-hero-cards { height: 320px; max-width: none; gap: 1rem; padding-inline: 0.5rem; }
+  .leo-hero-card--2 { transform: skewX(-8deg) translateY(-24px); }
+  .leo-hero__visual .leo-logo { margin-top: -72px; }
+  .leo-hero__visual .leo-logo__img { height: 140px; }
+}
+@media (hover: hover) {
+  .leo-hero-card:hover { box-shadow: 0 22px 44px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--leo-gold); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .leo-hero-card, .leo-hero-card img { transition: none; }
+}
+
+/* Owner's "Home page images" page */
+.leo-hero-admin__intro { max-width: 52rem; }
+.leo-hero-admin__bg {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--leo-radius-sm);
+  border: 1px solid var(--leo-border);
+  background-color: var(--leo-green);
+  background-size: cover;
+}
+.leo-hero-admin__samples img {
+  width: 72px; height: 96px; object-fit: cover;
+  border-radius: var(--leo-radius-sm); border: 1px solid var(--leo-border); opacity: 0.85;
+}
+.leo-hero-admin__item {
+  border-top: 1px solid var(--leo-border);
+  padding-block: 1rem 0.5rem;
+}
+.leo-hero-admin__thumb.leo-image-preview { width: 96px; height: 128px; }
+.leo-hero-admin__add {
+  border-top: 1px dashed var(--leo-border);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
 /* 12. Roadmap list
    ------------------------------------------------------------------------ */
 .leo-roadmap { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
@@ -490,9 +629,26 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
 @media (min-width: 576px) {
   .leo-shell__content { padding-inline: 1.5rem; }
 }
+/* Staff portal: the top bar stays in view; on large screens the sidebar is its own
+   scrolling column (sticky, exactly the height left under the top bar), so scrolling
+   the page never moves the menu and scrolling the menu never moves the page.
+   --leo-header-h is measured by leo.js (fallback below). */
+.leo-staff-header { position: sticky; top: 0; z-index: 1020; }
+html:has(.leo-staff-header) { scroll-padding-top: calc(var(--leo-header-h, 57px) + 1rem); }
 @media (min-width: 992px) {
-  .leo-sidebar { width: 260px; flex-shrink: 0; background: var(--leo-green); color: var(--leo-white); }
-  .leo-sidebar .offcanvas-body { position: sticky; top: 0; padding: 1rem; }
+  .leo-sidebar {
+    width: 260px; flex-shrink: 0; background: var(--leo-green); color: var(--leo-white);
+    position: sticky;
+    top: var(--leo-header-h, 57px);
+    align-self: flex-start;
+    height: calc(100vh - var(--leo-header-h, 57px));
+    height: calc(100dvh - var(--leo-header-h, 57px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+  .leo-sidebar .offcanvas-body { padding: 1rem 1rem 2rem; }
   .leo-shell__content { padding: 2rem 2.5rem 3rem; }
 }
 
@@ -577,6 +733,33 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
 
 /* Form helpers */
 .leo-field { margin-bottom: 1rem; }
+/* Password field: the input looks exactly like every other input (same border, radius,
+   height and text position); the show/hide icon sits inside it on the right. */
+.leo-password { position: relative; }
+.leo-password .form-control { padding-right: 3rem; }   /* room for the icon; text still starts where others do */
+/* Edge/IE add their own eye icon while typing; ours replaces it, so there is only one. */
+.leo-password input::-ms-reveal, .leo-password input::-ms-clear { display: none; }
+.leo-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--leo-radius-sm);
+  background: transparent;
+  color: var(--bs-secondary-color);
+  z-index: 3;                     /* above the input's focus ring */
+}
+.leo-password__toggle:hover, .leo-password__toggle:focus-visible { color: var(--leo-green); background: var(--leo-gold-tint); }
+.leo-password__toggle:focus-visible { outline: 2px solid var(--leo-gold); outline-offset: 0; }
+/* Bootstrap draws its own icon inside invalid inputs; keep it clear of the button. */
+.leo-password .form-control.is-invalid { padding-right: 5rem; background-position: right 3rem center; }
 .leo-required { color: #b3261e; }
 .leo-help ul { padding-left: 1.1rem; margin: 0.35rem 0 0; }
 .leo-help li { margin-bottom: 0.1rem; }
@@ -834,9 +1017,11 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
 .leo-shop-section { margin-top: 2rem; }
 .leo-shop-section__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--leo-gold); }
 .leo-shop-section .leo-subchips { margin-bottom: 1rem; }
+.leo-varieties { align-items: center; }
 .leo-shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 @media (min-width: 768px) { .leo-shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; } }
 @media (min-width: 1200px) { .leo-shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; } }
+@media (min-width: 1600px) { .leo-shop-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
 /* Storefront product card */
 .leo-shop-card { display: flex; flex-direction: column; }
@@ -849,6 +1034,21 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
 .leo-shop-card__name a { color: var(--leo-green); text-decoration: none; }
 .leo-shop-card__name a:hover, .leo-shop-card__name a:focus-visible { text-decoration: underline; }
 .leo-shop-card__price { font-weight: 700; color: var(--leo-green); margin-bottom: 0.6rem; }
+.leo-shop-card .leo-card__media { position: relative; }
+.leo-shop-card__badge {
+  position: absolute; top: 0.5rem; left: 0.5rem;
+  padding: 0.2rem 0.55rem; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 600; color: #fff; background: rgba(90, 30, 30, 0.85);
+}
+.leo-shop-card__desc {
+  font-size: 0.85rem; color: var(--bs-secondary-color); margin-bottom: 0.4rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.leo-shop-card__out { color: #8a2d2d; font-weight: 600; }
+.leo-shop-state--buyable { color: #1e6b45; }
+.leo-shop-state--out { color: #8a5a00; }
+.leo-shop-state--hidden { color: var(--bs-secondary-color); }
+.leo-option__name { display: block; font-size: 0.75rem; color: var(--bs-secondary-color); }
 .leo-shop-card__form { margin-top: auto; }
 .leo-shop-card .btn-sm { padding-inline: 0.6rem; }
 /* Buttons stack on narrow cards (2-column phones), sit side by side on wider cards. */

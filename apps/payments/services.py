@@ -280,7 +280,7 @@ def start_online_payment(order, request):
     checkout = gateway.build_checkout(
         payment,
         return_url=request.build_absolute_uri(reverse("payments:online_return", args=[payment.reference])),
-        cancel_url=request.build_absolute_uri(reverse("orders:detail", args=[order.number])),
+        cancel_url=request.build_absolute_uri(reverse("payments:online_cancel", args=[payment.reference])),
         notify_url=request.build_absolute_uri(reverse("payments:webhook", args=[gateway.name])),
         customer=order.customer,
     )

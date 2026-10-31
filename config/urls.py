@@ -33,6 +33,14 @@ if settings.DEBUG:
     ]
     # In production, the web server serves uploaded media files instead.
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+elif getattr(settings, "SERVE_MEDIA", False):
+    # Single-server installs without Nginx (see production.py). Public product images only;
+    # PRIVATE_MEDIA_ROOT (payment slips, receipts) is a different folder and is never exposed.
+    from django.urls import re_path
+    from django.views.static import serve
+
+    urlpatterns += [re_path(rf"^{settings.MEDIA_URL.strip('/')}/(?P<path>.*)$", serve,
+                            {"document_root": settings.MEDIA_ROOT})]
 
 # Branded error pages (templates/400.html, 403.html, 404.html, 500.html)
 handler400 = "apps.core.views.bad_request"

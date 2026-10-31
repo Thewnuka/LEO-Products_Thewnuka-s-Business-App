@@ -27,6 +27,61 @@
       });
     }
 
+    // Show / hide password buttons (partials/_form_field.html). Only changes how the
+    // field is displayed; the password itself is submitted exactly as before.
+    document.querySelectorAll("button[data-password-toggle]").forEach(function (button) {
+      var input = document.getElementById(button.getAttribute("data-password-toggle"));
+      if (!input) return;
+      var icon = button.querySelector("i");
+      button.hidden = false;
+      button.addEventListener("click", function () {
+        var show = input.type === "password";
+        input.type = show ? "text" : "password";
+        button.setAttribute("aria-pressed", show ? "true" : "false");
+        var label = show ? "Hide password" : "Show password";
+        button.setAttribute("aria-label", label);
+        button.title = label;
+        if (icon) icon.className = show ? "bi bi-eye-slash" : "bi bi-eye";
+        input.focus();
+      });
+      // Hide the password again before the form is sent, so the browser never stores it as plain text.
+      if (input.form) input.form.addEventListener("submit", function () { input.type = "password"; });
+    });
+
+    // Staff portal: keep the sidebar where it was when moving between pages, so choosing
+    // "Dashboard" (or any item) doesn't send the menu back to the top. Also tells the CSS
+    // how tall the sticky top bar is, so the sidebar column fits exactly beneath it.
+    var staffHeader = document.querySelector(".leo-staff-header");
+    if (staffHeader) {
+      var setHeaderHeight = function () {
+        document.documentElement.style.setProperty("--leo-header-h", staffHeader.offsetHeight + "px");
+      };
+      setHeaderHeight();
+      window.addEventListener("resize", setHeaderHeight);
+    }
+    var sideColumn = document.querySelector(".leo-sidebar");
+    if (sideColumn) {
+      var SIDEBAR_KEY = "leo-sidebar-scroll";
+      var saved = null;
+      try { saved = window.sessionStorage.getItem(SIDEBAR_KEY); } catch (e) { /* storage unavailable */ }
+      if (saved !== null) {
+        sideColumn.scrollTop = parseInt(saved, 10) || 0;
+      }
+      // Make sure the current page's link is visible (e.g. first visit, or a link opened from elsewhere).
+      var activeLink = sideColumn.querySelector(".nav-link.active");
+      if (activeLink && sideColumn.scrollHeight > sideColumn.clientHeight) {
+        var top = activeLink.offsetTop, view = sideColumn.scrollTop;
+        if (top < view || top + activeLink.offsetHeight > view + sideColumn.clientHeight) {
+          sideColumn.scrollTop = Math.max(0, top - sideColumn.clientHeight / 3);
+        }
+      }
+      var saveSidebar = function () {
+        try { window.sessionStorage.setItem(SIDEBAR_KEY, String(sideColumn.scrollTop)); } catch (e) { /* ignore */ }
+      };
+      sideColumn.addEventListener("click", saveSidebar);
+      window.addEventListener("pagehide", saveSidebar);
+    }
+
     // Ask before submitting forms marked with data-confirm="Question?"
     // (e.g. deactivating an account). The server still enforces permissions.
     document.querySelectorAll("form[data-confirm]").forEach(function (form) {

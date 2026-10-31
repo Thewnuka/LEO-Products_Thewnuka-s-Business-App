@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Redirecting to payment — {{ brand.name }}{% endblock %}
 
@@ -17,4 +18,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}<script>document.getElementById("gatewayForm").submit();</script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/gateway-redirect.js' %}"></script>{% endblock %}

@@ -1,7 +1,180 @@
 # LEO PRODUCTS: Project Status
 
 **Last updated:** 2026-10-31
-**Current phase:** Phase 09 (Notifications & Advanced Features): **COMPLETE**. Waiting for approval before Phase 10.
+**Current phase:** Phase 11 (Customer Store & UX Improvements): **COMPLETE**, except the PayHere sandbox test, which
+needs your merchant credentials (see below). Phases 01–10 are complete; see the [final project report](#final-project-report).
+
+---
+
+## Phase 11: Customer Store & UX Improvements ✅
+
+### Delivered (in the requested order)
+
+1. **Products visible in the online store.** Cause found: the shop listed a product only when one of its variations
+   had **stock recorded in Inventory**. The three products created by staff had no stock records, so the shop was
+   empty. Now every Active product (in active categories, with an active variation) is listed, with image, name,
+   category, short description, sizes and price; products with nothing in stock show an **"Out of stock"** badge and
+   cannot be added to the cart (stock rules unchanged: only in-stock variations are buyable, quantities are
+   limited by stock). Size options are labelled by size (e.g. "200g") with the staff name underneath. The staff
+   product page has a new **"Online shop"** panel saying whether customers can buy the product and, if not, why,
+   with a link to start tracking or add stock.
+2. **Category structure:** LEO TEA › **Tea Bags**, **Tea Packets** (with **Black / Ginger / Cinnamon** variety
+   filters on LEO TEA pages) and **LEO SWEETS** as its own main category. TEA BAGS is no longer a main category.
+   Data migration `catalog/0004` moves products (ids, slugs, SKUs, variations, stock and history unchanged), points
+   inventory items at the new categories, removes emptied old categories (or deactivates them if still referenced)
+   and is safe to run twice. The development database was backed up first (`backup-before-categories.sqlite3`).
+3. **Show/hide password** button on every password field (sign-in for both portals, registration, password change,
+   password reset, staff accounts). Display only; the button is hidden without JavaScript and the field returns to
+   hidden before the form is sent.
+4. **Online payment (PayHere, Sri Lanka).** The existing integration was reviewed against PayHere's documented
+   checkout hash and notification signature and kept (no duplicate workflow). Added: a **cancel return page**
+   (logged; nothing charged; "Pay now" offered again), a clear message for failed payments, and tests for the
+   cancelled (-1), pending (0) and chargeback (-3) codes and for paying again after a failure. Payments are marked
+   paid **only** by the signature-verified server notification (merchant, amount and currency checked; duplicates
+   ignored); the browser return is never trusted. No card data is stored. Cash on delivery/pickup and bank transfer
+   are unchanged.
+5. **Page width and spacing:** customer pages use the screen width fluidly (side padding 16–48 px, content up to
+   1600 px) instead of Bootstrap's fixed steps (e.g. only 720 px of a 991 px tablet). Shop grid: 2/3/4/5 columns.
+6. **Staff dashboard scrolling:** the top bar stays in view; on large screens the sidebar is its own scrolling
+   column (scrolling the page doesn't move it; scrolling it doesn't move the page) and it **keeps its scroll
+   position** when you open another section, with the current item kept in view. Phone drawer unchanged.
+
+Also in this round: **home page hero** with a photo background and three slanted image cards that change one at a
+time (Box 1 → Box 3 → Box 2, every 3.5 s), and an Owner-only **Staff portal → Administration → Home page images**
+page to upload, replace, preview, reorder and remove the background and box images (validated, resized, stored in
+`media/hero/`). Built-in samples (from the photos supplied) are used until images are uploaded.
+
+### Database changes
+
+- `core/0001`: `HomeHeroSettings` (background) and `HomeHeroImage` (box images).
+- `catalog/0004`: data only (category restructure above).
+
+### Verification performed (2026-10-31)
+
+| Check | Result |
+|---|---|
+| `python manage.py test` | **565 tests, all passed** (34 new: hero, store listing, categories and migration, password toggle, PayHere cancel/codes, layout) |
+| `check`, `makemigrations --check` | Clean |
+| Real development data | Shop shows the 3 staff products (marked out of stock: no stock recorded yet); categories restructured, no product lost or duplicated |
+| Browser (Edge) | Shop, category, product, cart, sign-in, account pages at 375/820/1024/1366/1920 px: no overflow or errors; add to cart with option + quantity; category chips and variety filters; password toggle then sign-in; staff sidebar scroll checks; home hero sequence 1→3→2 at 3.5 s; image upload/replace/remove |
+
+### Needs your input
+
+- **PayHere:** a sandbox Merchant ID and Merchant Secret (for your domain), and a public HTTPS address so PayHere
+  can call `/payments/webhook/payhere/`. Steps are in `.env.example`. **Online payment has not been tested against
+  PayHere** and must not be considered working until a sandbox payment succeeds.
+- **Stock:** customers can only buy once stock is recorded (Staff portal → Inventory → Stock items, or the
+  "start tracking stock" link on each product page).
+
+### Known limitations (Phase 11)
+
+- Variety filters (Black/Ginger/Cinnamon) search product names and descriptions; name products accordingly.
+- Moving between staff pages is still a normal page load (the sidebar position is restored, not kept live).
+
+---
+
+## Phase 10: Final Testing, Security, Deployment & Installation ✅
+
+### Delivered
+
+- [x] **Security review** of authentication, permissions, CSRF, XSS, SQL injection, uploads, sessions, secrets and caching
+      (findings and fixes below)
+- [x] **Content-Security-Policy** on every page (`script-src 'self'`, no inline scripts anywhere: the last one, the
+      payment redirect, moved to a static file), `frame-ancestors 'none'`, `object-src 'none'`, form targets limited to
+      this site and the configured payment gateway; **Permissions-Policy** (no camera, microphone, location…)
+- [x] **No caching of private pages:** `Cache-Control: private, no-store` on every response to a signed-in user
+- [x] Uploaded **PDF** payment slips and expense receipts are downloaded, never displayed inside the site
+- [x] **Production configuration:** WhiteNoise (compressed, cache-busting static files), PostgreSQL with persistent,
+      health-checked connections, console logging, optional `SERVE_MEDIA` for single-PC installs, guarded
+      `LOCAL_HTTP_ONLY` mode (refused for any host other than 127.0.0.1/localhost), `requirements-production.txt`
+      (psycopg, WhiteNoise, Gunicorn on Linux / Waitress on Windows)
+- [x] **Project deploy checks** in `check --deploy`: SQLite in production, default admin URL, console email, PayHere
+      sandbox, private uploads inside a public folder (error)
+- [x] **Deployment files** in `deploy/` (production `.env` template with empty placeholders, Gunicorn systemd service,
+      Nginx with HTTPS, Windows start script); DEVELOPMENT_GUIDE §15–§16: PostgreSQL, moving data from SQLite, backups,
+      Linux and Windows set-up, go-live checklist, updates
+- [x] **Installable app (PWA):** manifest, icons from the official logo (192/512, maskable, Apple touch, favicon),
+      standalone display, theme colours; service worker caching **static files only** plus a no-personal-data offline
+      page; Apple/Android meta tags (DEVELOPMENT_GUIDE §17)
+- [x] **Windows desktop app (Tauri 2) project** in `desktop/` with icons, config, capabilities and build guide;
+      opens the same server (no separate database) — **installer not built** (no Rust toolchain on this PC)
+- [x] New automated tests (`apps/core/tests_phase10.py`), README, ARCHITECTURE (§11, §20),
+      DEVELOPMENT_GUIDE, this file
+
+### Security review findings
+
+| Area | Result |
+|---|---|
+| Authentication | Django password hashing; staff password rules stricter than customers'; sign-in throttle shared by both portals, admin and discount approvals; sessions 8 h, HttpOnly, SameSite=Lax; secure-only in production |
+| Authorization | Every view checks a capability; automated sweep of **all** staff/admin/API URLs: customers and visitors never get a staff page; IT admin has no business pages |
+| CSRF | On every form and JSON call; the only exemption is the signature-verified payment webhook |
+| XSS | Auto-escaping everywhere; the only `|safe` is developer-written form help text; CSP now blocks inline/third-party scripts |
+| SQL injection | No raw SQL in the project (ORM only) |
+| Uploads | Size/type/content checks, random names, private folder for slips and receipts, permission-checked streaming, PDFs downloaded |
+| Secrets | Only in `.env`/environment; Git history checked: no `.env`, database, private files or keys ever committed |
+| **Fixed in this phase** | Signed-in pages could be cached by the browser (visible after sign-out/offline) → `no-store`; no CSP → enforced CSP; one inline script → static file; PDFs displayed inline → downloaded |
+
+### Verification performed (2026-10-31)
+
+| Check | Result |
+|---|---|
+| `python manage.py test` | **531 tests, all passed** (14 new Phase 10 tests + all Phase 01–09 tests) |
+| `check`, `makemigrations --check` | Clean; no new migrations in Phase 10 |
+| `check --deploy` (production settings) | Only expected warnings for the environment used (see "Not tested") |
+| Production stack smoke test (Waitress + WhiteNoise + production settings, local mode) | 30/30 checks: hashed, compressed, long-cached static files; manifest and service worker; branded 404 with DEBUG off; debug pages hidden; Owner pages; Excel export; private media unreachable; customer blocked from staff/admin; POST without CSRF refused; session cookie HttpOnly + SameSite |
+| Browser (Edge via DevTools protocol) on the production build | 20 pages as customer and Owner: **no console errors, CSP violations or failed requests**; fonts/icons load; dropdowns work |
+| Service worker | Active for the whole site; cache holds 14 static files + the offline page only; offline page contains no user data; with the network off a private page shows the offline page |
+| Responsive sweep (production build) | 43 pages × 5 widths (320–1366 px), all roles: no overflow, no broken images, all HTTP 200, navbar one row |
+| End-to-end on production build | Till sale → receipt; online checkout (pickup, cash) → confirmation |
+| Link crawl (automated test) | Every internal link and static file reachable for visitor, customer, cashier, manager, owner and IT admin |
+
+### Not tested (honestly)
+
+- **PostgreSQL**: not installed on this PC. The driver is installed and configuration is in place, but migrations and
+  the test suite ran on SQLite only. Run the tests once on PostgreSQL before going live.
+- **Linux/Gunicorn/Nginx and real HTTPS**: example files only; not run here. HSTS, secure cookies and the HTTPS redirect
+  were verified as settings, not over a real certificate.
+- **Windows installer**: the Tauri project was not built (no Rust); the JSON config was validated only.
+- **PWA install on real phones** (Android/iPhone) and on a public HTTPS site; real receipt printers; real email (SMTP);
+  PayHere sandbox (no credentials).
+
+---
+
+## Final project report
+
+### Completed (Phases 01–11)
+
+Foundation and branding · accounts with five roles and two portals · product catalogue · inventory, suppliers and
+purchases · online shop and cart · checkout, orders, cash/bank transfer/online-gateway payments · point of sale with
+cashier shifts, discounts, receipts and refunds · finance (expenses, supplier balances, COGS, profit & loss, cash flow,
+11 reports with charts and CSV/Excel/A4) · notifications, business alerts, wishlist, reviews, search and activity
+history · security hardening, production configuration, installable app, desktop-app project · store
+improvements (all products visible, tea/sweets categories, password toggle, payment cancel handling, wider
+layout, staff sidebar) and the managed home page hero.
+
+### Readiness
+
+| Area | Status |
+|---|---|
+| Automated tests | 565 passing |
+| Deployment | **Ready to deploy** once a server, domain, PostgreSQL and SMTP are provided; guide and example files included |
+| PWA | **Ready**: works on HTTPS (or 127.0.0.1); real-device install not yet tried |
+| Windows installer | **Not built**: project ready; needs Rust + C++ Build Tools to build (`desktop/README.md`) |
+
+### Manual steps before going live
+
+1. Provide hosting (Linux server or a Windows shop PC), a domain with HTTPS, PostgreSQL and SMTP email.
+2. Create the production `.env` from `deploy/env.production.example` (new SECRET_KEY, ADMIN_URL, hosts, database, email).
+3. `pip install -r requirements-production.txt`, `check --deploy`, `migrate`, `collectstatic`, `bootstrap_owner`.
+4. Run the test suite once against PostgreSQL.
+5. Enter business data: products, **stock costs**, delivery areas, bank details, POS receipt details, alert settings.
+6. Optional: PayHere (sandbox first), build the desktop installer, schedule `send_business_alerts` and backups.
+
+### Remaining limitations (summary)
+
+See the "Known limitations" lists of each phase above. The main ones: online payment untested against PayHere;
+profit figures need stock costs; no tax/VAT, payroll or double-entry accounting; no live push notifications or SMS;
+no barcode field (SKU scanning only); notifications and logs are not automatically cleaned up.
 
 ---
 
@@ -696,9 +869,9 @@ meta, mobile menu and responsive CSS present. No changes required.
 | 07 | Point of sale (POS) and cashier shift management | ✅ Complete |
 | 08 | Finance and reports (expenses, supplier balances, profit & loss, exports, charts) | ✅ Complete |
 | 09 | Notifications, business alerts, wishlist, reviews, search, activity history | ✅ Complete |
-| 10+ | Business Settings (logo upload), technical settings, security log viewer | Planned |
-| 10+ | PWA (manifest, service worker, icons) | Planned |
-| 10+ | Tauri Windows desktop app and production deployment | Planned |
+| 10 | Final testing, security hardening, production deployment, PWA, Windows desktop project | ✅ Complete |
+| Later | Business Settings (logo upload), technical settings, security log viewer | Optional |
+| Later | Build and sign the Windows installer; real-device PWA and PostgreSQL testing | Manual step |
 
-The roadmap is a proposal and can be reordered; phases after 09 will be numbered as they are approved. The home page shows a simplified version
+All planned phases are complete; optional later work is listed above. The home page shows a simplified version
 (`templates/core/home.html`).

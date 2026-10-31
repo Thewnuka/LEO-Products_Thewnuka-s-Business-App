@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{% block meta_description %}{{ brand.name|default:'LEO PRODUCTS' }} — {{ brand.tagline|default:'taste of tradition, zip of purity' }}{% endblock %}">
   <meta name="theme-color" content="#123d28">
+  {# Installable app (PWA): Android/desktop use the manifest, iPhone uses the apple-* tags #}
+  <link rel="manifest" href="{% url 'core:manifest' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="{{ brand.name|default:'LEO PRODUCTS' }}">
   <title>{% block title %}{{ brand.name|default:"LEO PRODUCTS" }}{% endblock %}</title>
 
   <link rel="icon" type="image/png" href="{% static brand.logo|default:'images/leo-logo.png' %}">
@@ -32,6 +39,7 @@
 
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'js/leo.js' %}"></script>
+  <script src="{% static 'js/pwa.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

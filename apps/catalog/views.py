@@ -6,7 +6,7 @@ Nothing is hard-deleted except empty categories; products, variations and
 units are archived by deactivating them.
 """
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, ProtectedError
 from django.shortcuts import get_object_or_404, redirect
@@ -112,7 +112,33 @@ class ProductDetailView(CatalogAccessMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["variations"] = self.object.variations.select_related("unit").order_by("sort_order", "measurement_type", "quantity")
         ctx["status_choices"] = Product.Status.choices
+        ctx["shop"] = _shop_visibility(self.object)
         return ctx
+
+
+def _shop_visibility(product):
+    """What customers see in the online shop for this product, and why (for the staff product page)."""
+    from apps.shop import services as shop
+
+    category_ok = product.category.is_active and (product.subcategory is None or product.subcategory.is_active)
+    variations = shop.product_variations(product) if product.status == Product.Status.ACTIVE and category_ok else []
+    for v in variations:
+        try:
+            v.stock_item = v.inventory_item
+        except ObjectDoesNotExist:
+            v.stock_item = None
+    if product.status != Product.Status.ACTIVE:
+        state, note = "hidden", "Hidden from customers: the product is not Active."
+    elif not category_ok:
+        state, note = "hidden", "Hidden from customers: its category or subcategory is inactive."
+    elif not variations:
+        state, note = "hidden", "Hidden from customers: it has no active variations."
+    elif any(v.available > 0 for v in variations):
+        state, note = "buyable", "Listed in the shop and customers can buy it."
+    else:
+        state, note = "out", ("Listed in the shop as “Out of stock”. Customers can see it but can't buy it "
+                              "until stock is recorded in Inventory.")
+    return {"state": state, "note": note, "variations": variations}
 
 
 class ProductStatusView(CatalogAccessMixin, View):

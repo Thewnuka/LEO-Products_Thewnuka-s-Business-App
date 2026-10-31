@@ -6,8 +6,10 @@ Business management system and e-commerce platform for LEO PRODUCTS, built with
 Django. One backend and one database will serve the website, a Windows desktop
 app (Tauri) and an installable mobile app (PWA).
 
-**Current status:** Phase 09 (notifications, alerts, wishlist, reviews, search and activity history) is complete.
-Phases 01–08 (foundation, authentication and roles, product catalogue, inventory, storefront and cart, orders and payments, point of sale, finance and reports) are done. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
+**Current status:** all planned phases (01–10) are complete: foundation, accounts and roles, product catalogue,
+inventory, online shop, orders and payments, point of sale, finance and reports, notifications, and final
+security/deployment work. What still needs doing before going live is listed in
+[PROJECT_STATUS.md](PROJECT_STATUS.md#final-project-report). See [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ---
 
@@ -26,10 +28,15 @@ Phases 01–08 (foundation, authentication and roles, product catalogue, invento
 | Icons | Bootstrap Icons (stored locally) | 1.13.1 |
 | Fonts | Playfair Display + Inter (Google Fonts) | n/a |
 | Database (development) | SQLite | built into Python |
-| Database (production) | PostgreSQL | chosen at deployment |
+| Database (production) | PostgreSQL (driver: psycopg) | 3.3.6 |
+| Static files (production) | WhiteNoise | 6.12.0 |
+| App server (production) | Gunicorn (Linux) / Waitress (Windows) | 23.0.0 / 3.0.2 |
+| Installable app | PWA (manifest + service worker, no library) | n/a |
+| Windows desktop app | Tauri 2 (project in `desktop/`, installer not yet built) | 2.x |
 
-Chart.js, Tauri and PWA support are planned for later phases and are **not** installed yet.
-The full pinned list is in [requirements.txt](requirements.txt).
+Charts are drawn as SVG on the server (no chart library). The pinned lists are in
+[requirements.txt](requirements.txt) (development) and [requirements-production.txt](requirements-production.txt)
+(adds PostgreSQL driver, WhiteNoise and the app server).
 
 ---
 
@@ -62,6 +69,7 @@ Then open <http://127.0.0.1:8000/> in your browser.
 | <http://127.0.0.1:8000/staff/finance/> | **Finance overview** (Owner); reports at `/staff/finance/reports/` (Owner, Manager) |
 | <http://127.0.0.1:8000/staff/pos/> | **Point of sale** till (Cashier, Owner); sales, shifts and POS settings under the same menu |
 | <http://127.0.0.1:8000/staff/orders/settings/> | Delivery areas and fees, pickup, cash and bank details (Owner) |
+| <http://127.0.0.1:8000/staff/home-images/> | **Home page images**: hero background and the three image boxes (Owner) |
 | <http://127.0.0.1:8000/staff/login/> | **Staff portal** sign-in (Owner, IT Admin, Manager, Cashier) |
 | <http://127.0.0.1:8000/account/login/> | **Customer** sign-in |
 | <http://127.0.0.1:8000/account/register/> | Customer registration |
@@ -201,8 +209,9 @@ Design: [ARCHITECTURE.md §14](ARCHITECTURE.md#14-inventory-stock-suppliers-and-
 
 ## Online shop at a glance
 
-- Products appear in the shop automatically when they are **Active**, in an active category, and have at
-  least one size **in stock** (tracked in Inventory). No product or category names are hard-coded.
+- Products appear in the shop automatically when they are **Active**, in an active category, with at least one
+  active size. Customers can buy a size once it is **in stock** (tracked in Inventory); otherwise the product is
+  shown as "Out of stock". Categories: LEO TEA (Tea Bags, Tea Packets) and LEO SWEETS.
 - Customers choose a size (weight, tea-bag count or pieces), see its price and availability, and add it to the cart.
 - The cart checks stock on every change, never reduces stock, and is private: guests' carts belong to
   their browser session and merge into their account when they sign in.
@@ -215,6 +224,19 @@ Design: [ARCHITECTURE.md §15](ARCHITECTURE.md#15-customer-storefront-and-cart).
 
 ## Documentation
 
-- [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md): installation, daily commands, Git and GitHub
+- [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md): installation, daily use of every module, testing, going live (§16),
+  installable app (§17), Windows desktop app (§18), Git and GitHub
 - [ARCHITECTURE.md](ARCHITECTURE.md): how the project is organised and why
 - [PROJECT_STATUS.md](PROJECT_STATUS.md): what is done, what is next
+- [deploy/README.md](deploy/README.md): example server files (no real credentials)
+- [desktop/README.md](desktop/README.md): building the Windows desktop installer
+
+## Going live in short
+
+1. `pip install -r requirements-production.txt`
+2. Create `.env` from `deploy/env.production.example` (new `SECRET_KEY`, your domain, PostgreSQL `DATABASE_URL`,
+   email, a private `ADMIN_URL`).
+3. `python manage.py check --deploy`, `migrate`, `collectstatic`, `bootstrap_owner`.
+4. Run with Gunicorn behind Nginx (Linux) or `deploy/windows/start-server.ps1` (Windows PC).
+
+Full steps and the go-live checklist: [DEVELOPMENT_GUIDE.md §16](DEVELOPMENT_GUIDE.md#16-going-live-production).

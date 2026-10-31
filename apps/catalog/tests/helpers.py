@@ -39,8 +39,9 @@ class CatalogTestCase(AccountsTestCase):
         super().setUpTestData()
         # Rows created by the data migration (seed) are available in tests.
         cls.leo_tea = Category.objects.get(name="LEO TEA", parent=None)
-        cls.black_tea = Category.objects.get(name="Black Tea", parent=cls.leo_tea)
-        cls.tea_bags = Category.objects.get(name="TEA BAGS", parent=None)
+        # Phase 11 structure: LEO TEA › Tea Bags / Tea Packets; LEO SWEETS › Kokis
+        cls.tea_packets = Category.objects.get(name="Tea Packets", parent=cls.leo_tea)
+        cls.tea_bags = Category.objects.get(name="Tea Bags", parent=cls.leo_tea)
         cls.sweets = Category.objects.get(name="LEO SWEETS", parent=None)
         cls.kokis = Category.objects.get(name="Kokis", parent=cls.sweets)
         cls.gram = Unit.objects.get(symbol="g")

@@ -1,0 +1,16 @@
+# /etc/systemd/system/leo-products.service  (EXAMPLE: adjust user and paths)
+# sudo systemctl daemon-reload && sudo systemctl enable --now leo-products
+[Unit]
+Description=LEO PRODUCTS (Gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=leo
+Group=www-data
+WorkingDirectory=/srv/leo-products
+EnvironmentFile=/srv/leo-products/.env
+ExecStart=/srv/leo-products/.venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

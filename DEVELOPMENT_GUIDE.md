@@ -383,20 +383,34 @@ home page) and see their cart at <http://127.0.0.1:8000/cart/> (bag icon in the 
 
 ### How a product appears in the shop
 
-A product is shown only when **all** of these are true. If your product doesn't appear, check them in order:
+A product is **listed** when all of these are true. If your product doesn't appear, check them in order
+(the product's page in the staff portal has an **Online shop** panel that tells you which one is missing):
 
 1. **Catalogue → Products:** the product's status is **Active**.
 2. Its **main category** (and subcategory, if any) is **active**.
 3. At least one **variation** is active.
-4. That variation has **stock tracking**: **Inventory → Track new item → Finished product**.
+
+Customers can **buy** a size only when, in addition:
+
+4. That variation has **stock tracking**: **Inventory → Track new item → Finished product**
+   (or "start tracking stock" in the product's Online shop panel).
 5. Its stock is **at least 1 packet**.
 
-Variations that are out of stock or not tracked still appear on the product page, greyed out
-and not selectable. Customers only ever see the **selling price**, never the wholesale price.
+A listed product with nothing in stock shows an **"Out of stock"** badge and cannot be added to the cart
+(Phase 11; before that it was hidden completely). Sizes that are out of stock or not tracked appear on the
+product page greyed out and not selectable. Customers only ever see the **selling price**, never the wholesale price.
 At 5 or fewer in stock the shop shows "Only N left" (`SHOP_LOW_STOCK_THRESHOLD` in settings).
 
-> Quick test: create a product, add a 200g variation with a price, activate the product,
-> then track the 200g variation in Inventory with an opening stock of e.g. 10. It now appears in the shop.
+> Quick test: create a product, add a 200g variation with a price and activate the product: it appears
+> in the shop as "Out of stock". Track the 200g variation in Inventory with an opening stock of e.g. 10:
+> customers can now add it to the cart.
+
+### Categories in the shop
+
+LEO TEA (subcategories **Tea Bags** and **Tea Packets**) and **LEO SWEETS** are separate main categories; their
+products are never mixed. Put each tea product in LEO TEA › Tea Bags or Tea Packets and name it by its variety
+(e.g. "Black Tea", "Ginger Tea Bags"): the **Black / Ginger / Cinnamon** buttons on LEO TEA pages search product
+names and descriptions. The list of variety buttons is `VARIETY_FILTERS` in `apps/shop/services.py`.
 
 ### Searching and sorting
 
@@ -527,6 +541,12 @@ an online payment as paid, and repeated notifications are ignored.
    public HTTPS test server (or a tunnel) with sandbox test cards.
 5. Before going live, **check the hash and notification format against PayHere's current documentation**,
    run sandbox tests end to end, then set `PAYHERE_SANDBOX=False` with your live credentials.
+
+What the customer sees: **Pay now** on the order page opens PayHere's secure page. If they **cancel** there, they
+come back to the order with "You cancelled the online payment… use Pay now whenever you're ready" (logged in the
+payment's history; nothing charged). If PayHere reports the payment **failed or cancelled**, the order stays
+unpaid and **Pay now** can be used again (a new payment record is created). Successful payments are shown as paid
+only after PayHere's verified notification arrives.
 
 ### Emails
 
@@ -751,6 +771,23 @@ Staff portal → **Search**: one box for order and receipt numbers, customer nam
 references, products and SKUs, stock items, suppliers, purchases, expenses and staff accounts. It only searches the
 areas the user's role can open (a cashier finds their own till sales, not other cashiers').
 
+### Home page images (Owner)
+
+Staff portal → **Administration → Home page images** (<http://127.0.0.1:8000/staff/home-images/>). Only the Owner
+can open it.
+
+- **Background photo:** choose a photo, pick which part to keep in view, **Save background**. Wide (landscape)
+  photos with a calm area on the left work best; the dark green shading is added automatically so the text stays
+  readable. **Remove uploaded background** brings back the sample.
+- **Box 1, Box 2, Box 3** (the slanted cards on the right): **Add image** with a short description (read out by
+  screen readers). Upright (portrait) photos fit best. For each uploaded image you can change the description and
+  **Position** (lower first), **Replace photo**, or **Remove** it. Up to 8 images per box.
+- A box with no uploaded images shows its sample images (`static/images/hero/`); your first upload replaces them.
+- Photos: JPG, PNG or WebP, up to 5 MB; they are checked, resized and stored under `media/hero/`. A preview
+  appears as soon as you choose a file. The home page changes as soon as you save.
+- The order the boxes change in (Box 1 → Box 3 → Box 2) and the time between changes (3.5 s) are
+  `CHANGE_ORDER` and `INTERVAL_SECONDS` in `apps/core/hero.py`.
+
 ### Activity history (Owner, Manager)
 
 Staff portal → **Activity history**: one timeline of order status changes, payment events, stock movements, POS shifts,
@@ -799,6 +836,9 @@ The tests use a temporary database; your `db.sqlite3` is never touched. Test fil
 | `apps/notifications/tests/test_notifications.py` | Who is notified for each event (and who isn't), no duplicates, mutes and customer email switch, unsafe links dropped, stock crossing alerts, own-inbox privacy, read/unread, bell, preferences, business alerts by role, alert settings, daily alert command |
 | `apps/shop/tests/test_reviews.py` | Wishlist (customers only), reviews only after a paid purchase, moderation, notifications, one review per customer, edits re-checked, auto-publish setting, no emails shown |
 | `apps/dashboard/tests_phase09.py` | Staff search limited by role, activity history by role and filters |
+| `apps/core/tests_hero.py` | Home page hero: sample fallback, cards inside the hero, order 1→3→2 and 3.5 s, uploads (valid, wrong type, fake image, too large), replace/remove delete old files, background, Owner-only access |
+| `apps/core/tests_phase11.py`, `apps/shop/tests/test_categories.py`, `apps/accounts/tests/test_password_toggle.py` | Phase 11: page width and staff sidebar hooks; LEO TEA › Tea Bags/Tea Packets and LEO SWEETS, variety filters, the category data migration (nothing lost or duplicated, safe twice); password show/hide on every password field (out-of-stock listing and PayHere cancel/codes are in the shop and payments tests) |
+| `apps/core/tests_phase10.py` | Security headers (CSP, Permissions-Policy, no-store for signed-in pages), no inline scripts, PDF slips downloaded, PWA manifest/service worker/offline page, every staff/admin/API URL refused to customers and visitors, IT admin limits, deploy checks, production settings and the local-only mode guard, a link crawl for every role (no errors, no broken links or missing static files) |
 | `apps/shop/tests/test_cart.py` | Add/update/remove, stock limits, invalid input, stock dropping later, guest vs customer carts, merge on sign-in and registration, cart privacy, staff blocked, CSRF, safe redirects |
 
 Tests take a while because password hashing is deliberately slow (that is what makes it secure).
@@ -810,14 +850,132 @@ Tests take a while because password hashing is deliberately slow (that is what m
 **Development:** SQLite. The database is the file `db.sqlite3`. It is not committed to Git.
 To start again from an empty database, stop the server, delete `db.sqlite3` and run `python manage.py migrate`.
 
-**Production (later):** PostgreSQL.
-1. Install PostgreSQL and create a database and user.
-2. `pip install "psycopg[binary]"` and update `requirements.txt`.
-3. Set `DATABASE_URL=postgres://user:password@host:5432/dbname` and `DJANGO_SETTINGS_MODULE=config.settings.production`.
-4. Run `python manage.py migrate` and `python manage.py collectstatic`.
-5. Run `python manage.py check --deploy` and fix anything it reports.
+**Production:** PostgreSQL (see §16). The same migrations create the same tables; nothing in the code is
+SQLite-specific. Set `DATABASE_URL=postgres://USER:PASSWORD@HOST:5432/DATABASE`.
 
-## 16. Git and GitHub
+**Moving existing data from SQLite to PostgreSQL** (only if you already have real data in `db.sqlite3`):
+
+```powershell
+# 1. With the OLD (SQLite) settings: export everything except tables Django rebuilds itself
+python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.permission -e sessions --indent 2 -o leo-data.json
+# 2. Point .env at PostgreSQL (DATABASE_URL=postgres://...), then:
+python manage.py migrate
+python manage.py loaddata leo-data.json
+```
+
+Copy the `media\` and `private_media\` folders too. Keep `leo-data.json` private (it contains customer data) and
+delete it when done.
+
+**Backups (both databases):** back up the database **and** the `media\` and `private_media\` folders together.
+PostgreSQL: `pg_dump -Fc leo_products > leo-YYYYMMDD.dump`; restore with `pg_restore -d leo_products leo-YYYYMMDD.dump`.
+SQLite: stop the server and copy `db.sqlite3`.
+
+---
+
+## 16. Going live (production)
+
+Production uses `config.settings.production`: `DEBUG` is always off, HTTPS is enforced, cookies are
+secure-only, static files are served by WhiteNoise, and `check --deploy` must be clean. Nothing below contains
+real hosts or passwords: use your own. Example files are in `deploy\` (see `deploy\README.md`).
+
+### Option A: Linux server (recommended for a public website)
+
+1. A server with Python 3.12, PostgreSQL and Nginx, and a domain name pointing to it.
+2. PostgreSQL: create a database and user, e.g. `CREATE USER leo WITH PASSWORD '...'; CREATE DATABASE leo_products OWNER leo;`
+3. Copy the project to e.g. `/srv/leo-products`, then:
+
+   ```bash
+   python3.12 -m venv .venv
+   .venv/bin/pip install -r requirements-production.txt
+   cp deploy/env.production.example .env   # fill in every value, then: chmod 600 .env
+   .venv/bin/python manage.py check --deploy
+   .venv/bin/python manage.py migrate
+   .venv/bin/python manage.py collectstatic --noinput
+   .venv/bin/python manage.py bootstrap_owner     # first time only (§5)
+   ```
+4. Gunicorn as a service: `deploy/linux/gunicorn.service.example`. Nginx with HTTPS: `deploy/linux/nginx.conf.example`
+   (certificates e.g. with certbot). Set `USE_X_FORWARDED_PROTO=True` behind Nginx.
+5. Open the site, sign in as the Owner, and work through the checklist below.
+
+### Option B: one Windows PC in the shop (no public website)
+
+For using the system only inside the shop (till, stock, finance), on the PC that runs it or through the desktop app.
+
+1. Install Python 3.12 and PostgreSQL for Windows (or keep SQLite for a single PC, see the note below).
+2. In the project folder:
+
+   ```powershell
+   .\.venv\Scripts\pip install -r requirements-production.txt
+   Copy-Item deploy\env.production.example .env    # then edit .env:
+   ```
+   `ALLOWED_HOSTS=127.0.0.1,localhost`, `LOCAL_HTTP_ONLY=True`, `SERVE_MEDIA=True`, `SECURE_SSL_REDIRECT=False`,
+   `USE_X_FORWARDED_PROTO=False`, plus `SECRET_KEY`, `DATABASE_URL`, `ADMIN_URL`, `PRIVATE_MEDIA_ROOT`.
+3. Start it: `powershell -ExecutionPolicy Bypass -File deploy\windows\start-server.ps1` (runs the checks, migrations and
+   `collectstatic`, then serves on `http://127.0.0.1:8000`). To start it automatically, create a Windows Task Scheduler
+   task "At log on" running that command.
+
+`LOCAL_HTTP_ONLY=True` turns off HTTPS-only cookies because there is no HTTPS on `127.0.0.1`. It is refused unless
+`ALLOWED_HOSTS` contains only `127.0.0.1`/`localhost`, so it can't accidentally be used on a public server.
+SQLite works for one PC (`DATABASE_URL=sqlite:///C:/LEO/leo.sqlite3`), but `check --deploy` will warn; PostgreSQL is
+safer for multiple users at once.
+
+### Go-live checklist
+
+- [ ] `python manage.py check --deploy` shows no errors (warnings only for things you chose deliberately)
+- [ ] New `SECRET_KEY`; `.env` is not readable by other users and is not in Git
+- [ ] `ADMIN_URL` changed from `admin/`; the Owner's password is strong and changed after `bootstrap_owner`
+- [ ] Email sends (try "Forgot password"); order emails arrive
+- [ ] Delivery & payment settings, POS settings (receipt address/phone), stock costs and alert settings filled in (§10–§13)
+- [ ] Online payment left off, or PayHere tested in sandbox first (§10)
+- [ ] Backups of the database and `media\` + `private_media\` scheduled and a restore tested
+- [ ] Staff accounts created with the right roles; test sign-in for each role
+
+### Updating to a new version
+
+```bash
+git pull
+.venv/bin/pip install -r requirements-production.txt
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py collectstatic --noinput
+sudo systemctl restart leo-products        # Windows: stop and start start-server.ps1
+```
+
+Back up first. Migrations only add or change tables; they never delete business data.
+
+---
+
+## 17. Install as an app (phones, tablets, computers)
+
+The website can be installed like an app (a "PWA") from the browser, with the LEO PRODUCTS icon and its own window.
+It needs **HTTPS** (or `http://127.0.0.1` on the same PC).
+
+* **Android (Chrome):** open the site → menu ⋮ → **Install app** / **Add to Home screen**.
+* **iPhone/iPad (Safari):** open the site → Share → **Add to Home Screen**.
+* **Windows/Mac (Chrome or Edge):** the install icon in the address bar, or menu → **Install LEO PRODUCTS**.
+
+What it stores on the device: **only** the site's design files (CSS, JavaScript, icons, fonts) and a small "You're
+offline" page, so it opens quickly. **Pages, orders, payments, reports and customer data are never stored**; they always
+come from the server, and pages for signed-in users are sent with "do not store" instructions. Without a connection the
+app shows the offline page. After an update, the app picks up the new files automatically on the next visit.
+
+Files: `apps/core/pwa.py` (manifest, service worker, offline page), `templates/pwa/`, `static/js/pwa.js`,
+`static/icons/` (made from the official logo).
+
+---
+
+## 18. Windows desktop app
+
+`desktop\` contains a Tauri project that opens the LEO PRODUCTS server in its own window (Start menu icon, no browser
+tabs). It uses the same server and database; the desktop app stores no business data. See **`desktop\README.md`** for the
+server address setting, the build tools (Rust, C++ Build Tools, Node.js) and the build command. **The installer has not
+been built yet** (the development PC had no Rust toolchain). If the server is hosted, the desktop app needs internet access.
+
+An alternative that needs no build: install the site as an app from Edge or Chrome (§17); it also gets its own window
+and Start menu entry.
+
+---
+
+## 19. Git and GitHub
 
 ### First commit
 
@@ -870,7 +1028,7 @@ Then open a Pull Request on GitHub and merge it into `main` when the phase is do
 - Run `python manage.py test` before committing.
 - Commit small, meaningful steps with clear messages.
 
-## 17. Troubleshooting
+## 20. Troubleshooting
 
 | Problem | Fix |
 |---|---|

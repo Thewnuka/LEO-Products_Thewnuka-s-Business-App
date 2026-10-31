@@ -97,6 +97,8 @@
 <li><p class="leo-sidebar__heading">Administration</p></li>
 {% if can.MANAGE_BUSINESS_SETTINGS %}{% url 'notifications:alert_settings' as alertset_url %}
 <li class="nav-item"><a class="nav-link{% if path == alertset_url %} active{% endif %}" href="{{ alertset_url }}"><i class="bi bi-sliders" aria-hidden="true"></i>Alert settings</a></li>
+{% url 'core:hero_images' as heroimg_url %}
+<li class="nav-item"><a class="nav-link{% if path == heroimg_url %} active{% endif %}" href="{{ heroimg_url }}"><i class="bi bi-images" aria-hidden="true"></i>Home page images</a></li>
 {% endif %}
 {% if can.VIEW_STAFF %}
 {% url 'accounts:staff_list' as staff_url %}

@@ -13,11 +13,8 @@ from .helpers import CatalogTestCase, make_product, make_variation
 class SeedDataTests(CatalogTestCase):
     def test_initial_categories_and_units_exist(self):
         mains = list(Category.objects.main().values_list("name", flat=True))
-        self.assertEqual(mains, ["LEO TEA", "TEA BAGS", "LEO SWEETS"])
-        self.assertEqual(
-            list(self.tea_bags.children.values_list("name", flat=True)),
-            ["Black Tea Bags", "Ginger Tea Bags", "Cinnamon Tea Bags"],
-        )
+        self.assertEqual(mains, ["LEO TEA", "LEO SWEETS"])  # TEA BAGS is a subcategory of LEO TEA (Phase 11)
+        self.assertEqual(list(self.leo_tea.children.values_list("name", flat=True)), ["Tea Bags", "Tea Packets"])
         self.assertEqual(list(self.sweets.children.values_list("name", flat=True)), ["Kokis"])
         self.assertEqual(
             set(Unit.objects.values_list("symbol", "measurement_type")),
@@ -35,29 +32,29 @@ class CategoryModelTests(CatalogTestCase):
         self.assertEqual(str(pepper), "LEO SPICES › Pepper")
 
     def test_duplicate_name_in_same_parent_is_rejected(self):
-        dup = Category(name="black tea", parent=self.leo_tea)
+        dup = Category(name="tea packets", parent=self.leo_tea)
         with self.assertRaises(ValidationError):
             dup.full_clean()
         with self.assertRaises(IntegrityError), transaction.atomic():
-            Category.objects.create(name="BLACK TEA", parent=self.leo_tea, slug="x")
+            Category.objects.create(name="TEA PACKETS", parent=self.leo_tea, slug="x")
 
     def test_duplicate_main_category_is_rejected(self):
         with self.assertRaises(IntegrityError), transaction.atomic():
             Category.objects.create(name="leo tea", slug="leo-tea-dup")
 
     def test_same_name_allowed_under_different_parents(self):
-        Category.objects.create(name="Black Tea", parent=self.tea_bags)  # no error
+        Category.objects.create(name="Tea Packets", parent=self.sweets)  # no error
 
     def test_only_two_levels(self):
-        deeper = Category(name="Extra Strong", parent=self.black_tea)
+        deeper = Category(name="Extra Strong", parent=self.tea_packets)
         with self.assertRaises(ValidationError) as ctx:
             deeper.full_clean()
         self.assertIn("parent", ctx.exception.message_dict)
 
     def test_category_with_products_or_children_cannot_be_deleted(self):
-        make_product(category=self.leo_tea, subcategory=self.black_tea)
+        make_product(category=self.leo_tea, subcategory=self.tea_packets)
         with self.assertRaises(ProtectedError), transaction.atomic():
-            self.black_tea.delete()
+            self.tea_packets.delete()
         with self.assertRaises(ProtectedError), transaction.atomic():
             self.sweets.delete()  # has the Kokis subcategory
         empty = Category.objects.create(name="Empty")
@@ -78,7 +75,7 @@ class ProductModelTests(CatalogTestCase):
         self.assertIn("subcategory", ctx.exception.message_dict)
 
     def test_main_category_must_be_a_main_category(self):
-        product = Product(name="Wrong", category=self.black_tea)
+        product = Product(name="Wrong", category=self.tea_packets)
         with self.assertRaises(ValidationError):
             product.full_clean()
 
@@ -98,7 +95,7 @@ class VariationModelTests(CatalogTestCase):
 
     def test_weight_count_and_piece_variations(self):
         weight = make_variation(self.product, "200", self.gram, measurement=MeasurementType.WEIGHT)
-        bags_product = make_product("Ginger Bags", category=self.tea_bags)
+        bags_product = make_product("Ginger Bags", category=self.leo_tea, subcategory=self.tea_bags)
         count = make_variation(bags_product, "25", self.bags, measurement=MeasurementType.COUNT)
         kokis = make_product("Kokis Pack", category=self.sweets, subcategory=self.kokis)
         piece = make_variation(kokis, "10", self.pieces, measurement=MeasurementType.PIECE)
@@ -158,7 +155,7 @@ class VariationModelTests(CatalogTestCase):
 class StatsTests(CatalogTestCase):
     def test_stats_count_real_rows(self):
         stats = catalog_stats()
-        self.assertEqual((stats["total_products"], stats["main_categories"], stats["subcategories"], stats["total_variations"]), (0, 3, 7, 0))
+        self.assertEqual((stats["total_products"], stats["main_categories"], stats["subcategories"], stats["total_variations"]), (0, 2, 3, 0))
         p = make_product()
         make_variation(p)
         make_variation(p, "400", is_active=False)

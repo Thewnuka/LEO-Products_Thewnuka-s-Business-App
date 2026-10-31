@@ -8,7 +8,10 @@ A variation is *purchasable* when:
     subcategory is active;
   - the variation is active;
   - it has an active inventory record (Phase 04) with at least 1 in stock.
-A product is listed in the shop when it has at least one purchasable variation.
+A product is listed in the shop when it is visible (active, in active categories)
+and has at least one active variation. Products with nothing in stock are still
+listed so customers can see the full range, but they are marked "Out of stock"
+and cannot be added to the cart.
 Stock always comes from the inventory module; the cart never changes it.
 """
 from dataclasses import dataclass, field
@@ -18,6 +21,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Case, Count, IntegerField, Min, Q, Value, When
+from django.db.models.functions import Coalesce
 
 from apps.catalog.models import Category, Product, ProductVariation
 
@@ -44,22 +48,41 @@ def _product_visible(prefix=""):
 # Storefront queries
 # ---------------------------------------------------------------------------
 def visible_products():
-    """Active products (in active categories) with at least one purchasable variation."""
+    """
+    Active products (in active categories) with at least one active variation.
+    `available_count` = purchasable variations (0 = out of stock); `from_price` =
+    the lowest price a customer can buy now, or the lowest listed price when out of stock.
+    """
+    listed = Q(variations__is_active=True)
     available = _variation_available("variations__")
     return (Product.objects.filter(_product_visible())
-            .annotate(available_count=Count("variations", filter=available, distinct=True),
-                      from_price=Min("variations__selling_price", filter=available))
-            .filter(available_count__gt=0)
+            .annotate(option_count=Count("variations", filter=listed, distinct=True),
+                      available_count=Count("variations", filter=available, distinct=True),
+                      from_price=Coalesce(Min("variations__selling_price", filter=available),
+                                          Min("variations__selling_price", filter=listed)))
+            .filter(option_count__gt=0)
             .select_related("category", "subcategory"))
 
 
+# Quick "variety" filters shown on a main category's pages (main category name -> search words).
+# They search product names and descriptions, so new products appear under them automatically.
+VARIETY_FILTERS = {
+    "LEO TEA": ["Black", "Ginger", "Cinnamon"],
+}
+
+
+def variety_filters(main_category):
+    return VARIETY_FILTERS.get(main_category.name.upper(), [])
+
+
 def visible_categories():
-    """Active main categories that currently have something to buy, with their subcategories."""
-    products = visible_products()
-    main_ids = set(products.values_list("category_id", flat=True))
-    sub_ids = set(products.exclude(subcategory=None).values_list("subcategory_id", flat=True))
+    """
+    Active main categories that have products listed, each with all of its active
+    subcategories (e.g. LEO TEA: Tea Bags and Tea Packets), so the structure is always clear.
+    """
+    main_ids = set(visible_products().values_list("category_id", flat=True))
     mains = list(Category.objects.main().filter(is_active=True, pk__in=main_ids))
-    subs = Category.objects.sub().filter(is_active=True, pk__in=sub_ids)
+    subs = Category.objects.sub().filter(is_active=True, parent_id__in=main_ids)
     by_parent = {}
     for sub in subs:
         by_parent.setdefault(sub.parent_id, []).append(sub)

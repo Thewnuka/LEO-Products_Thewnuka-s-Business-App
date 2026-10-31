@@ -321,6 +321,51 @@ class OnlinePaymentTests(OrdersTestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, P.PENDING)
 
+    def test_cancel_return_page(self):
+        # Phase 11: cancelling on PayHere's page brings the customer back with a clear message;
+        # nothing is charged or marked paid and they can pay again.
+        request = RequestFactory().post("/")
+        request.user = self.customer
+        _, checkout = services.start_online_payment(self.order, request)
+        cancel = reverse("payments:online_cancel", args=[self.payment.reference])
+        self.assertTrue(checkout.fields["cancel_url"].endswith(cancel))
+        self.client.login(username="customer@example.com", password=PASSWORD)
+        response = self.client.get(cancel, follow=True)
+        self.assertContains(response, "You cancelled the online payment")
+        self.assertContains(response, "Pay now")
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, S.PENDING)
+        self.assertTrue(self.payment.events.filter(event="online_checkout_cancelled_by_customer").exists())
+        # another customer can't use someone else's payment reference
+        self.client.force_login(make_user(username="other@example.com"))
+        self.assertEqual(self.client.get(cancel).status_code, 404)
+
+    def test_cancelled_pending_and_chargeback_codes(self):
+        self.assertEqual(self.post_webhook(notification(self.payment, status_code="0")).content, b"pending")
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, S.PENDING)
+        self.assertEqual(self.post_webhook(notification(self.payment, status_code="-1")).content, b"cancelled")
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, S.FAILED)
+        self.client.login(username="customer@example.com", password=PASSWORD)
+        response = self.client.get(reverse("payments:online_return", args=[self.payment.reference]), follow=True)
+        self.assertContains(response, "Your payment was not completed")
+        self.assertContains(response, "Pay now")  # the order can be paid again
+        self.assertEqual(self.post_webhook(notification(self.payment, status_code="-3")).content, b"chargeback")
+        self.order.refresh_from_db()
+        self.assertNotEqual(self.order.payment_status, P.PAID)
+
+    def test_retry_after_failure_creates_a_new_payment(self):
+        self.post_webhook(notification(self.payment, status_code="-2"))
+        request = RequestFactory().post("/")
+        request.user = self.customer
+        retry, _ = services.start_online_payment(self.order, request)
+        self.assertNotEqual(retry.pk, self.payment.pk)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.assertEqual(self.post_webhook(notification(retry)).content, b"paid")
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, P.PAID)
+
     def test_unknown_payment_ignored(self):
         other = Payment(reference="PAY-000000-ABCDEF", amount=D("1300"))
         self.assertEqual(self.post_webhook(notification(other)).content, b"ignored: unknown payment")

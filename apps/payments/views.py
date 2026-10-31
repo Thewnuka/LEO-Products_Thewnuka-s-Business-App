@@ -73,9 +73,30 @@ class OnlineReturnView(CustomerRequiredMixin, View):
         payment = get_object_or_404(Payment, reference=reference, order__customer=request.user)
         if payment.status == Payment.Status.PAID:
             messages.success(request, "Your payment was received. Thank you!")
+        elif payment.status == Payment.Status.FAILED:
+            messages.error(request, "Your payment was not completed, so you have not been charged. "
+                                    "You can try again with “Pay now”.")
         else:
             messages.info(request, "Thank you. We're waiting for the payment provider to confirm your payment; "
                                    "this page will show it as paid once confirmed.")
+        return redirect(payment.order)
+
+
+class OnlineCancelView(CustomerRequiredMixin, View):
+    """
+    Where the gateway sends the customer after they cancel on its payment page.
+    Only noted in the payment's history: the payment stays open (so "Pay now" can be used
+    again) and its status is still decided only by the gateway's verified notification.
+    """
+
+    def get(self, request, reference):
+        payment = get_object_or_404(Payment, reference=reference, order__customer=request.user)
+        if payment.status == Payment.Status.PAID:  # e.g. paid in another tab, then this page was reached
+            messages.success(request, "Your payment was received. Thank you!")
+        else:
+            services.log(payment, "online_checkout_cancelled_by_customer", request.user)
+            messages.warning(request, "You cancelled the online payment, so you have not been charged. "
+                                      "Your order is saved; use “Pay now” whenever you're ready.")
         return redirect(payment.order)
 
 
@@ -103,9 +124,10 @@ class EvidenceView(View):
         if not payment.evidence:
             raise Http404
         content_type = payment.evidence_content_type or mimetypes.guess_type(payment.evidence.name)[0] or "application/octet-stream"
+        # Images open in the browser; PDFs are downloaded, so they never run inside the site.
         response = FileResponse(payment.evidence.open("rb"), content_type=content_type,
+                                as_attachment=content_type == "application/pdf",
                                 filename=f"{payment.reference}{_ext(payment.evidence.name)}")
-        response["Content-Disposition"] = response["Content-Disposition"].replace("attachment", "inline")
         response["Cache-Control"] = "private, no-store"
         return response
 

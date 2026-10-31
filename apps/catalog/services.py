@@ -25,7 +25,7 @@ def unique_slug(model, text, exclude_pk=None, max_length=90):
 # SKUs
 # ---------------------------------------------------------------------------
 def category_code(category):
-    """Initials of the main category name: "LEO TEA" -> "LT", "TEA BAGS" -> "TB"."""
+    """Initials of the main category name: "LEO TEA" -> "LT", "LEO SWEETS" -> "LS"."""
     words = re.findall(r"[A-Za-z0-9]+", category.name if category else "")
     code = "".join(w[0] for w in words).upper()
     return (code or "GEN")[:4]

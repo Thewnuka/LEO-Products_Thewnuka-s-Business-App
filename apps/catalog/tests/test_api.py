@@ -31,7 +31,7 @@ class CatalogApiTests(CatalogTestCase):
     def test_create_product_and_variation(self):
         self.api.force_authenticate(self.manager)
         r = self.api.post(reverse("api:catalog-product-list"),
-                          {"name": "API Tea", "category": self.leo_tea.pk, "subcategory": self.black_tea.pk, "status": "DRAFT"}, format="json")
+                          {"name": "API Tea", "category": self.leo_tea.pk, "subcategory": self.tea_packets.pk, "status": "DRAFT"}, format="json")
         self.assertEqual(r.status_code, 201, r.content)
         product = Product.objects.get(name="API Tea")
         self.assertEqual(product.created_by, self.manager)
@@ -61,7 +61,7 @@ class CatalogApiTests(CatalogTestCase):
                 self.assertEqual(self.api.post(url, {**base, **override}, format="json").status_code, 400)
         r = self.api.post(reverse("api:catalog-product-list"), {"name": "X", "category": self.leo_tea.pk, "subcategory": self.kokis.pk}, format="json")
         self.assertEqual(r.status_code, 400)
-        r = self.api.post(reverse("api:catalog-category-list"), {"name": "black tea", "parent": self.leo_tea.pk}, format="json")
+        r = self.api.post(reverse("api:catalog-category-list"), {"name": "tea packets", "parent": self.leo_tea.pk}, format="json")
         self.assertEqual(r.status_code, 400)
 
     def test_cannot_activate_product_without_variation(self):

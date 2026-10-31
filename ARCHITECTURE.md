@@ -122,6 +122,15 @@ templates/<name>/    That app's templates
 - `templates/base.html` is the master layout (navbar, messages, content, footer, scripts).
 - `templates/layouts/sidebar.html` adds a responsive sidebar: a slide-in drawer below
   992px and a fixed column at 992px and above. This is the base for the dashboard.
+  Since Phase 11 the staff top bar is sticky and, from 992px, the sidebar is its own sticky scrolling column whose
+  scroll position `leo.js` restores between pages (sessionStorage key `leo-sidebar-scroll`).
+- Page width (Phase 11): `.container` is fluid with `clamp()` side padding and a 1600px maximum, instead of
+  Bootstrap's fixed breakpoint widths.
+- Password fields (`partials/_form_field.html`) carry a show/hide button that `leo.js` reveals.
+- Home page hero: `apps/core/hero.py` builds the background and three image cards from `HomeHeroSettings` /
+  `HomeHeroImage` (Owner page `/staff/home-images/`), falling back to the samples in `static/images/hero/`;
+  `static/js/hero.js` changes one card at a time in the configured order. The background URL is passed as a CSS
+  variable in a `style` attribute (allowed by the CSP; scripts stay external).
 - `static/css/leo.css` contains:
   - **Design tokens** (CSS variables) in `:root`: colours, shadows, radius, fonts. Change brand colours here only.
   - Reusable classes: `.btn-leo-primary`, `.btn-leo-gold`, `.btn-leo-outline`, `.leo-card`,
@@ -164,14 +173,13 @@ with `DEBUG=True` Django shows its detailed debug pages instead.
   for desktop and PWA clients to check connectivity.
 - `/api/schema/` and `/api/docs/` (drf-spectacular) are available only when `DEBUG=True`.
 
-## 11. Future platforms (prepared, not built)
+## 11. Other platforms (Phase 10)
 
-- **PWA:** add a `manifest.json`, a service worker and icons generated from the
-  central logo. The responsive layout and local Bootstrap files are already in place.
-- **Tauri (Windows):** a Tauri shell that opens the deployed site URL, plus native
-  features (printing receipts) where useful. The CSRF/session setup and the
-  versioned API support this. `X_FRAME_OPTIONS` stays `DENY` because Tauri loads
-  the site as a top-level page, not in a frame.
+- **PWA (built):** `/manifest.webmanifest`, `/sw.js` and `/offline/` from `apps/core/pwa.py`; icons in
+  `static/icons/` generated from the central logo. Details in §20.
+- **Tauri (project prepared, installer not built):** `desktop/` opens the server URL in a desktop window; the
+  website gets no Tauri permissions. `X_FRAME_OPTIONS` stays `DENY` because Tauri loads the site as a top-level
+  page, not in a frame. See `desktop/README.md`.
 
 ## 12. Authentication and role-based access control
 
@@ -574,13 +582,20 @@ g = 1 and kg = 1000) so that weights can be converted. Nothing else in the catal
 
 ### 15.1 What customers see
 
-`services.visible_products()` is the single definition of "shown in the shop":
+`services.visible_products()` is the single definition of "listed in the shop":
 
 | Condition | Source |
 |---|---|
 | Product status **Active** | catalogue (Phase 03) |
 | Main category active; subcategory (if set) active | catalogue |
-| At least one variation that is active **and** has an active inventory record with ≥ 1 in stock | inventory (Phase 04) |
+| At least one **active** variation | catalogue |
+
+A variation is **buyable** only with an active inventory record (Phase 04) holding ≥ 1. Since Phase 11, listed
+products with nothing buyable are shown with an "Out of stock" badge instead of being hidden
+(`available_count` = buyable variations; `from_price` = lowest buyable price, or the lowest listed price when out of
+stock). Category structure (data migration `catalog/0004`): LEO TEA › Tea Bags / Tea Packets and LEO SWEETS;
+`VARIETY_FILTERS` adds Black/Ginger/Cinnamon search buttons on LEO TEA pages. The staff product page's
+"Online shop" panel (`catalog.views._shop_visibility`) explains why a product is hidden or not buyable.
 
 Product pages list all active variations; ones that can't be bought (no stock record, 0 stock,
 inactive record) are disabled. Only `selling_price` is ever rendered; wholesale prices, SKUs
@@ -762,3 +777,35 @@ Orders, order lines and status events are never deleted (`PROTECT` foreign keys 
   timeline built from `OrderStatusEvent`, `PaymentEvent`, `StockMovement`, `CashierShift`, `CashMovement`, `ReceiptPrint`,
   `ProductReview`, `FinanceEvent`, `ItemCostChange` and `AccountAuditLog` (no duplicated audit tables).
 - **Capabilities added:** `VIEW_ACTIVITY`, `MODERATE_REVIEWS`.
+
+---
+
+## 20. Security, deployment and installable app (Phase 10)
+
+### Security layers
+
+| Layer | Where |
+|---|---|
+| Authentication, roles, capabilities, sign-in throttle | `apps/accounts` (§12): every view checks a capability; templates only hide links |
+| CSRF on every form and JSON call | Django middleware; the only exemption is the signature-verified payment webhook |
+| XSS | Django auto-escaping (no user data marked safe); **Content-Security-Policy** with `script-src 'self'` (no inline scripts anywhere) from `apps/core/middleware.py` |
+| Clickjacking | `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` |
+| SQL injection | ORM only (no raw SQL in the project) |
+| Uploads | size limits, extension and content checks (Pillow / PDF header), random names; payment slips and expense receipts in `PRIVATE_MEDIA_ROOT`, streamed only after a permission check; PDFs are downloaded, not displayed |
+| Caching of private data | `Cache-Control: private, no-store` on every response to a signed-in user; the service worker never caches pages |
+| Secrets | only in environment variables / `.env` (Git-ignored); `deploy/env.production.example` has empty placeholders |
+| Production settings | `DEBUG=False` (forced), HTTPS redirect, secure cookies, HSTS (configurable), `check --deploy` plus project checks in `apps/core/checks.py` (SQLite, default admin URL, console email, PayHere sandbox, private files inside public folders) |
+
+### Production stack
+
+`config.settings.production` + WhiteNoise (compressed, hashed static files) + Gunicorn (Linux) or Waitress (Windows) +
+PostgreSQL (psycopg 3, persistent connections with health checks). Public media is served by Nginx (or by Django with
+`SERVE_MEDIA=True` on a single PC); private media is never served directly. `LOCAL_HTTP_ONLY=True` allows a
+single-PC install on `http://127.0.0.1` and is refused for any other host.
+
+### Installable app (PWA)
+
+The service worker caches only same-origin `/static/` files (a versioned pre-cache of the core CSS/JS/fonts/icons,
+network-first for other static files) and the generic offline page. It ignores non-GET requests and other sites, and
+never stores pages, API responses, uploads, receipts or exports; navigation falls back to the offline page only when
+the network fails. The cache name changes when a pre-cached file changes, and old caches are deleted on activation.

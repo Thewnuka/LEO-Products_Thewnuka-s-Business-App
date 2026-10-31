@@ -1,0 +1,22 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123d28">
+  <title>You're offline — {{ brand.name }}</title>
+  <link rel="icon" type="image/png" href="{% static 'icons/favicon-32.png' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/leo.css' %}">
+</head>
+{# No user-specific content here: this page is stored on the device by the service worker. #}
+<body class="leo-offline">
+  <main class="container text-center py-5">
+    <img src="{% static 'icons/icon-192.png' %}" alt="{{ brand.name }} logo" width="120" height="120" class="mb-3">
+    <h1 class="h3">You're offline</h1>
+    <p class="text-body-secondary mx-auto" style="max-width: 28rem">{{ brand.name }} needs an internet connection to show
+      products, orders and accounts. Nothing has been lost: check your connection and try again.</p>
+    <a href="/" class="btn btn-leo-primary">Try again</a>
+  </main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Production extras, installed ON TOP of requirements.txt:
+#     pip install -r requirements-production.txt
+-r requirements.txt
+
+# PostgreSQL driver (binary build: no compiler needed)
+psycopg[binary]==3.3.6
+# Serves the collected static files (CSS, JS, icons) efficiently, compressed and cached
+whitenoise==6.12.0
+# Application server: Gunicorn on Linux servers, Waitress on Windows servers
+gunicorn==23.0.0; sys_platform != "win32"
+waitress==3.0.2; sys_platform == "win32"

@@ -32,9 +32,11 @@ def _safe_next(request, fallback):
 
 
 def _attach_card_options(products):
-    """For product cards: the purchasable variations (for the quick-add selector)."""
+    """For product cards: the purchasable variations (quick-add selector) and all listed sizes."""
     for product in products:
-        product.card_options = [v for v in services.product_variations(product) if v.available > 0]
+        variations = services.product_variations(product)
+        product.card_options = [v for v in variations if v.available > 0]
+        product.card_sizes = [v.size_label or v.display_name for v in variations]
     return products
 
 
@@ -81,7 +83,8 @@ class CategoryView(TemplateView):
         categories = services.visible_categories()
         ctx.update(category=category, main=main, form=form, sorts=services.SORTS, sort=sort, q=q, page_obj=page,
                    querystring=_querystring(self.request), categories=categories,
-                   subcategories=next((c.visible_subs for c in categories if c.pk == main.pk), []))
+                   subcategories=next((c.visible_subs for c in categories if c.pk == main.pk), []),
+                   varieties=services.variety_filters(main))
         return ctx
 
 
@@ -102,8 +105,9 @@ class ProductDetailView(TemplateView):
         selectable = [v for v in variations if v.available > 0]
         requested = self.request.GET.get("option")
         selected = next((v for v in selectable if str(v.pk) == requested), selectable[0] if selectable else None)
+        lowest = min((v.selling_price for v in variations), default=None)  # shown when nothing can be selected
         related = list(services.search_products(category=product.subcategory or product.category).exclude(pk=product.pk)[:4])
-        ctx.update(product=product, variations=variations, selected=selected, can_shop=services.can_shop(self.request.user),
+        ctx.update(product=product, variations=variations, selected=selected, lowest_price=lowest, can_shop=services.can_shop(self.request.user),
                    related=_attach_card_options(related))
         # Phase 09: wishlist and reviews
         user = self.request.user

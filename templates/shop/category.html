@@ -29,6 +29,15 @@
       {% for sub in subcategories %}<a href="{% url 'shop:category' sub.slug %}" class="leo-chip leo-chip--sm{% if sub.pk == category.pk %} active{% endif %}">{{ sub.name }}</a>{% endfor %}
     </div>
     {% endif %}
+    {% if varieties %}
+    <nav class="leo-subchips leo-varieties mt-2" aria-label="{{ main.name }} varieties">
+      <span class="small text-body-secondary me-1">Variety:</span>
+      {% for v in varieties %}
+        {% if q|lower == v|lower %}<a href="{{ request.path }}" class="leo-chip leo-chip--sm active" aria-current="true">{{ v }} <i class="bi bi-x" aria-hidden="true"></i><span class="visually-hidden">(clear filter)</span></a>
+        {% else %}<a href="{{ request.path }}?q={{ v|urlencode }}" class="leo-chip leo-chip--sm">{{ v }}</a>{% endif %}
+      {% endfor %}
+    </nav>
+    {% endif %}
 
     <p class="small text-body-secondary mt-3" aria-live="polite">{{ page_obj.paginator.count }} product{{ page_obj.paginator.count|pluralize }}{% if q %} matching “{{ q }}”{% endif %}</p>
     {% if page_obj.object_list %}
@@ -38,7 +47,7 @@
       <div class="leo-empty">
         <i class="bi bi-{% if q %}search{% else %}basket{% endif %}" aria-hidden="true"></i>
         <h2 class="h5">{% if q %}No products found{% else %}Nothing here right now{% endif %}</h2>
-        <p>{% if q %}No {{ category.name }} products match “{{ q }}”.{% else %}Products in {{ category.name }} are currently out of stock. Please check back soon.{% endif %}</p>
+        <p>{% if q %}No {{ category.name }} products match “{{ q }}”.{% else %}There are no {{ category.name }} products yet. Please check back soon.{% endif %}</p>
         <a href="{% url 'shop:home' %}" class="btn btn-leo-primary">See all products</a>
       </div>
     {% endif %}

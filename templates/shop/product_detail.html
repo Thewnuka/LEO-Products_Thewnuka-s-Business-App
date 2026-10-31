@@ -28,10 +28,10 @@
         <p class="leo-eyebrow mb-1">{{ product.subcategory.name|default:product.category.name }}</p>
         <h1 class="h2 mb-2">{{ product.name }}</h1>
         {% if rating.count %}<p class="mb-2"><a href="#reviews" class="leo-rating-link">{% include "shop/partials/_stars.html" with value=rating.average %} {{ rating.average }} · {{ rating.count }} review{{ rating.count|pluralize }}</a></p>{% endif %}
-        <p class="leo-product-price mb-1" id="shopPrice" aria-live="polite">{% if selected %}{{ selected.selling_price|money }}{% else %}—{% endif %}</p>
+        <p class="leo-product-price mb-1" id="shopPrice" aria-live="polite">{% if selected %}{{ selected.selling_price|money }}{% elif lowest_price %}<span class="small text-body-secondary">From</span> {{ lowest_price|money }}{% else %}—{% endif %}</p>
         <p class="mb-3" id="shopAvailability" aria-live="polite">
           {% if selected %}<span class="leo-avail {% if selected.is_low %}leo-avail--low{% endif %}"><i class="bi bi-check-circle" aria-hidden="true"></i>{{ selected.availability }}</span>
-          {% else %}<span class="leo-avail leo-avail--out"><i class="bi bi-x-circle" aria-hidden="true"></i>Currently unavailable</span>{% endif %}
+          {% else %}<span class="leo-avail leo-avail--out"><i class="bi bi-x-circle" aria-hidden="true"></i>Out of stock: this product can't be ordered right now</span>{% endif %}
         </p>
 
         {% if variations %}
@@ -47,7 +47,8 @@
                          {% if v.available <= 0 %}disabled{% endif %}{% if selected and v.pk == selected.pk %} checked{% endif %}
                          data-price="{{ v.selling_price|money }}" data-availability="{{ v.availability }}" data-max="{{ v.max_qty }}"
                          data-low="{% if v.is_low %}1{% else %}0{% endif %}">
-                  <span class="leo-option__size">{{ v.display_name }}</span>
+                  <span class="leo-option__size">{{ v.size_label|default:v.display_name }}</span>
+                  {% if v.name and v.size_label %}<span class="leo-option__name">{{ v.name }}</span>{% endif %}
                   <span class="leo-option__price">{{ v.selling_price|money }}</span>
                   {% if v.available <= 0 %}<span class="leo-option__note">Out of stock</span>{% endif %}
                 </label>

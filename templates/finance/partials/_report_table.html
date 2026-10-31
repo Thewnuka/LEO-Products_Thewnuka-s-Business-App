@@ -1,0 +1,30 @@
+{% load catalog_tags %}
+{% comment %}A report as a table. Needs columns, rows ([{cells: [(column, value)], style}]) and totals.{% endcomment %}
+{% if rows %}
+<div class="table-responsive leo-report-table">
+  <table class="table leo-table leo-table--stack">
+    <thead><tr>{% for c in columns %}<th scope="col"{% if c.kind != "text" %} class="text-end"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr class="leo-report-row--{{ row.style|default:'plain' }}">
+        {% for c, value in row.cells %}
+        <td data-label="{{ c.label|default:'Item' }}"{% if c.kind != "text" %} class="text-end"{% endif %}>
+          {% if value is None %}{% if c.kind == "text" %}—{% elif row.style != "heading" %}<span class="text-body-secondary" title="Not known">—</span>{% endif %}
+          {% elif c.kind == "money" %}<span class="{% if value < 0 %}leo-qty--out{% endif %}">{{ value|money }}</span>
+          {% elif c.kind == "number" %}{{ value|floatformat:"4g" }}
+          {% else %}{{ value }}{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    {% if totals %}
+    <tfoot><tr class="leo-report-row--total">
+      {% for c, value in totals %}<td data-label="{{ c.label|default:'Item' }}"{% if c.kind != "text" %} class="text-end"{% endif %}>{% if value is None %}{% elif c.kind == "money" %}{{ value|money }}{% else %}{{ value }}{% endif %}</td>{% endfor %}
+    </tr></tfoot>
+    {% endif %}
+  </table>
+</div>
+{% else %}
+<p class="leo-empty-note">Nothing to show for this period.</p>
+{% endif %}

@@ -241,6 +241,10 @@ class OrderItem(models.Model):
     unit_price = models.DecimalField(**MONEY, validators=[NON_NEGATIVE])
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     line_total = models.DecimalField(**MONEY, validators=[NON_NEGATIVE])
+    # Cost of goods sold, copied from the stock item's average cost at the moment of sale.
+    # Empty when no cost was known then (never filled in afterwards).
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True, editable=False)
+    cost_total = models.DecimalField(**MONEY, null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ["pk"]

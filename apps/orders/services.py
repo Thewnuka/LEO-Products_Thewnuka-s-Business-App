@@ -16,13 +16,13 @@ be deducted or restored twice.
 """
 import uuid
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from apps.inventory.models import StockMovement
+from apps.inventory.models import InventoryItem, StockMovement
 from apps.inventory.services import record_movement
 from apps.shop import services as shop
 
@@ -179,6 +179,11 @@ def add_items_and_deduct_stock(order, lines, user, *, reason, hint=""):
             v.inventory_item.refresh_from_db()  # the caller's copy may be stale: report what is really left
             available = shop.available_stock(v)
             raise OrderError(f"Sorry, only {available} of {v.product.name} ({v.display_name}) left. {hint}".strip())
+        # Cost of goods sold: the item's average cost right now (empty if none is known yet).
+        unit_cost = InventoryItem.objects.values_list("average_cost", flat=True).get(pk=v.inventory_item.pk)
+        if unit_cost is not None:
+            OrderItem.objects.filter(pk=item.pk).update(
+                unit_cost=unit_cost, cost_total=(unit_cost * quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 # ---------------------------------------------------------------------------

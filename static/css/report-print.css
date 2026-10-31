@@ -1,0 +1,30 @@
+/* LEO PRODUCTS — A4 printable reports. */
+@page { size: A4; margin: 14mm 12mm; }
+.leo-print-page { background: #e9e6df; }
+.leo-print-tools { display: flex; gap: 8px; justify-content: center; padding: 12px; }
+.leo-print-sheet { background: #fff; width: 210mm; max-width: 100%; margin: 0 auto 24px; padding: 14mm 12mm; box-shadow: 0 2px 10px rgba(0, 0, 0, .12); }
+.leo-print-head { display: flex; gap: 12px; align-items: center; border-bottom: 2px solid var(--leo-green); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.leo-print-head .leo-logo__img { width: 56px; height: 56px; object-fit: contain; }
+.leo-print-brand { font-family: var(--leo-font-heading); font-weight: 700; font-size: 1.2rem; color: var(--leo-green); }
+.leo-print-tagline { font-style: italic; color: var(--leo-text-muted); font-size: .85rem; }
+.leo-print-meta { margin-left: auto; text-align: right; }
+.leo-print-warning { border: 1px solid #b3261e; padding: 6px 8px; font-size: .85rem; }
+.leo-print-notes, .leo-print-foot { font-size: .78rem; color: #444; }
+.leo-print-foot { border-top: 1px solid #ccc; margin-top: 12px; padding-top: 6px; text-align: center; }
+.leo-print-sheet .table { font-size: .72rem; }
+.leo-print-sheet .table-responsive { overflow: visible; }
+.leo-print-sheet .table th { white-space: normal; padding: .35rem .3rem; vertical-align: bottom; }
+.leo-print-sheet .table td { white-space: nowrap; padding: .3rem; }
+.leo-print-sheet .leo-table--stack thead { display: table-header-group !important; }
+.leo-print-sheet .leo-table--stack tr { display: table-row !important; }
+.leo-print-sheet .leo-table--stack td { display: table-cell !important; text-align: inherit; }
+.leo-print-sheet .leo-table--stack td::before { content: none !important; }
+.leo-print-sheet .leo-chart__scroll { overflow: visible; }
+.leo-print-sheet svg { max-width: 100%; height: auto; }
+@media print {
+  .leo-print-page { background: #fff; }
+  .leo-print-tools { display: none; }
+  .leo-print-sheet { width: auto; margin: 0; padding: 0; box-shadow: none; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+}

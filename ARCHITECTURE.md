@@ -59,7 +59,7 @@ own phase (`python manage.py startapp <name> apps/<name>`), which avoids empty c
 | `orders` | **Created** (Phase 06) | Checkout, orders, status workflow, delivery settings (see §16) |
 | `payments` | **Created** (Phase 06) | Payment records, cash, bank transfer, refunds, online gateway adapters (see §16) |
 | `pos` | **Created** (Phase 07) | Till, cashier shifts, cash drawer movements, receipts, POS settings; sales are `orders.Order` rows (see §17) |
-| `finance` | Planned | Income, expenses, summaries |
+| `finance` | **Created** (Phase 08) | Expenses, supplier payments, reports, profit & loss, exports, audit log (see §18) |
 | `notifications` | Planned | Email and in-app notifications |
 | `reports` | Planned | Business reports and exports |
 
@@ -716,3 +716,25 @@ Orders, order lines and status events are never deleted (`PROTECT` foreign keys 
 - **Pages:** `/staff/pos/` (till), `/staff/pos/sale/` (JSON checkout), `/staff/pos/sales/…` (history, detail, receipt,
   reprint, refund), `/staff/pos/shifts/…` (list, detail, cash, close), `/staff/pos/settings/`. Front end:
   `static/js/pos.js`, `static/js/receipt.js`, `static/css/receipt.css`.
+
+---
+
+## 18. Finance and reports
+
+- **Single definitions** (`finance/services.py`): revenue = `recognised_orders` (paid, not cancelled, by order date);
+  COGS = `OrderItem.cost_total` of those orders; expenses = `Expense` RECORDED; purchases = received `Purchase` totals;
+  collections/cash flow = `Payment.paid_at`, `Payment.refunded_at`, `SupplierPayment`, `Expense`. Purchases are never
+  expenses. Every report and the dashboard use these functions.
+- **Costs:** `InventoryItem.average_cost` (4 decimals) is updated by `inventory.services.update_average_cost` inside
+  `receive_purchase`, or set by the Owner through `set_item_cost`; both write `ItemCostChange`.
+  `orders.services.add_items_and_deduct_stock` copies the cost onto each `OrderItem` at sale (online and POS).
+- **Records:** `Expense` and `SupplierPayment` share an abstract `VoidableRecord` (reference, RECORDED/VOID, unique
+  `submission_token`, created/voided by). Creation is idempotent on the token; voiding is a conditional update.
+  `pre_delete` guards block deleting financial records, categories, cost history and `FinanceEvent`.
+- **Reports** (`finance/reports.py`): each builder returns a `Report` (columns with `financial` flag, rows, totals,
+  notes, Owner-only `finance_notes`, warnings, chart). `ReportView` renders the page, the A4 print page, or exports
+  (`finance/exports.py`: CSV with BOM, and .xlsx written with `zipfile`; formula-injection safe). Charts are SVG geometry
+  from `finance/charts.py`.
+- **Access:** `VIEW_FINANCE` (Owner) for money reports, dashboard, balances, audit; `VIEW_OPERATIONAL_REPORTS`
+  (Owner, Manager) for sales/stock/purchase/expense reports; `RECORD_EXPENSES` (Owner, Manager);
+  `MANAGE_FINANCE` (Owner) for voids, supplier payments, stock costs, categories.

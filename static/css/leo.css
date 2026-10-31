@@ -1011,3 +1011,29 @@ form.leo-pay-box { border: 1px solid var(--leo-gold); }
 .leo-pos__quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
 .leo-pos__change { margin: 0.6rem 0 0; font-size: 1.1rem; }
 .leo-pos__change strong { color: var(--leo-green); }
+
+/* Finance & reports (Phase 08) */
+.leo-stats--finance { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px) { .leo-stats--finance { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .leo-stats--finance { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.leo-chart { margin: 0; }
+.leo-chart__scroll { overflow-x: auto; }
+.leo-chart svg { display: block; max-width: none; }
+.leo-chart__grid { stroke: var(--leo-border); stroke-dasharray: 3 3; }
+.leo-chart__base { stroke: var(--leo-border-strong); }
+.leo-chart__axis, .leo-chart__label { font-size: 10px; fill: var(--leo-text-muted); }
+.leo-chart__bar--online { fill: var(--leo-green-3); background: var(--leo-green-3); }
+.leo-chart__bar--pos { fill: var(--leo-gold); background: var(--leo-gold); }
+.leo-chart__bar--expense { fill: #b5564d; background: #b5564d; }
+.leo-chart__legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-size: 0.85rem; margin-top: 0.5rem; }
+.leo-chart__legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.leo-chart__key { display: inline-block; width: 12px; height: 12px; border-radius: 2px; }
+.leo-report-table td { font-variant-numeric: tabular-nums; }
+.leo-report-row--heading td { font-weight: 700; color: var(--leo-green); background: var(--leo-green-tint); }
+.leo-report-row--subtotal td { font-weight: 700; border-top: 1px solid var(--leo-border-strong); }
+.leo-report-row--indent td:first-child { padding-left: 2rem; }
+.leo-report-row--total td { font-weight: 700; border-top: 2px solid var(--leo-green); background: var(--leo-surface-alt, #f7f5ef); }
+.leo-report-notes { padding-left: 1.1rem; }
+@media print {
+  .leo-sidebar, .leo-topbar, .leo-shell__toolbar .btn, .leo-no-print { display: none !important; }
+}

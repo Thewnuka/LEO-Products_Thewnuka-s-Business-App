@@ -1,0 +1,21 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Reports — {{ brand.name }}{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary">Every report has date filters, CSV and Excel export, and an A4 print layout.
+  {% if not can.VIEW_FINANCE %}Cost and profit columns are shown to the Owner only.{% endif %}</p>
+<div class="row g-4">
+  {% for group, reports in groups.items %}
+  <div class="col-12 col-lg-4">
+    <article class="leo-card leo-card--auto h-100"><div class="leo-card__body">
+      <h2 class="h5">{{ group }}</h2>
+      <ul class="list-unstyled leo-mini-list mb-0">
+        {% for r in reports %}<li><span><a href="{% url 'finance:report' r.slug %}" class="fw-semibold">{{ r.title }}</a><span class="d-block small text-body-secondary">{{ r.description }}</span></span></li>{% endfor %}
+      </ul>
+    </div></article>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

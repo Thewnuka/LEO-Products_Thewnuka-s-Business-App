@@ -1,0 +1,44 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Expenses — {{ brand.name }}{% endblock %}
+{% block page_title %}Expenses{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'finance:expense_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Record expense</a>
+  {% if can.MANAGE_FINANCE %}<a href="{% url 'finance:categories' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-tags" aria-hidden="true"></i><span class="d-none d-sm-inline">Categories</span></a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.period %}</div>
+    <div class="col-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.start %}</div>
+    <div class="col-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.end %}</div>
+    <div class="col-12 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.category %}</div>
+    <div class="col-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=filter_form.payment_method %}</div>
+    <div class="col-6 col-md-2 col-xl-1">{% include "partials/_form_field.html" with field=filter_form.status %}</div>
+    <div class="col-12 col-md-2 col-xl-1 d-grid leo-field"><button type="submit" class="btn btn-leo-primary">Apply</button></div>
+  </div>
+</form>
+<p class="text-body-secondary">{{ period.label }} · {{ page_obj.paginator.count }} entr{{ page_obj.paginator.count|pluralize:"y,ies" }} · recorded total <strong>{{ total|money }}</strong></p>
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Reference</th><th scope="col">Date</th><th scope="col">Category</th><th scope="col">Description</th><th scope="col">Paid by</th><th scope="col" class="text-end">Amount</th></tr></thead>
+    <tbody>{% for e in page_obj %}
+      <tr{% if e.is_void %} class="leo-row--muted"{% endif %}>
+        <td data-label="Reference"><a href="{% url 'finance:expense_detail' e.pk %}" class="fw-semibold">{{ e.reference }}</a>{% if e.is_void %} <span class="leo-badge leo-ostatus--cancelled">Void</span>{% endif %}{% if e.receipt %} <i class="bi bi-paperclip" title="Receipt attached" aria-label="Receipt attached"></i>{% endif %}</td>
+        <td data-label="Date">{{ e.expense_date|date:"j M Y" }}</td>
+        <td data-label="Category">{{ e.category }}</td>
+        <td data-label="Description" class="leo-wrap">{{ e.description }}</td>
+        <td data-label="Paid by">{{ e.get_payment_method_display }}</td>
+        <td data-label="Amount" class="text-end">{{ e.amount|money }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No expenses in this period.</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

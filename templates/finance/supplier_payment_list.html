@@ -1,0 +1,47 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Supplier payments — {{ brand.name }}{% endblock %}
+{% block page_title %}Suppliers: balances &amp; payments{% endblock %}
+{% block page_actions %}
+  {% if can.MANAGE_FINANCE %}<a href="{% url 'finance:supplier_payment_create' %}" class="btn btn-leo-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i>Pay a supplier</a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<article class="leo-card leo-card--auto mb-4"><div class="leo-card__body">
+  <h2 class="h5">Balances today</h2>
+  {% if balances %}
+  <div class="table-responsive"><table class="table leo-table leo-table--stack leo-table--nowrap mb-0">
+    <thead><tr><th scope="col">Supplier</th><th scope="col" class="text-end">Received purchases</th><th scope="col" class="text-end">Paid</th><th scope="col" class="text-end">Owed</th></tr></thead>
+    <tbody>{% for supplier, purchased, paid, balance in balances %}
+      <tr><td data-label="Supplier"><a href="{% url 'finance:supplier_statement' supplier.pk %}" class="fw-semibold">{{ supplier.name }}</a></td>
+        <td data-label="Received purchases" class="text-end">{{ purchased|money }}</td><td data-label="Paid" class="text-end">{{ paid|money }}</td>
+        <td data-label="Owed" class="text-end fw-semibold">{{ balance|money }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="leo-empty-note">No received purchases yet.</p>{% endif %}
+</div></article>
+
+<h2 class="h5">Payments</h2>
+{% include "finance/partials/_period_filter.html" %}
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Reference</th><th scope="col">Date</th><th scope="col">Supplier</th><th scope="col">For</th><th scope="col">Paid by</th><th scope="col" class="text-end">Amount</th></tr></thead>
+    <tbody>{% for p in page_obj %}
+      <tr{% if p.is_void %} class="leo-row--muted"{% endif %}>
+        <td data-label="Reference" class="fw-semibold">{{ p.reference }}{% if p.is_void %} <span class="leo-badge leo-ostatus--cancelled">Void</span>{% endif %}</td>
+        <td data-label="Date">{{ p.payment_date|date:"j M Y" }}</td>
+        <td data-label="Supplier"><a href="{% url 'finance:supplier_statement' p.supplier_id %}">{{ p.supplier }}</a></td>
+        <td data-label="For">{% if p.purchase %}<a href="{% url 'inventory:purchase_detail' p.purchase_id %}">{{ p.purchase.reference }}</a>{% else %}On account{% endif %}</td>
+        <td data-label="Paid by">{{ p.get_payment_method_display }}{% if p.payment_reference %} · {{ p.payment_reference }}{% endif %}</td>
+        <td data-label="Amount" class="text-end">{{ p.amount|money }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}
+<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">No supplier payments in this period.</div></div>
+{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Pay a supplier — {{ brand.name }}{% endblock %}
+{% block page_title %}Pay a supplier{% endblock %}
+
+{% block page_content %}
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card" data-once>
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {{ form.token }}
+    <p class="small text-body-secondary">Record money paid to a supplier for goods already received. It can't be more than
+      the supplier is owed (advance payments aren't recorded here).</p>
+    {% include "partials/_form_errors.html" %}
+    <div class="row g-0 gx-2 gx-md-3">
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.supplier %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.purchase %}</div>
+      <div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=form.payment_date %}</div>
+      <div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=form.amount %}</div>
+      <div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=form.payment_method %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.payment_reference %}</div>
+      <div class="col-12 col-md-6">{% include "partials/_form_field.html" with field=form.notes %}</div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save payment</button>
+      <a href="{% url 'finance:supplier_payments' %}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

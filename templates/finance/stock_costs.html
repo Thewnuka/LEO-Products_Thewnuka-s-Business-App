@@ -1,0 +1,30 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Stock costs — {{ brand.name }}{% endblock %}
+{% block page_title %}Stock costs{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary">The cost of one stock unit is used for stock valuation and for the cost of goods sold.
+  It is updated automatically (weighted average) when a purchase is received. For products made in-house, set the
+  cost here from your own costing. A new cost applies to sales from now on; past sales keep the cost they were sold at.</p>
+{% if missing_count %}{% include "partials/_alert.html" with level="warning" text="Some active items have no cost yet. Sales of them are reported without a cost, so profit is incomplete." %}{% endif %}
+<nav class="leo-tabs mb-3" aria-label="Filter">
+  <a class="leo-tabs__link{% if not missing %} active{% endif %}" href="?">All items</a>
+  <a class="leo-tabs__link{% if missing %} active{% endif %}" href="?missing=1">Missing cost ({{ missing_count }})</a>
+</nav>
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack leo-table--nowrap">
+    <thead><tr><th scope="col">Item</th><th scope="col">Type</th><th scope="col" class="text-end">In stock</th><th scope="col" class="text-end">Cost per unit (LKR)</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for item in items %}
+      <tr{% if not item.is_active %} class="leo-row--muted"{% endif %}>
+        <td data-label="Item" class="leo-wrap">{{ item.display_name }}</td>
+        <td data-label="Type">{{ item.get_kind_display }}</td>
+        <td data-label="In stock" class="text-end">{{ item.quantity_display }}</td>
+        <td data-label="Cost per unit (LKR)" class="text-end">{% if item.average_cost is None %}<span class="leo-text-warning">Not set</span>{% else %}{{ item.average_cost|floatformat:"4g" }}{% endif %}</td>
+        <td data-label="Updated">{{ item.cost_updated_at|date:"j M Y"|default:"—" }}</td>
+        <td data-label=""><a href="{% url 'finance:stock_cost' item.pk %}" class="btn btn-leo-outline btn-sm">{% if item.average_cost is None %}Set cost{% else %}Change / history{% endif %}</a></td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="text-center text-body-secondary">No items.</td></tr>{% endfor %}</tbody>
+  </table>
+</div></div>
+{% endblock %}

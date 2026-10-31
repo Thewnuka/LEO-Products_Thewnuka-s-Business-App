@@ -15,6 +15,15 @@ record_movement() runs in a transaction and:
 Receiving a purchase flips its status DRAFT -> RECEIVED with a conditional
 UPDATE first; a second (or simultaneous) receive updates 0 rows and stops.
 A database constraint also allows only one movement per purchase line.
+
+Costs (Phase 08)
+----------------
+Each item keeps a weighted average cost per stock unit. Receiving a purchase
+line updates it:  new = (stock before x old cost + line total) / (stock before + added).
+If no cost was known yet, the purchase's cost becomes the item's cost (stock
+already on hand is valued at it from then on; past sales are never re-costed).
+The Owner can also set a cost (e.g. products made in-house). Every change is
+logged in ItemCostChange.
 """
 from dataclasses import dataclass
 from datetime import timedelta
@@ -25,7 +34,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count, F, Q, Sum
 from django.utils import timezone
 
-from .models import InventoryItem, Purchase, PurchaseLine, StockMovement, Supplier
+from .models import InventoryItem, ItemCostChange, Purchase, PurchaseLine, StockMovement, Supplier
 
 T = StockMovement.Type
 INCREASING = {T.OPENING, T.PURCHASE, T.INCREASE, T.ORDER_CANCEL}
@@ -234,10 +243,60 @@ def receive_purchase(purchase, user):
         raise StockError(f"This purchase is already {Purchase.Status(current).label.lower()}; stock was not changed again.")
 
     for line in lines:
-        record_movement(line.item, T.PURCHASE, line.quantity, user, unit=line.unit,
-                        reason=f"Purchase {purchase.reference}", purchase=purchase, purchase_line=line)
+        movement = record_movement(line.item, T.PURCHASE, line.quantity, user, unit=line.unit,
+                                   reason=f"Purchase {purchase.reference}", purchase=purchase, purchase_line=line)
+        update_average_cost(line, movement, user)
     purchase.refresh_from_db()
     return purchase
+
+
+# ---------------------------------------------------------------------------
+# Costs
+# ---------------------------------------------------------------------------
+COST_PLACES = Decimal("0.0001")
+
+
+def update_average_cost(line, movement, user):
+    """Weighted average cost after receiving one purchase line (called inside receive_purchase)."""
+    added = movement.quantity_change
+    if added <= 0:
+        return None
+    item = InventoryItem.objects.select_for_update().get(pk=line.item_id)
+    old_cost, before = item.average_cost, movement.quantity_before
+    line_cost = Decimal(line.line_total)
+    if old_cost is None or before <= 0:
+        # No known cost for what is on hand (or nothing on hand): this purchase sets the cost.
+        new_cost = line_cost / added
+    else:
+        new_cost = (before * old_cost + line_cost) / (before + added)
+    new_cost = new_cost.quantize(COST_PLACES, rounding=ROUND_HALF_UP)
+    now = timezone.now()
+    InventoryItem.objects.filter(pk=item.pk).update(average_cost=new_cost, cost_updated_at=now)
+    return ItemCostChange.objects.create(item=item, source=ItemCostChange.Source.PURCHASE, old_cost=old_cost,
+                                         new_cost=new_cost, quantity_before=before, quantity_added=added,
+                                         purchase_line=line, changed_by=user,
+                                         reason=f"Purchase {line.purchase.reference}")
+
+
+@transaction.atomic
+def set_item_cost(item, cost, user, reason):
+    """The Owner sets an item's cost per stock unit (from now on; past sales keep their recorded cost)."""
+    if not (reason or "").strip():
+        raise StockError("Please explain where this cost comes from.")
+    try:
+        cost = Decimal(str(cost)).quantize(COST_PLACES, rounding=ROUND_HALF_UP)
+    except Exception:
+        raise StockError("Enter a valid cost.")
+    if cost < 0:
+        raise StockError("The cost can't be negative.")
+    item = InventoryItem.objects.select_for_update().get(pk=item.pk)
+    if item.average_cost == cost:
+        raise StockError("That is already the item's cost.")
+    change = ItemCostChange.objects.create(item=item, source=ItemCostChange.Source.MANUAL, old_cost=item.average_cost,
+                                           new_cost=cost, quantity_before=item.quantity, changed_by=user,
+                                           reason=reason.strip()[:200])
+    InventoryItem.objects.filter(pk=item.pk).update(average_cost=cost, cost_updated_at=timezone.now())
+    return change
 
 
 @transaction.atomic

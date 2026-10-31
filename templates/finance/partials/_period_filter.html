@@ -1,0 +1,11 @@
+{% comment %}Date filter (preset or custom dates). Needs period_form; extra fields can be added via `extra`.{% endcomment %}
+<form method="get" class="leo-card leo-card--auto mb-3 leo-no-print" role="search" aria-label="Date filter">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-md-4">{% include "partials/_form_field.html" with field=period_form.period %}</div>
+    <div class="col-6 col-md-3">{% include "partials/_form_field.html" with field=period_form.start %}</div>
+    <div class="col-6 col-md-3">{% include "partials/_form_field.html" with field=period_form.end %}</div>
+    {% for name, value in hidden %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+    <div class="col-12 col-md-2 d-grid leo-field"><button type="submit" class="btn btn-leo-primary"><i class="bi bi-funnel" aria-hidden="true"></i>Apply</button></div>
+  </div>
+  <p class="small text-body-secondary px-4 pb-3 mb-0">Custom dates are used when “Custom dates” is chosen.</p>
+</form>

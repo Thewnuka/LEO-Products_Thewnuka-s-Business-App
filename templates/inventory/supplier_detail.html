@@ -4,6 +4,7 @@
 {% block title %}{{ supplier.name }} — Suppliers — {{ brand.name }}{% endblock %}
 {% block page_title %}{{ supplier.name }}{% endblock %}
 {% block page_actions %}
+  {% if can.VIEW_FINANCE %}<a href="{% url 'finance:supplier_statement' supplier.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-journal-text" aria-hidden="true"></i><span class="d-none d-sm-inline">Statement{% if balance %} · owed {{ balance|money }}{% endif %}</span></a>{% endif %}
   <a href="{% url 'inventory:supplier_update' supplier.pk %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i><span class="d-none d-sm-inline">Edit</span></a>
 {% endblock %}
 

@@ -17,7 +17,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 
 from apps.accounts.permissions import CapabilityRequiredMixin
-from apps.accounts.roles import Capability
+from apps.accounts.roles import Capability, has_capability
 
 from . import services
 from .forms import (
@@ -266,6 +266,10 @@ class SupplierDetailView(SupplierAccess, DetailView):
         purchases = self.object.purchases.annotate(line_count=Count("lines")).order_by("-purchase_date", "-pk")
         ctx["page_obj"], ctx["querystring"] = paginate(self.request, purchases, 15)
         ctx["received_total"] = purchases.filter(status=Purchase.Status.RECEIVED).aggregate(t=Sum("total"))["t"]
+        if has_capability(self.request.user, Capability.VIEW_FINANCE):
+            from apps.finance.services import supplier_balance
+
+            ctx["balance"] = supplier_balance(self.object)[2]
         return ctx
 
 
@@ -372,6 +376,11 @@ class PurchaseDetailView(PurchaseAccess, DetailView):
         ctx["lines"] = self.object.lines.select_related("item__stock_unit", "item__variation__product", "item__variation__unit",
                                                         "unit", "movement")
         ctx["cancel_form"] = CancelPurchaseForm()
+        if self.object.status == Purchase.Status.RECEIVED and has_capability(self.request.user, Capability.VIEW_FINANCE):
+            from apps.finance.services import purchase_paid
+
+            ctx["paid"] = purchase_paid(self.object)
+            ctx["outstanding"] = self.object.total - ctx["paid"]
         return ctx
 
 

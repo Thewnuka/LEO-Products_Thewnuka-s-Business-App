@@ -1,0 +1,22 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Finance audit log — {{ brand.name }}{% endblock %}
+{% block page_title %}Finance audit log{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary">Every expense, supplier payment, void, stock cost change and report export. Entries can't be changed or deleted.</p>
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack">
+    <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Details</th></tr></thead>
+    <tbody>{% for e in page_obj %}
+      <tr><td data-label="When">{{ e.created_at|date:"j M Y, H:i" }}</td>
+        <td data-label="Who">{{ e.user.get_full_name|default:e.user.username|default:"system" }}</td>
+        <td data-label="What">{{ e.label }} <span class="fw-semibold">{{ e.object_ref }}</span></td>
+        <td data-label="Details" class="small">{% for k, v in e.detail.items %}{{ k }}: {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% else %}<div class="leo-card leo-card--auto"><div class="leo-card__body text-center text-body-secondary">Nothing recorded yet.</div></div>{% endif %}
+{% include "partials/_pager.html" %}
+{% endblock %}

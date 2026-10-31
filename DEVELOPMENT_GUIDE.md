@@ -621,7 +621,84 @@ footers. For A4, choose **A4 size** on the receipt page first.
 
 ---
 
-## 12. Running the tests
+## 12. Finance and reports
+
+Staff portal → **Finance & reports**. The Owner sees everything. Managers see the operational reports (without
+cost and profit columns) and can record expenses. Cashiers, IT Admins and customers have no finance access.
+
+### How the figures are worked out (no double counting)
+
+| Figure | Comes from | Rule |
+|---|---|---|
+| Revenue | Orders (online and POS) | Only **paid** sales that aren't cancelled, dated by the order date. Product sales − discounts + delivery fees = order total. Unpaid, cancelled and refunded sales are **not** revenue. |
+| Cost of goods sold (COGS) | The stock cost copied onto each sold line **at the moment of sale** | Sales made before a cost was known have no cost; they are shown separately ("sales without cost") and are never filled in afterwards. |
+| Operating expenses | Expenses | Voided entries don't count. **Stock purchases are not expenses**: they become cost of goods when the goods are sold. |
+| Gross profit | Revenue − COGS | |
+| Net operating profit | Gross profit − operating expenses | Before tax; tax is not calculated. |
+| Collections / cash flow | Payments received, refunds paid, supplier payments, expenses | Money that actually moved, by its date. Cash moved into or out of POS drawers is an internal transfer and isn't shown. |
+
+### Stock costs (Owner): set these first
+
+Profit can only be correct when stock items have a cost.
+- **Bought goods:** receiving a purchase updates the item's **weighted average cost** automatically
+  (`(stock before × old cost + purchase amount) ÷ (stock before + quantity received)`). If the item had no cost yet,
+  the purchase cost becomes its cost.
+- **Products made in-house** (e.g. packed tea): Finance & reports → **Stock costs** → **Set cost**, with where the
+  figure comes from (e.g. your costing sheet). The page lists items with **missing cost**.
+- A new cost applies to sales **from then on**; past sales keep the cost they were sold at. Every change is logged
+  in the item's cost history.
+
+### Expenses (Owner, Manager)
+
+Finance & reports → **Expenses → Record expense**: date, category, amount, how it was paid (cash, bank transfer,
+card, cheque, other), description, optional payee, bill number and receipt (JPG, PNG, WebP or PDF up to 5 MB,
+stored privately like payment slips). Saved expenses can't be edited; the **Owner voids** a mistake (with a reason)
+and it is entered again. Categories (seeded: Transport & delivery, Utilities, Rent, Salaries & wages, …) are managed
+by the Owner and can be made inactive but not deleted.
+
+### Suppliers: balances and payments (Owner)
+
+Finance & reports → **Supplier balances** shows, for each supplier, received purchases, payments and what is owed.
+**Pay a supplier** records a payment (optionally against one purchase). A payment can't be more than the supplier is
+owed (or what is left on that purchase); advance payments aren't recorded. Each supplier has a **statement** with a
+running balance, also linked from the supplier and purchase pages in Inventory. Draft purchases are not owed.
+
+### Reports
+
+Finance & reports → **Reports**. Each has date filters (today, this week, this month, last month, this year, last
+year or custom dates), a chart where useful, **CSV** and **Excel (.xlsx)** export and an **A4 print** layout with the
+logo.
+
+| Report | Who | Shows |
+|---|---|---|
+| Sales | Owner, Manager | Revenue by day, month or year; online vs in store; discounts; delivery fees |
+| Product sales / Category sales | Owner, Manager | Quantities and sales; cost, gross profit and sales without cost for the Owner |
+| Cashier sales | Owner, Manager | POS sales per cashier: cash, transfers, transfers to check, discounts, voids |
+| Purchases | Owner, Manager | Received purchases; paid and still to pay for the Owner |
+| Stock valuation | Owner, Manager | Current stock × average cost; items without a cost are listed and left out of the total |
+| Expenses | Owner, Manager | By category and payment method |
+| Profit & loss | Owner | Revenue, COGS, gross profit, expenses by category, net operating profit, with warnings |
+| Cash flow | Owner | Money in and out, cash vs bank/online |
+| Supplier balances / Customer balances | Owner | What is owed to suppliers; unpaid customer orders and refunds owed |
+
+The **Finance overview** (Owner) shows the period's sales, revenue, COGS, gross profit, expenses, net operating profit,
+stock purchases, cash and bank collections, and a 12-month chart.
+
+### Audit trail
+
+Finance & reports → **Finance audit log** (Owner): every expense, supplier payment, void, stock cost change, category
+change and report export, with who and when. Financial records, cost history and the log can't be deleted.
+
+### Getting correct figures: checklist
+
+1. Set a cost for every product (Stock costs → Missing cost).
+2. Record stock bought from suppliers as **purchases** (Inventory), not expenses, and receive them.
+3. Record every operating cost as an **expense**, and supplier payments under Supplier balances.
+4. Confirm payments (cash received, bank transfers approved) so sales count as revenue.
+
+---
+
+## 13. Running the tests
 
 ```powershell
 python manage.py test                       # everything (about 8–10 minutes)
@@ -656,13 +733,15 @@ The tests use a temporary database; your `db.sqlite3` is never touched. Test fil
 | `apps/payments/tests/test_payments.py` | Cash, bank transfer submit/approve/reject/resubmit, slip validation and privacy, refunds, online payment off without credentials, PayHere signing, signature/amount checks, duplicate notifications |
 | `apps/pos/tests/test_services.py` | Shifts (one open per cashier, expected cash, closing count and difference, closed shifts locked), cash in/out, cash and bank-transfer sales, change, stock deducted once, duplicate submissions, race for the last items, discounts and approval limits, refunds/voids, today's figures |
 | `apps/pos/tests/test_views.py` | Role access to every POS page, till product list, checkout endpoint (errors, double submit, CSRF, manager approval and throttling), receipts and logged reprints, sales history and filters, transfer verification, refunds, shift pages, dashboards, POS settings |
+| `apps/finance/tests/test_finance.py` | Weighted average cost and unit conversion, cost copied at sale (never back-filled), Owner-set costs, expenses (validation, receipts, one-time tokens, void once, no deleting), supplier payments and balances, every headline figure counted once (revenue, discounts, delivery, COGS, expenses, collections, refunds, unpaid and cancelled orders), profit & loss, cash flow, all reports, date periods |
+| `apps/finance/tests/test_views.py` | Role access to every finance page, hidden cost/profit columns for Managers, every report as page/print/CSV/Excel, export logging, formula-injection protection, expense and supplier payment pages (double submit, errors, voids), stock cost page |
 | `apps/shop/tests/test_cart.py` | Add/update/remove, stock limits, invalid input, stock dropping later, guest vs customer carts, merge on sign-in and registration, cart privacy, staff blocked, CSRF, safe redirects |
 
 Tests take a while because password hashing is deliberately slow (that is what makes it secure).
 
 ---
 
-## 13. Databases
+## 14. Databases
 
 **Development:** SQLite. The database is the file `db.sqlite3`. It is not committed to Git.
 To start again from an empty database, stop the server, delete `db.sqlite3` and run `python manage.py migrate`.
@@ -674,7 +753,7 @@ To start again from an empty database, stop the server, delete `db.sqlite3` and 
 4. Run `python manage.py migrate` and `python manage.py collectstatic`.
 5. Run `python manage.py check --deploy` and fix anything it reports.
 
-## 14. Git and GitHub
+## 15. Git and GitHub
 
 ### First commit
 
@@ -727,7 +806,7 @@ Then open a Pull Request on GitHub and merge it into `main` when the phase is do
 - Run `python manage.py test` before committing.
 - Commit small, meaningful steps with clear messages.
 
-## 15. Troubleshooting
+## 16. Troubleshooting
 
 | Problem | Fix |
 |---|---|

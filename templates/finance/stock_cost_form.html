@@ -1,0 +1,34 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Cost of {{ item.display_name }} — {{ brand.name }}{% endblock %}
+{% block page_title %}Cost: {{ item.display_name }}{% endblock %}
+{% block page_actions %}<a href="{% url 'finance:stock_costs' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Stock costs</span></a>{% endblock %}
+
+{% block page_content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <form method="post" novalidate class="leo-card leo-card--auto" data-confirm="Set this cost? Sales from now on will use it." data-once>
+      <div class="leo-card__body">
+        {% csrf_token %}
+        <p class="mb-2">In stock: <strong>{{ item.quantity_display }}</strong> · current cost:
+          <strong>{% if item.average_cost is None %}not set{% else %}LKR {{ item.average_cost|floatformat:"4g" }} per {{ item.unit_label }}{% endif %}</strong></p>
+        {% include "partials/_form_errors.html" %}
+        {% include "partials/_form_field.html" with field=form.cost %}
+        {% include "partials/_form_field.html" with field=form.reason %}
+        <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Set cost</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-12 col-lg-7">
+    <article class="leo-card leo-card--auto"><div class="leo-card__body">
+      <h2 class="h5">Cost history</h2>
+      <ul class="list-unstyled leo-mini-list mb-0">
+        {% for c in history %}
+        <li><span><span class="fw-semibold">{% if c.old_cost is None %}—{% else %}{{ c.old_cost|floatformat:"4g" }}{% endif %} → {{ c.new_cost|floatformat:"4g" }}</span>
+          <span class="d-block small text-body-secondary">{{ c.changed_at|date:"j M Y, H:i" }} · {{ c.get_source_display }}{% if c.changed_by %} · {{ c.changed_by.get_full_name|default:c.changed_by.username }}{% endif %}{% if c.reason %} · {{ c.reason }}{% endif %}</span></span></li>
+        {% empty %}<li class="text-body-secondary">No cost recorded yet.</li>{% endfor %}
+      </ul>
+    </div></article>
+  </div>
+</div>
+{% endblock %}

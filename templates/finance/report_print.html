@@ -1,0 +1,38 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ report.title }} — {{ brand.name }}</title>
+  <link rel="icon" type="image/png" href="{% static brand.logo %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/leo.css' %}">
+  <link rel="stylesheet" href="{% static 'css/report-print.css' %}">
+</head>
+<body class="leo-print-page">
+  <div class="leo-print-tools">
+    <button type="button" class="btn btn-leo-primary btn-sm" id="printReport">Print</button>
+    <a class="btn btn-leo-outline btn-sm" href="{% url 'finance:report' report.slug %}?{{ query }}">Back to report</a>
+  </div>
+  <main class="leo-print-sheet">
+    <header class="leo-print-head">
+      {% include "partials/_logo.html" with size="md" show_text=False link=False %}
+      <div>
+        <div class="leo-print-brand">{{ brand.name }}</div>
+        <div class="leo-print-tagline">{{ brand.tagline }}</div>
+      </div>
+      <div class="leo-print-meta">
+        <h1 class="h4 mb-1">{{ report.title }}</h1>
+        <div>{% if report.period %}{{ report.period.label }}{% else %}As of {{ printed_at|date:"j M Y" }}{% endif %}</div>
+        <div class="small">Printed {{ printed_at|date:"j M Y, H:i" }} by {{ user.get_full_name|default:user.username }}</div>
+      </div>
+    </header>
+    {% for w in report.warnings %}<p class="leo-print-warning">⚠ {{ w }}</p>{% endfor %}
+    {% if report.chart %}{% include "finance/partials/_bar_chart.html" with chart=report.chart title=report.title %}{% endif %}
+    {% include "finance/partials/_report_table.html" %}
+    {% if report.notes %}<ul class="leo-print-notes">{% for n in report.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+    <footer class="leo-print-foot">{{ brand.name }} · {{ report.title }} · confidential business information</footer>
+  </main>
+  <script src="{% static 'js/report-print.js' %}"></script>
+</body>
+</html>

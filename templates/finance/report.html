@@ -1,0 +1,45 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}{{ report.title }} — Reports — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ report.title }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'finance:reports' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Reports</span></a>
+{% endblock %}
+
+{% block page_content %}
+<div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+  <p class="mb-0 text-body-secondary">{% if report.period %}<i class="bi bi-calendar3" aria-hidden="true"></i> {{ report.period.label }}{% else %}As of {{ printed_at|date:"j M Y, H:i" }}{% endif %}</p>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-leo-outline btn-sm" href="?{{ query }}{% if query %}&amp;{% endif %}export=csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</a>
+    <a class="btn btn-leo-outline btn-sm" href="?{{ query }}{% if query %}&amp;{% endif %}export=xlsx"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i>Excel</a>
+    <a class="btn btn-leo-primary btn-sm" href="?{{ query }}{% if query %}&amp;{% endif %}print=1" target="_blank" rel="noopener"><i class="bi bi-printer" aria-hidden="true"></i>Print (A4)</a>
+  </div>
+</div>
+
+{% if period_form %}
+  {% if report.options.groups %}
+    {% include "finance/partials/_period_filter.html" with hidden=report.options.hidden %}
+    <nav class="leo-tabs mb-3" aria-label="Group by">
+      {% for value, label in report.options.groups %}<a class="leo-tabs__link{% if report.options.group == value %} active{% endif %}" href="?period={{ report.period.preset }}&amp;start={{ report.period.start|date:'Y-m-d' }}&amp;end={{ report.period.end|date:'Y-m-d' }}&amp;group={{ value }}">{{ label }}</a>{% endfor %}
+    </nav>
+  {% else %}
+    {% include "finance/partials/_period_filter.html" %}
+  {% endif %}
+{% endif %}
+
+{% for w in report.warnings %}{% include "partials/_alert.html" with level="warning" text=w %}{% endfor %}
+
+{% if report.chart %}
+<article class="leo-card leo-card--auto mb-3"><div class="leo-card__body">
+  {% include "finance/partials/_bar_chart.html" with chart=report.chart title=report.title %}
+</div></article>
+{% endif %}
+
+<article class="leo-card leo-card--auto mb-3"><div class="leo-card__body p-0 p-md-2">
+  {% include "finance/partials/_report_table.html" %}
+</div></article>
+
+{% if report.notes %}
+<ul class="small text-body-secondary leo-report-notes">{% for n in report.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

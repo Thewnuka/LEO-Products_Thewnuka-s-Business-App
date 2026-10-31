@@ -50,6 +50,16 @@
 <li class="nav-item"><a class="nav-link{% if pset_url in path %} active{% endif %}" href="{{ pset_url }}"><i class="bi bi-sliders2" aria-hidden="true"></i>POS settings</a></li>
 {% endif %}
 {% endif %}
+{% if can.VIEW_FINANCE or can.VIEW_OPERATIONAL_REPORTS or can.RECORD_EXPENSES %}
+<li><p class="leo-sidebar__heading">Finance &amp; reports</p></li>
+{% url 'finance:dashboard' as fin_url %}{% url 'finance:reports' as rep_url %}{% url 'finance:expenses' as exp_url %}{% url 'finance:supplier_payments' as sup_pay_url %}{% url 'finance:stock_costs' as cost_url %}{% url 'finance:audit_log' as audit_url %}
+{% if can.VIEW_FINANCE %}<li class="nav-item"><a class="nav-link{% if path == fin_url %} active{% endif %}" href="{{ fin_url }}"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i>Finance overview</a></li>{% endif %}
+{% if can.VIEW_FINANCE or can.VIEW_OPERATIONAL_REPORTS %}<li class="nav-item"><a class="nav-link{% if rep_url in path %} active{% endif %}" href="{{ rep_url }}"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i>Reports</a></li>{% endif %}
+{% if can.RECORD_EXPENSES %}<li class="nav-item"><a class="nav-link{% if exp_url in path %} active{% endif %}" href="{{ exp_url }}"><i class="bi bi-receipt-cutoff" aria-hidden="true"></i>Expenses</a></li>{% endif %}
+{% if can.VIEW_FINANCE %}<li class="nav-item"><a class="nav-link{% if sup_pay_url in path or '/statement/' in path %} active{% endif %}" href="{{ sup_pay_url }}"><i class="bi bi-truck" aria-hidden="true"></i>Supplier balances</a></li>{% endif %}
+{% if can.MANAGE_FINANCE %}<li class="nav-item"><a class="nav-link{% if cost_url in path %} active{% endif %}" href="{{ cost_url }}"><i class="bi bi-tags" aria-hidden="true"></i>Stock costs</a></li>{% endif %}
+{% if can.VIEW_FINANCE %}<li class="nav-item"><a class="nav-link{% if audit_url in path %} active{% endif %}" href="{{ audit_url }}"><i class="bi bi-journal-check" aria-hidden="true"></i>Finance audit log</a></li>{% endif %}
+{% endif %}
 {% if can.MANAGE_CATALOG %}
 <li><p class="leo-sidebar__heading">Catalogue</p></li>
 {% url 'catalog:dashboard' as cat_url %}{% url 'catalog:product_list' as prod_url %}{% url 'catalog:category_list' as catg_url %}{% url 'catalog:unit_list' as unit_url %}

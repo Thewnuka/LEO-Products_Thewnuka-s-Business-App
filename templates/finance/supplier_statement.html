@@ -1,0 +1,44 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}{{ supplier.name }} — statement — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ supplier.name }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'finance:supplier_payments' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Suppliers</span></a>
+  {% if can_manage and owed > 0 %}<a href="{% url 'finance:supplier_payment_create' %}?supplier={{ supplier.pk }}" class="btn btn-leo-primary btn-sm"><i class="bi bi-cash" aria-hidden="true"></i>Pay</a>{% endif %}
+{% endblock %}
+
+{% block page_content %}
+<div class="leo-stats mb-3">
+  <div class="leo-stat"><span class="leo-stat__label">Received purchases</span><span class="leo-stat__value leo-stat__value--money">{{ purchased|money }}</span></div>
+  <div class="leo-stat"><span class="leo-stat__label">Paid</span><span class="leo-stat__value leo-stat__value--money">{{ paid|money }}</span></div>
+  <div class="leo-stat"><span class="leo-stat__label">Owed now</span><span class="leo-stat__value leo-stat__value--money">{{ owed|money }}</span></div>
+</div>
+<article class="leo-card leo-card--auto"><div class="leo-card__body">
+  <h2 class="h5">Statement (newest first)</h2>
+  {% if lines %}
+  <div class="table-responsive"><table class="table leo-table leo-table--stack leo-table--nowrap mb-0">
+    <thead><tr><th scope="col">Date</th><th scope="col">Entry</th><th scope="col" class="text-end">Purchased</th><th scope="col" class="text-end">Paid</th><th scope="col" class="text-end">Balance</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for line in lines %}{% with o=line.obj %}
+      <tr{% if line.kind == "payment" and o.is_void %} class="leo-row--muted"{% endif %}>
+        <td data-label="Date">{{ line.date|date:"j M Y" }}</td>
+        {% if line.kind == "purchase" %}
+          <td data-label="Entry"><a href="{% url 'inventory:purchase_detail' o.pk %}">{{ o.reference }}</a>{% if o.invoice_number %} · invoice {{ o.invoice_number }}{% endif %}</td>
+          <td data-label="Purchased" class="text-end">{{ o.total|money }}</td><td data-label="Paid" class="text-end">—</td>
+        {% else %}
+          <td data-label="Entry">{{ o.reference }} · {{ o.get_payment_method_display }}{% if o.purchase %} · for {{ o.purchase.reference }}{% endif %}{% if o.is_void %} <span class="leo-badge leo-ostatus--cancelled">Void</span> <span class="small">{{ o.void_reason }}</span>{% endif %}</td>
+          <td data-label="Purchased" class="text-end">—</td><td data-label="Paid" class="text-end">{{ o.amount|money }}</td>
+        {% endif %}
+        <td data-label="Balance" class="text-end fw-semibold">{{ line.balance|money }}</td>
+        <td data-label="">{% if line.kind == "payment" and can_manage and not o.is_void %}
+          <details><summary class="small text-danger">Void</summary>
+            <form method="post" action="{% url 'finance:supplier_payment_void' o.pk %}" class="d-flex gap-2 mt-1" data-confirm="Void payment {{ o.reference }}?" data-once>
+              {% csrf_token %}<input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason" required maxlength="300">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Void</button></form></details>
+        {% endif %}</td>
+      </tr>
+    {% endwith %}{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="leo-empty-note">No received purchases or payments yet.</p>{% endif %}
+</div></article>
+{% endblock %}

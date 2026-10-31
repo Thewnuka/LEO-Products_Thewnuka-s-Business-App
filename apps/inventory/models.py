@@ -98,6 +98,10 @@ class InventoryItem(TimeStampedModel):
     last_movement_at = models.DateTimeField(null=True, blank=True, editable=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                    related_name="+", editable=False)
+    # Cost of one stock unit (weighted average), used for stock valuation and the cost of goods sold.
+    # Empty = no cost known yet. Changed only by services.update_average_cost / set_item_cost (logged).
+    average_cost = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True, editable=False)
+    cost_updated_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     objects = InventoryItemQuerySet.as_manager()
 
@@ -280,6 +284,35 @@ class StockMovement(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("Stock movements are permanent and cannot be deleted.")
+
+
+class ItemCostChange(models.Model):
+    """Audit trail of every change to InventoryItem.average_cost (never edited or deleted)."""
+
+    class Source(models.TextChoices):
+        PURCHASE = "PURCHASE", "Purchase received (weighted average)"
+        MANUAL = "MANUAL", "Set by the Owner"
+
+    item = models.ForeignKey(InventoryItem, on_delete=models.PROTECT, related_name="cost_changes")
+    source = models.CharField(max_length=10, choices=Source.choices)
+    old_cost = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
+    new_cost = models.DecimalField(max_digits=14, decimal_places=4)
+    quantity_before = models.DecimalField(**QTY, null=True, blank=True)
+    quantity_added = models.DecimalField(**QTY, null=True, blank=True)
+    purchase_line = models.ForeignKey("PurchaseLine", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    reason = models.CharField(max_length=200, blank=True)
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-changed_at", "-pk"]
+        constraints = [models.CheckConstraint(condition=Q(new_cost__gte=0), name="inventory_cost_change_non_negative")]
+
+    def __str__(self):
+        return f"{self.item}: {self.old_cost} → {self.new_cost}"
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Cost history is permanent and cannot be deleted.")
 
 
 # ---------------------------------------------------------------------------

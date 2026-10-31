@@ -14,6 +14,7 @@ urlpatterns = [
     path("staff/dashboard/", include("apps.dashboard.urls")),
     path("staff/catalog/", include("apps.catalog.urls")),
     path("staff/inventory/", include("apps.inventory.urls")),
+    path("staff/finance/", include("apps.finance.urls")),
     path("", include("apps.shop.urls")),       # /shop/... and /cart/...
     path("", include("apps.orders.urls")),     # /checkout/, /account/orders/, /staff/orders/
     path("", include("apps.payments.urls")),   # /payments/..., payment actions

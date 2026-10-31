@@ -60,7 +60,6 @@ class OwnerDashboardView(RoleDashboardView):
     )
     shows_pos = True
     upcoming = (
-        ("Finance & reports", "08"),
         ("Business settings & logo upload", "08"),
     )
 
@@ -95,9 +94,6 @@ class ManagerDashboardView(RoleDashboardView):
         "View operational reports",
     )
     shows_pos = True
-    upcoming = (
-        ("Operational reports", "08"),
-    )
 
 
 class CashierDashboardView(RoleDashboardView):

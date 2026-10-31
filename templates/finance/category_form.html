@@ -1,0 +1,20 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}{% if category %}Edit category{% else %}New category{% endif %} — {{ brand.name }}{% endblock %}
+{% block page_title %}{% if category %}Edit category{% else %}New expense category{% endif %}{% endblock %}
+
+{% block page_content %}
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    {% include "partials/_form_field.html" with field=form.name %}
+    {% include "partials/_form_field.html" with field=form.description %}
+    {% include "partials/_form_field.html" with field=form.is_active %}
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save</button>
+      <a href="{% url 'finance:categories' %}" class="btn btn-leo-outline">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

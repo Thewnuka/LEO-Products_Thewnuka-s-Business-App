@@ -58,7 +58,9 @@ class Capability:
     MANAGE_PAYMENTS = "payments.manage"        # payment configuration and refunds
     VERIFY_PAYMENTS = "payments.verify"        # approve / reject bank-transfer evidence
     RECORD_CASH_PAYMENTS = "payments.record_cash"
-    MANAGE_FINANCE = "finance.manage"
+    MANAGE_FINANCE = "finance.manage"          # void expenses, supplier payments, stock costs, expense categories
+    VIEW_FINANCE = "finance.view"              # finance dashboard, profit & loss, cash flow, balances, audit log
+    RECORD_EXPENSES = "finance.record_expenses"
     VIEW_ALL_REPORTS = "reports.all"
 
     # Point of sale
@@ -87,6 +89,7 @@ _OWNER = {
     _C.MANAGE_PURCHASES, _C.CONFIGURE_STOCK_RULES, _C.VIEW_ORDERS,
     _C.VIEW_OPERATIONAL_REPORTS,
     _C.MANAGE_PAYMENTS, _C.VERIFY_PAYMENTS, _C.RECORD_CASH_PAYMENTS, _C.MANAGE_FINANCE, _C.VIEW_ALL_REPORTS,
+    _C.VIEW_FINANCE, _C.RECORD_EXPENSES,
     _C.USE_POS, _C.PROCESS_SALES, _C.ISSUE_RECEIPTS, _C.TAKE_PAYMENTS, _C.VIEW_OWN_TRANSACTIONS,
     _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.UNLIMITED_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
 }
@@ -107,6 +110,8 @@ ROLE_CAPABILITIES = {
         _C.VIEW_OPERATIONAL_REPORTS,
         # Point of sale: oversight, not selling.
         _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
+        # Finance: operational reports and recording expenses; no profit, cash flow or balances.
+        _C.RECORD_EXPENSES,
     }),
     Role.CASHIER: frozenset({
         _C.VIEW_STAFF_PORTAL,

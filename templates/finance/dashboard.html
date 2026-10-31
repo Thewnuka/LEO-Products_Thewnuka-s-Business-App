@@ -1,0 +1,58 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}Finance — {{ brand.name }}{% endblock %}
+{% block page_title %}Finance{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'finance:report' 'profit-loss' %}?{{ request.GET.urlencode }}" class="btn btn-leo-primary btn-sm"><i class="bi bi-graph-up" aria-hidden="true"></i>Profit &amp; loss</a>
+  <a href="{% url 'finance:reports' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i><span class="d-none d-sm-inline">All reports</span></a>
+{% endblock %}
+
+{% block page_content %}
+{% include "finance/partials/_period_filter.html" %}
+<p class="text-body-secondary"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ period.label }}</p>
+
+{% if s.uncosted_lines %}
+  {% include "partials/_alert.html" with level="warning" text="Some items were sold before their cost was known, so cost of goods and profit are incomplete. See the Profit & loss report for details, and set missing stock costs." %}
+{% endif %}
+
+<div class="leo-stats leo-stats--finance mb-4">
+  <a class="leo-stat" href="{% url 'finance:report' 'sales' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Sales</span><span class="leo-stat__value">{{ s.sales_count }}</span><span class="leo-stat__note">paid orders and till sales</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'sales' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Revenue</span><span class="leo-stat__value leo-stat__value--money">{{ s.revenue|money }}</span><span class="leo-stat__note">after {{ s.discounts|money }} discounts</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'products' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Cost of goods sold</span><span class="leo-stat__value leo-stat__value--money">{{ s.cogs|money }}</span>{% if s.uncosted_lines %}<span class="leo-stat__note leo-text-warning">+ {{ s.uncosted_lines }} line(s) without cost</span>{% endif %}</a>
+  <a class="leo-stat" href="{% url 'finance:report' 'profit-loss' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Gross profit</span><span class="leo-stat__value leo-stat__value--money">{{ s.gross_profit|money }}</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'expenses' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Operating expenses</span><span class="leo-stat__value leo-stat__value--money">{{ s.expenses|money }}</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'profit-loss' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Net operating profit</span><span class="leo-stat__value leo-stat__value--money{% if s.net_operating_profit < 0 %} leo-qty--out{% endif %}">{{ s.net_operating_profit|money }}</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'purchases' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Stock purchases</span><span class="leo-stat__value leo-stat__value--money">{{ s.purchases|money }}</span><span class="leo-stat__note">received; not an expense</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'cash-flow' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Cash collected</span><span class="leo-stat__value leo-stat__value--money">{{ s.cash_in|money }}</span></a>
+  <a class="leo-stat" href="{% url 'finance:report' 'cash-flow' %}?{{ request.GET.urlencode }}"><span class="leo-stat__label">Bank &amp; online collected</span><span class="leo-stat__value leo-stat__value--money">{{ s.bank_in|money }}</span></a>
+</div>
+
+<article class="leo-card leo-card--auto mb-4"><div class="leo-card__body">
+  <h2 class="h5">Last 12 months</h2>
+  {% include "finance/partials/_bar_chart.html" with chart=chart title="Revenue, cost of goods and expenses, last 12 months" %}
+  {% if not chart %}<p class="leo-empty-note">No sales or expenses recorded yet.</p>{% endif %}
+</div></article>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-6"><article class="leo-card leo-card--auto"><div class="leo-card__body">
+    <h2 class="h5">Record</h2>
+    <div class="d-grid gap-2">
+      <a href="{% url 'finance:expense_create' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-receipt-cutoff" aria-hidden="true"></i>Record an expense</a>
+      {% if can.MANAGE_FINANCE %}
+      <a href="{% url 'finance:supplier_payment_create' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-truck" aria-hidden="true"></i>Pay a supplier</a>
+      <a href="{% url 'finance:stock_costs' %}" class="btn btn-leo-outline justify-content-start"><i class="bi bi-tags" aria-hidden="true"></i>Stock costs</a>
+      {% endif %}
+    </div>
+  </div></article></div>
+  <div class="col-12 col-lg-6"><article class="leo-card leo-card--auto"><div class="leo-card__body">
+    <h2 class="h5">How these figures are worked out</h2>
+    <ul class="small text-body-secondary mb-0">
+      <li>Revenue counts each paid sale once, by order date. Unpaid ({{ s.unpaid_orders|money }}), cancelled and refunded sales are not revenue.</li>
+      <li>Cost of goods uses the stock cost recorded when each item was sold.</li>
+      <li>Stock purchases are not expenses; they become cost of goods when sold.</li>
+      <li>Collections are money received (by payment date), not sales.</li>
+    </ul>
+  </div></article></div>
+</div>
+{% endblock %}

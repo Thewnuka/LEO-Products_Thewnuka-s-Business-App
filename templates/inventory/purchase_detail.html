@@ -23,6 +23,8 @@
         <dt>Purchase date</dt><dd>{{ purchase.purchase_date|date:"j M Y" }}</dd>
         <dt>Invoice no.</dt><dd>{{ purchase.invoice_number|default:"—" }}</dd>
         <dt>Total</dt><dd class="fw-semibold">{{ purchase.total|money }}</dd>
+        {% if paid is not None %}<dt>Paid</dt><dd>{{ paid|money }} · still to pay <strong>{{ outstanding|money }}</strong>
+          {% if outstanding > 0 and can.MANAGE_FINANCE %}<a href="{% url 'finance:supplier_payment_create' %}?purchase={{ purchase.pk }}" class="ms-1">Record payment</a>{% endif %}</dd>{% endif %}
         <dt>Created</dt><dd>{{ purchase.created_at|date:"j M Y, H:i" }}{% if purchase.created_by %} by {{ purchase.created_by }}{% endif %}</dd>
         {% if purchase.received_at %}<dt>Received</dt><dd>{{ purchase.received_at|date:"j M Y, H:i" }} by {{ purchase.received_by|default:"—" }}</dd>{% endif %}
         {% if purchase.cancelled_at %}<dt>Cancelled</dt><dd>{{ purchase.cancelled_at|date:"j M Y, H:i" }} by {{ purchase.cancelled_by|default:"—" }}<br><span class="small">{{ purchase.cancel_reason }}</span></dd>{% endif %}

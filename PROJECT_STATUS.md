@@ -1,7 +1,84 @@
 # LEO PRODUCTS: Project Status
 
 **Last updated:** 2026-10-31
-**Current phase:** Phase 07 (POS & Cashier Management): **COMPLETE**. Waiting for approval before Phase 08.
+**Current phase:** Phase 08 (Finance & Reports): **COMPLETE**. Waiting for approval before Phase 09.
+
+---
+
+## Phase 08: Finance & Reports ✅
+
+### Delivered
+
+- [x] **Built on existing data:** sales from `orders.Order`/`OrderItem` (online and POS), money received from
+      `payments.Payment`, purchases and suppliers from `inventory`, shifts from `pos`. New `finance` app only adds
+      expenses, supplier payments, the audit log and the reporting layer
+- [x] **Costs (the missing piece):** `InventoryItem.average_cost` (weighted average, updated automatically when a purchase
+      is received, with unit conversion) and Owner-set costs for products made in-house; every change logged in
+      `ItemCostChange`. Each sold line copies `unit_cost`/`cost_total` at the moment of sale. Older sales stay "without
+      cost" and are reported as such; no historical cost is invented or back-filled
+- [x] **Finance overview** (Owner): sales, revenue, discounts, COGS, gross profit, operating expenses, net operating
+      profit, stock purchases, cash and bank/online collections for any period, plus a 12-month chart
+- [x] **Expenses** (Owner, Manager record; Owner voids): categories (seeded, Owner-managed, deactivate not delete),
+      date, amount, payment method, payee, reference, private receipt attachment (validated like payment slips)
+- [x] **Supplier payments and balances** (Owner): payments on account or against a received purchase, never more than
+      owed; balances, running statement per supplier; paid/outstanding shown on purchase and supplier pages
+- [x] **Profit & loss** with one definition per figure: revenue = paid, non-cancelled sales by order date (discounts and
+      delivery fees once); COGS from recorded costs; purchases kept out of expenses; refunds never counted as revenue;
+      warnings when sales lack a cost
+- [x] **11 reports:** sales (day/month/year), product sales, category sales, cashier sales, purchases, stock valuation,
+      expenses, profit & loss, cash flow, supplier balances, customer balances
+- [x] **Date filters** (presets and custom), **SVG charts** (no external library), **CSV** (UTF-8 for Excel) and real
+      **Excel .xlsx** exports (written with the standard library, no new dependency), **A4 print** layout with logo;
+      spreadsheet formula injection neutralised; exports logged
+- [x] **Roles:** Owner everything; Manager operational reports without cost/profit columns or notes, and recording
+      expenses; Cashier, IT Admin and customers no finance access (POS shift/sales pages unchanged). New capabilities
+      `VIEW_FINANCE`, `RECORD_EXPENSES`; `MANAGE_FINANCE` and `VIEW_OPERATIONAL_REPORTS` now used
+- [x] **Protection:** expenses, supplier payments, categories, cost history and the audit log can't be deleted (model and
+      bulk-delete guards); corrections by void with reason; one-time form tokens stop double recording; conditional
+      updates stop double voids; supplier balance checks run with the supplier row locked
+- [x] **Finance audit log** (Owner): recorded/voided entries, cost changes, category changes, exports
+- [x] Sidebar "Finance & reports", dashboard links, home roadmap (08 done)
+- [x] Docs: DEVELOPMENT_GUIDE §12, test table, README, ARCHITECTURE §18, this file
+- [x] Development database backed up to `backup-before-phase08.sqlite3` before migrating
+
+### Database changes
+
+| Migration | Change |
+|---|---|
+| `inventory.0004` | `InventoryItem.average_cost`, `cost_updated_at`; new `ItemCostChange` |
+| `orders.0004` | `OrderItem.unit_cost`, `cost_total` (cost of goods sold, copied at sale) |
+| `finance.0001` | `ExpenseCategory`, `Expense`, `SupplierPayment`, `FinanceEvent` |
+| `finance.0002` | Seeds 10 expense categories (names only, no figures) |
+
+### Verification performed (2026-10-31)
+
+| Check | Result |
+|---|---|
+| `python manage.py test` | **484 tests, all passed** (37 new finance tests + all Phase 01–07 tests) |
+| `check`, `makemigrations --check` | Clean; migrations applied to the dev DB |
+| Hand-checked scenario | One period with discounted POS cash sale, approved and unverified till transfers, refunded sale, paid delivery order, unpaid order, expenses (one voided) and a supplier payment: revenue, discounts, delivery, COGS, gross/net profit, collections, cash flow, balances all match hand calculations |
+| Horizontal overflow (headless Edge), Owner and Manager, 25 finance pages × 5 widths (320–1366px) | 125/125 OK, all HTTP 200 |
+| A4 print | Wide reports fit the page after a fix (see below) |
+
+**Issues found and fixed during Phase 08:**
+- The product report's note about gross profit was visible to Managers; cost/profit notes are now Owner-only
+- Wide reports were cut off on the A4 print page; the print table now wraps headings and fits
+- Chart axis numbers were hidden behind the first bar
+
+### Known limitations (Phase 08)
+
+- **Profit is only as good as the stock costs.** Your existing products have no cost until a purchase is received or
+  the Owner sets one; sales before that are "without cost" (flagged in the reports, not estimated).
+- Stock valuation is current only (no "value as of a past date"); average cost isn't reduced for returns/damage.
+- Order-level discounts are not allocated to individual products in the product/category reports (they are in the
+  sales and P&L reports).
+- Revenue is recognised on the order date once paid (cash basis per sale); a cash-on-delivery order paid next month
+  is counted in the month it was ordered. There is no accrual accounting, VAT/tax, depreciation, payroll, bank
+  reconciliation or double-entry ledger.
+- Supplier advance payments, supplier credit notes and returns to suppliers aren't supported.
+- Expenses paid from a POS drawer must also be recorded as a POS "cash out" to keep the drawer count right (not linked).
+- Charts are simple bar charts; no interactive zooming.
+- Responsive checks used headless Microsoft Edge; printing on a physical printer was not tested.
 
 ---
 
@@ -552,10 +629,10 @@ meta, mobile menu and responsive CSS present. No changes required.
 | 05 | Customer storefront and shopping cart | ✅ Complete |
 | 06 | Checkout, orders and payments (cash, bank transfer, online gateway) | ✅ Complete |
 | 07 | Point of sale (POS) and cashier shift management | ✅ Complete |
-| 08+ | Finance, reports and dashboard charts (Chart.js) | Planned |
-| 08+ | Notifications, Business Settings (logo upload), technical settings, security log viewer | Planned |
-| 08+ | PWA (manifest, service worker, icons) | Planned |
-| 08+ | Tauri Windows desktop app and production deployment | Planned |
+| 08 | Finance and reports (expenses, supplier balances, profit & loss, exports, charts) | ✅ Complete |
+| 09+ | Notifications, Business Settings (logo upload), technical settings, security log viewer | Planned |
+| 09+ | PWA (manifest, service worker, icons) | Planned |
+| 09+ | Tauri Windows desktop app and production deployment | Planned |
 
-The roadmap is a proposal and can be reordered; phases after 07 will be numbered as they are approved. The home page shows a simplified version
+The roadmap is a proposal and can be reordered; phases after 08 will be numbered as they are approved. The home page shows a simplified version
 (`templates/core/home.html`).

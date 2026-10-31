@@ -1,0 +1,40 @@
+{% extends "layouts/staff.html" %}
+{% load catalog_tags %}
+
+{% block title %}{{ expense.reference }} — Expenses — {{ brand.name }}{% endblock %}
+{% block page_title %}{{ expense.reference }}{% endblock %}
+{% block page_actions %}<a href="{% url 'finance:expenses' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline">Expenses</span></a>{% endblock %}
+
+{% block page_content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <article class="leo-card leo-card--auto"><div class="leo-card__body">
+      {% if expense.is_void %}{% include "partials/_alert.html" with level="warning" text="This expense is void and is not counted in any report." %}{% endif %}
+      <dl class="leo-dl">
+        <dt>Amount</dt><dd class="fw-semibold">{{ expense.amount|money }}</dd>
+        <dt>Date</dt><dd>{{ expense.expense_date|date:"j F Y" }}</dd>
+        <dt>Category</dt><dd>{{ expense.category }}</dd>
+        <dt>Description</dt><dd>{{ expense.description }}</dd>
+        <dt>Paid by</dt><dd>{{ expense.get_payment_method_display }}{% if expense.payment_reference %} · {{ expense.payment_reference }}{% endif %}</dd>
+        <dt>Paid to</dt><dd>{{ expense.paid_to|default:"—" }}</dd>
+        <dt>Receipt</dt><dd>{% if expense.receipt %}<a href="{% url 'finance:expense_receipt' expense.pk %}" target="_blank" rel="noopener"><i class="bi bi-paperclip" aria-hidden="true"></i> Open receipt</a>{% else %}—{% endif %}</dd>
+        <dt>Recorded</dt><dd>{{ expense.created_at|date:"j M Y, H:i" }} by {{ expense.created_by.get_full_name|default:expense.created_by.username }}</dd>
+        {% if expense.is_void %}<dt>Voided</dt><dd>{{ expense.voided_at|date:"j M Y, H:i" }} by {{ expense.voided_by.get_full_name|default:expense.voided_by.username }} · {{ expense.void_reason }}</dd>{% endif %}
+      </dl>
+    </div></article>
+  </div>
+  {% if void_form %}
+  <div class="col-12 col-lg-5">
+    <form method="post" action="{% url 'finance:expense_void' expense.pk %}" class="leo-card leo-card--auto" data-confirm="Void {{ expense.reference }}? It will no longer count in reports." data-once>
+      <div class="leo-card__body">
+        {% csrf_token %}
+        <h2 class="h5">Void this expense</h2>
+        <p class="small text-body-secondary">Use this for a mistake, then record the correct expense. The entry stays visible, marked void.</p>
+        {% include "partials/_form_field.html" with field=void_form.reason %}
+        <button type="submit" class="btn btn-outline-danger">Void</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

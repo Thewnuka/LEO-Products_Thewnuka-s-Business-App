@@ -76,6 +76,7 @@ LOCAL_APPS = [
     "apps.payments",
     "apps.pos",
     "apps.finance",
+    "apps.notifications",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -108,6 +109,7 @@ TEMPLATES = [
                 "apps.core.context_processors.brand",
                 "apps.accounts.context_processors.access",
                 "apps.shop.context_processors.cart",
+                "apps.notifications.context_processors.notifications",
             ],
         },
     },

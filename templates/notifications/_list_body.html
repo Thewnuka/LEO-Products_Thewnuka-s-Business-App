@@ -1,0 +1,43 @@
+{% comment %}Inbox body shared by the staff and customer notification pages.{% endcomment %}
+<div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+  <nav class="leo-tabs" aria-label="Filter notifications">
+    <a class="leo-tabs__link{% if show != 'unread' %} active{% endif %}" href="?category={{ category }}">All</a>
+    <a class="leo-tabs__link{% if show == 'unread' %} active{% endif %}" href="?show=unread&amp;category={{ category }}">Unread{% if unread %} ({{ unread }}){% endif %}</a>
+  </nav>
+  <div class="d-flex flex-wrap gap-2">
+    {% if unread %}
+    <form method="post" action="{% url 'notifications:read_all' %}">{% csrf_token %}
+      <button type="submit" class="btn btn-leo-outline btn-sm"><i class="bi bi-check2-all" aria-hidden="true"></i>Mark all read</button></form>
+    {% endif %}
+    <a href="{% url 'notifications:preferences' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-sliders" aria-hidden="true"></i>Preferences</a>
+  </div>
+</div>
+{% if categories|length > 1 %}
+<div class="leo-chips mb-3" role="group" aria-label="Category">
+  <a class="leo-chip leo-chip--sm{% if not category %} active{% endif %}" href="?show={{ show }}">Everything</a>
+  {% for value, label in categories %}<a class="leo-chip leo-chip--sm{% if category == value %} active{% endif %}" href="?show={{ show }}&amp;category={{ value }}">{{ label }}</a>{% endfor %}
+</div>
+{% endif %}
+
+{% if page_obj.object_list %}
+<ul class="list-unstyled leo-notes">
+  {% for n in page_obj %}
+  <li class="leo-note{% if not n.is_read %} is-unread{% endif %}">
+    <i class="bi bi-{{ n.icon }} leo-note-icon leo-note-icon--{{ n.level }}" aria-hidden="true"></i>
+    <div class="leo-note__body">
+      <a href="{% url 'notifications:open' n.pk %}" class="leo-note__title">{{ n.title }}</a>
+      {% if n.message %}<p class="leo-note__message">{{ n.message }}</p>{% endif %}
+      <span class="leo-note__meta">{{ n.created_at|date:"j M Y, H:i" }} · {{ n.get_category_display }}{% if not n.is_read %} · <strong>New</strong>{% endif %}</span>
+    </div>
+    <form method="post" action="{% url 'notifications:read' n.pk %}" class="leo-note__action">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% if n.is_read %}<input type="hidden" name="unread" value="1"><button type="submit" class="btn btn-link btn-sm">Mark unread</button>
+      {% else %}<button type="submit" class="btn btn-link btn-sm">Mark read</button>{% endif %}
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% include "partials/_pager.html" %}
+{% else %}
+<div class="leo-empty"><i class="bi bi-bell-slash" aria-hidden="true"></i><p class="mb-0">{% if show == "unread" %}No unread notifications.{% else %}No notifications yet.{% endif %}</p></div>
+{% endif %}

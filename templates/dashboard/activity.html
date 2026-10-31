@@ -1,0 +1,38 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Activity history — {{ brand.name }}{% endblock %}
+{% block page_title %}Activity history{% endblock %}
+
+{% block page_content %}
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <div class="col-12 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=period_form.period %}</div>
+    <div class="col-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=period_form.start %}</div>
+    <div class="col-6 col-md-4 col-xl-2">{% include "partials/_form_field.html" with field=period_form.end %}</div>
+    <div class="col-12 col-md-4 col-xl-2 leo-field"><label class="form-label" for="actSource">Area</label>
+      <select name="source" id="actSource" class="form-select"><option value="">Everything</option>{% for k, label in sources %}<option value="{{ k }}"{% if source == k %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-4 col-xl-2 leo-field"><label class="form-label" for="actActor">Person</label>
+      <select name="actor" id="actActor" class="form-select"><option value="">Anyone</option>{% for s in staff %}<option value="{{ s.pk }}"{% if actor.pk == s.pk %} selected{% endif %}>{{ s.get_full_name|default:s.username }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-4 col-xl-2 leo-field"><label class="form-label" for="actQ">Contains</label>
+      <input type="search" name="q" id="actQ" value="{{ q }}" class="form-control" maxlength="100"></div>
+    <div class="col-12 d-grid d-md-flex justify-content-md-end"><button type="submit" class="btn btn-leo-primary"><i class="bi bi-funnel" aria-hidden="true"></i>Apply</button></div>
+  </div>
+</form>
+<p class="small text-body-secondary">{{ period.label }} · {{ page_obj.paginator.count }} entr{{ page_obj.paginator.count|pluralize:"y,ies" }} · read from the records each area already keeps.{% if not can.VIEW_FINANCE %} Finance and account entries are shown to the Owner only.{% endif %}</p>
+{% if page_obj.object_list %}
+<div class="leo-card leo-card--auto"><div class="table-responsive">
+  <table class="table leo-table leo-table--stack">
+    <thead><tr><th scope="col">When</th><th scope="col">Area</th><th scope="col">What</th><th scope="col">Who</th></tr></thead>
+    <tbody>{% for e in page_obj %}
+      <tr><td data-label="When" class="text-nowrap">{{ e.at|date:"j M Y, H:i" }}</td>
+        <td data-label="Area"><span class="leo-badge">{{ e.source|capfirst }}</span></td>
+        <td data-label="What" class="leo-wrap">{% if e.url %}<a href="{{ e.url }}">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}{% if e.detail %}<span class="d-block small text-body-secondary">{{ e.detail }}</span>{% endif %}</td>
+        <td data-label="Who">{{ e.actor.get_full_name|default:e.actor.username|default:"system" }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</div></div>
+{% include "partials/_pager.html" %}
+{% else %}
+<div class="leo-empty"><i class="bi bi-clock-history" aria-hidden="true"></i><p class="mb-0">No activity matches these filters.</p></div>
+{% endif %}
+{% endblock %}

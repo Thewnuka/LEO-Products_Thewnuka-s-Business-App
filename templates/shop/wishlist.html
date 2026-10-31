@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load catalog_tags %}
+
+{% block title %}My wishlist — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    <span class="leo-eyebrow">My account</span>
+    <h1 class="h2 mt-1 mb-3">Wishlist</h1>
+    {% include "accounts/customer/_nav.html" %}
+    {% if items %}
+    <ul class="list-unstyled leo-order-list mt-4">
+      {% for w in items %}
+      <li class="leo-wish-row">
+        <span class="leo-wish-row__main"><a href="{% url 'shop:product' w.product.slug %}" class="fw-semibold">{{ w.product.name }}</a>
+          <span class="d-block small text-body-secondary">{{ w.product.category }} · saved {{ w.created_at|date:"j M Y" }}{% if w.product.status != "ACTIVE" %} · no longer sold{% endif %}</span></span>
+        <form method="post" action="{% url 'shop:wishlist_toggle' w.product.slug %}">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button type="submit" class="btn btn-link btn-sm leo-cart-remove"><i class="bi bi-x-lg" aria-hidden="true"></i>Remove</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="leo-empty mt-4"><i class="bi bi-heart" aria-hidden="true"></i><p>Nothing saved yet. Tap “Save to wishlist” on a product to keep it here.</p>
+      <a href="{% url 'shop:home' %}" class="btn btn-leo-primary">Browse the shop</a></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

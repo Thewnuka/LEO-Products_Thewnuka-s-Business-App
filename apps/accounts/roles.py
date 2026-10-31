@@ -75,6 +75,10 @@ class Capability:
     MANAGE_SHIFTS = "pos.manage_shifts"        # review every shift, close a forgotten shift
     REFUND_POS_SALES = "pos.refund"            # void / refund an in-store sale
 
+    # Activity, reviews (Phase 09)
+    VIEW_ACTIVITY = "activity.view"            # business activity history
+    MODERATE_REVIEWS = "reviews.moderate"      # approve / reject customer product reviews
+
     # Customer portal
     USE_CUSTOMER_PORTAL = "customer_portal.use"
 
@@ -92,6 +96,7 @@ _OWNER = {
     _C.VIEW_FINANCE, _C.RECORD_EXPENSES,
     _C.USE_POS, _C.PROCESS_SALES, _C.ISSUE_RECEIPTS, _C.TAKE_PAYMENTS, _C.VIEW_OWN_TRANSACTIONS,
     _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.UNLIMITED_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
+    _C.VIEW_ACTIVITY, _C.MODERATE_REVIEWS,
 }
 
 ROLE_CAPABILITIES = {
@@ -112,6 +117,8 @@ ROLE_CAPABILITIES = {
         _C.VIEW_POS_SALES, _C.APPROVE_DISCOUNTS, _C.MANAGE_SHIFTS, _C.REFUND_POS_SALES,
         # Finance: operational reports and recording expenses; no profit, cash flow or balances.
         _C.RECORD_EXPENSES,
+        # Operational activity history (no account or finance entries) and review moderation.
+        _C.VIEW_ACTIVITY, _C.MODERATE_REVIEWS,
     }),
     Role.CASHIER: frozenset({
         _C.VIEW_STAFF_PORTAL,

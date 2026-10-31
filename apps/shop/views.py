@@ -18,9 +18,9 @@ from django.views.generic import TemplateView
 
 from apps.catalog.models import Category, Product
 
-from . import services
+from . import reviews, services
 from .forms import AddToCartForm, ShopSearchForm, UpdateQuantityForm
-from .models import CartItem
+from .models import CartItem, ProductReview
 
 
 def _safe_next(request, fallback):
@@ -105,6 +105,14 @@ class ProductDetailView(TemplateView):
         related = list(services.search_products(category=product.subcategory or product.category).exclude(pk=product.pk)[:4])
         ctx.update(product=product, variations=variations, selected=selected, can_shop=services.can_shop(self.request.user),
                    related=_attach_card_options(related))
+        # Phase 09: wishlist and reviews
+        user = self.request.user
+        ctx.update(
+            wishlisted=reviews.is_wishlisted(user, product), rating=reviews.rating_summary(product),
+            reviews=product.reviews.filter(status=ProductReview.Status.APPROVED).select_related("customer")[:20],
+            my_review=ProductReview.objects.filter(product=product, customer=user).first() if user.is_authenticated else None,
+            can_review=reviews.has_bought(user, product),
+        )
         return ctx
 
 

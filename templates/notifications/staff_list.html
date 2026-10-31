@@ -1,0 +1,7 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Notifications — {{ brand.name }}{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_actions %}<a href="{% url 'notifications:alerts' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span class="d-none d-sm-inline">Business alerts</span></a>{% endblock %}
+
+{% block page_content %}{% include "notifications/_list_body.html" %}{% endblock %}

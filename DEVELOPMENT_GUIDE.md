@@ -698,7 +698,68 @@ change and report export, with who and when. Financial records, cost history and
 
 ---
 
-## 13. Running the tests
+## 13. Notifications, alerts and other tools
+
+### Notifications (everyone who signs in)
+
+The **bell** in the top bar (staff) or next to the cart (customers) shows how many notifications are unread and the
+five newest. **See all notifications** opens the full history with **All / Unread** and category filters, **Mark read**,
+**Mark unread** and **Mark all read**. Opening a notification marks it read and goes to the related page.
+
+Who is told about what (chosen by role; customers only ever hear about their own orders and reviews):
+
+| Event | Notified |
+|---|---|
+| New online order; order cancelled by the customer; online payment confirmed | Owner, Manager |
+| Bank transfer waiting for verification (online or at the till) | Owner, Manager |
+| Stock drops to its reorder level, or runs out (once, when it crosses the line) | Owner, Manager |
+| Purchase received; expense recorded by someone else; till sale voided | Owner |
+| POS shift closed short or over | Owner, Manager |
+| New customer review to check | Owner, Manager |
+| Order placed, status changes, cancelled; payment received or transfer rejected | The order's customer |
+| Review published / not published | The customer who wrote it |
+
+Each event notifies each person **once** (a database rule), even if the action is repeated or retried.
+
+**Preferences:** bell page → **Preferences** (or the user menu). Staff and customers can switch off the categories they
+don't want. Customers can also switch off order emails; their in-app notifications continue.
+
+### Business alerts (staff)
+
+Staff portal → **Business alerts** (also "Needs attention" on every dashboard) shows live counts for the user's role:
+out-of-stock and low-stock items, bank transfers to verify, orders waiting to be confirmed (flagged when older than the
+set number of hours), orders unpaid for several days, refunds owed, POS shifts left open (a cashier sees their own),
+products without a cost (Owner) and reviews to check.
+
+**Alert settings** (Owner, Staff portal → Administration): hours before a pending order is flagged, days before an
+unpaid order is flagged, hours before an open shift is flagged, and whether reviews need approval.
+
+Optional daily reminder: `python manage.py send_business_alerts` turns the current alerts into notifications, at most
+once per alert, person and day. Schedule it with Windows Task Scheduler if wanted (e.g. 8:00 every morning).
+
+### Wishlist and reviews (customers)
+
+- **Save to wishlist** on a product page; **My account → Wishlist** lists saved products.
+- **Reviews:** only customers who **bought and paid for** a product can review it (one review each, editable). The
+  public page shows their first name and last initial and "Verified purchase", never their email.
+- New and edited reviews wait for approval (unless the Owner turned approval off). **Customer reviews** in the staff
+  sidebar (Owner, Manager): **Publish** or **Don't publish** with a reason, which is sent to the customer.
+
+### Search (staff)
+
+Staff portal → **Search**: one box for order and receipt numbers, customer names/phones/emails, payment and bank
+references, products and SKUs, stock items, suppliers, purchases, expenses and staff accounts. It only searches the
+areas the user's role can open (a cashier finds their own till sales, not other cashiers').
+
+### Activity history (Owner, Manager)
+
+Staff portal → **Activity history**: one timeline of order status changes, payment events, stock movements, POS shifts,
+cash movements and reprints, and review decisions, read from the records each area already keeps. The Owner also sees
+finance entries (expenses, voids, cost changes, exports) and account changes. Filter by dates, area, person and text.
+
+---
+
+## 14. Running the tests
 
 ```powershell
 python manage.py test                       # everything (about 8–10 minutes)
@@ -735,13 +796,16 @@ The tests use a temporary database; your `db.sqlite3` is never touched. Test fil
 | `apps/pos/tests/test_views.py` | Role access to every POS page, till product list, checkout endpoint (errors, double submit, CSRF, manager approval and throttling), receipts and logged reprints, sales history and filters, transfer verification, refunds, shift pages, dashboards, POS settings |
 | `apps/finance/tests/test_finance.py` | Weighted average cost and unit conversion, cost copied at sale (never back-filled), Owner-set costs, expenses (validation, receipts, one-time tokens, void once, no deleting), supplier payments and balances, every headline figure counted once (revenue, discounts, delivery, COGS, expenses, collections, refunds, unpaid and cancelled orders), profit & loss, cash flow, all reports, date periods |
 | `apps/finance/tests/test_views.py` | Role access to every finance page, hidden cost/profit columns for Managers, every report as page/print/CSV/Excel, export logging, formula-injection protection, expense and supplier payment pages (double submit, errors, voids), stock cost page |
+| `apps/notifications/tests/test_notifications.py` | Who is notified for each event (and who isn't), no duplicates, mutes and customer email switch, unsafe links dropped, stock crossing alerts, own-inbox privacy, read/unread, bell, preferences, business alerts by role, alert settings, daily alert command |
+| `apps/shop/tests/test_reviews.py` | Wishlist (customers only), reviews only after a paid purchase, moderation, notifications, one review per customer, edits re-checked, auto-publish setting, no emails shown |
+| `apps/dashboard/tests_phase09.py` | Staff search limited by role, activity history by role and filters |
 | `apps/shop/tests/test_cart.py` | Add/update/remove, stock limits, invalid input, stock dropping later, guest vs customer carts, merge on sign-in and registration, cart privacy, staff blocked, CSRF, safe redirects |
 
 Tests take a while because password hashing is deliberately slow (that is what makes it secure).
 
 ---
 
-## 14. Databases
+## 15. Databases
 
 **Development:** SQLite. The database is the file `db.sqlite3`. It is not committed to Git.
 To start again from an empty database, stop the server, delete `db.sqlite3` and run `python manage.py migrate`.
@@ -753,7 +817,7 @@ To start again from an empty database, stop the server, delete `db.sqlite3` and 
 4. Run `python manage.py migrate` and `python manage.py collectstatic`.
 5. Run `python manage.py check --deploy` and fix anything it reports.
 
-## 15. Git and GitHub
+## 16. Git and GitHub
 
 ### First commit
 
@@ -806,7 +870,7 @@ Then open a Pull Request on GitHub and merge it into `main` when the phase is do
 - Run `python manage.py test` before committing.
 - Commit small, meaningful steps with clear messages.
 
-## 16. Troubleshooting
+## 17. Troubleshooting
 
 | Problem | Fix |
 |---|---|

@@ -150,6 +150,10 @@ def record_movement(item, movement_type, quantity, user, *, reason="", unit=None
         reason=reason.strip(), purchase=purchase, purchase_line=purchase_line, order_item=order_item, created_by=user,
     )
     item.quantity, item.last_movement_at = after, now  # keep the caller's object current
+    if delta < 0 and locked.is_active:
+        from apps.notifications.events import stock_crossed
+
+        stock_crossed(locked, movement)
     return movement
 
 
@@ -247,6 +251,9 @@ def receive_purchase(purchase, user):
                                    reason=f"Purchase {purchase.reference}", purchase=purchase, purchase_line=line)
         update_average_cost(line, movement, user)
     purchase.refresh_from_db()
+    from apps.notifications.events import purchase_received
+
+    purchase_received(purchase, user)
     return purchase
 
 

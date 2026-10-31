@@ -24,6 +24,7 @@ from django.utils import timezone
 
 from apps.inventory.models import InventoryItem, StockMovement
 from apps.inventory.services import record_movement
+from apps.notifications import events
 from apps.shop import services as shop
 
 from .models import CheckoutSettings, DeliveryZone, Order, OrderItem, OrderStatusEvent
@@ -158,6 +159,7 @@ def _place_order(customer, details, checkout_token, expected_total):
     OrderStatusEvent.objects.create(order=order, to_status=St.PENDING, created_by=customer, note="Order placed")
     cart.items.all().delete()
     _notify_on_commit(order, "placed")
+    events.new_online_order(order)
     return order
 
 
@@ -283,6 +285,8 @@ def cancel_order(order, user, reason, by_customer=False):
                                     note=("Cancelled by customer: " if by_customer else "") + reason.strip())
     order.refresh_from_db()
     _notify_on_commit(order, "cancelled")
+    if by_customer:
+        events.order_cancelled_by_customer(order)
     return order
 
 

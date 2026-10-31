@@ -17,6 +17,11 @@
     <i class="bi bi-speedometer2" aria-hidden="true"></i>My dashboard
   </a>
 </li>
+{% url 'notifications:list' as notes_url %}{% url 'notifications:alerts' as alerts_url %}{% url 'dashboard:search' as search_url %}{% url 'dashboard:activity' as activity_url %}
+<li class="nav-item"><a class="nav-link{% if notes_url in path %} active{% endif %}" href="{{ notes_url }}"><i class="bi bi-bell" aria-hidden="true"></i>Notifications{% if notification_unread %} <span class="leo-sidebar__count">{{ notification_unread }}</span>{% endif %}</a></li>
+<li class="nav-item"><a class="nav-link{% if alerts_url in path %} active{% endif %}" href="{{ alerts_url }}"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Business alerts</a></li>
+<li class="nav-item"><a class="nav-link{% if path == search_url %} active{% endif %}" href="{{ search_url }}"><i class="bi bi-search" aria-hidden="true"></i>Search</a></li>
+{% if can.VIEW_ACTIVITY %}<li class="nav-item"><a class="nav-link{% if path == activity_url %} active{% endif %}" href="{{ activity_url }}"><i class="bi bi-clock-history" aria-hidden="true"></i>Activity history</a></li>{% endif %}
 
 {% if can.VIEW_ALL_DASHBOARDS %}
 <li><p class="leo-sidebar__heading">All dashboards</p></li>
@@ -68,6 +73,9 @@
 <li class="nav-item"><a class="nav-link{% if catg_url in path %} active{% endif %}" href="{{ catg_url }}"><i class="bi bi-diagram-3" aria-hidden="true"></i>Categories</a></li>
 <li class="nav-item"><a class="nav-link{% if unit_url in path %} active{% endif %}" href="{{ unit_url }}"><i class="bi bi-rulers" aria-hidden="true"></i>Units</a></li>
 {% endif %}
+{% if can.MODERATE_REVIEWS %}{% url 'shop:review_moderation' as reviews_url %}
+<li class="nav-item"><a class="nav-link{% if reviews_url in path %} active{% endif %}" href="{{ reviews_url }}"><i class="bi bi-star" aria-hidden="true"></i>Customer reviews</a></li>
+{% endif %}
 
 {% if can.MANAGE_INVENTORY or can.MANAGE_SUPPLIERS or can.MANAGE_PURCHASES %}
 <li><p class="leo-sidebar__heading">Inventory</p></li>
@@ -85,8 +93,11 @@
 {% endif %}
 {% endif %}
 
-{% if can.VIEW_STAFF or user.is_superuser %}
+{% if can.VIEW_STAFF or user.is_superuser or can.MANAGE_BUSINESS_SETTINGS %}
 <li><p class="leo-sidebar__heading">Administration</p></li>
+{% if can.MANAGE_BUSINESS_SETTINGS %}{% url 'notifications:alert_settings' as alertset_url %}
+<li class="nav-item"><a class="nav-link{% if path == alertset_url %} active{% endif %}" href="{{ alertset_url }}"><i class="bi bi-sliders" aria-hidden="true"></i>Alert settings</a></li>
+{% endif %}
 {% if can.VIEW_STAFF %}
 {% url 'accounts:staff_list' as staff_url %}
 <li class="nav-item"><a class="nav-link{% if staff_url in path %} active{% endif %}" href="{{ staff_url }}"><i class="bi bi-people" aria-hidden="true"></i>Staff accounts</a></li>

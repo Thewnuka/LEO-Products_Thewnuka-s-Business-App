@@ -23,6 +23,26 @@
   </div>
 </article>
 
+<div class="row g-4 mb-4">
+  <div class="col-12 col-xl-7">
+    <article class="leo-card leo-card--auto h-100"><div class="leo-card__body">
+      <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Needs attention</h2>
+        <a href="{% url 'notifications:alerts' %}" class="small">All alerts</a></div>
+      {% include "notifications/_alerts_panel.html" %}
+    </div></article>
+  </div>
+  <div class="col-12 col-xl-5">
+    <article class="leo-card leo-card--auto h-100"><div class="leo-card__body">
+      <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h5 mb-0"><i class="bi bi-bell me-2" aria-hidden="true"></i>Latest notifications</h2>
+        <a href="{% url 'notifications:list' %}" class="small">See all</a></div>
+      <ul class="list-unstyled leo-mini-list mb-0">
+        {% for n in recent_notifications %}<li><span><a href="{% url 'notifications:open' n.pk %}" class="{% if not n.is_read %}fw-semibold{% endif %}">{{ n.title }}</a><span class="d-block small text-body-secondary">{{ n.created_at|timesince }} ago</span></span></li>
+        {% empty %}<li class="text-body-secondary">No notifications yet.</li>{% endfor %}
+      </ul>
+    </div></article>
+  </div>
+</div>
+
 {% if pos_today %}
 <section class="mb-4" aria-labelledby="posTodayTitle">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">

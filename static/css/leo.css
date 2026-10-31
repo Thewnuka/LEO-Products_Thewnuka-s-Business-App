@@ -220,7 +220,7 @@ html:has(.leo-site-header) { scroll-padding-top: 84px; }
 .leo-navbar > .container { flex-wrap: wrap; }
 .leo-navbar .navbar-brand { flex: 0 1 auto; min-width: 0; }
 .leo-navbar .leo-logo, .leo-navbar .leo-logo__text { min-width: 0; }
-.leo-navbar .leo-logo__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.leo-navbar .leo-logo__name, .leo-navbar .leo-logo__tagline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 991.98px) {
   .leo-navbar .navbar-brand { max-width: calc(100% - 7.25rem); }  /* room for cart icon, menu button and margins */
 }
@@ -1037,3 +1037,77 @@ form.leo-pay-box { border: 1px solid var(--leo-gold); }
 @media print {
   .leo-sidebar, .leo-topbar, .leo-shell__toolbar .btn, .leo-no-print { display: none !important; }
 }
+
+
+/* Notifications, alerts, wishlist and reviews (Phase 09) */
+.leo-bell__btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: var(--leo-touch-target); height: var(--leo-touch-target); padding: 0;
+  color: var(--leo-white); font-size: 1.25rem; border: 0; border-radius: var(--leo-radius-sm);
+}
+.leo-bell__btn:hover, .leo-bell__btn:focus-visible, .leo-bell__btn[aria-expanded="true"] { color: var(--leo-gold); background: rgba(255, 255, 255, 0.08); }
+.leo-bell__count {
+  position: absolute; top: 2px; right: 0; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem;
+  border-radius: var(--leo-radius-pill); background: #c0392b; color: var(--leo-white);
+  font-size: 0.7rem; font-weight: 700; line-height: 1.25rem; text-align: center;
+}
+.leo-bell__menu { width: min(22rem, calc(100vw - 1.5rem)); padding: 0; overflow: hidden; }
+.leo-bell__head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--leo-border); }
+.leo-bell__head form { margin: 0; }
+.leo-bell__item { display: flex; gap: 0.65rem; padding: 0.65rem 1rem; color: inherit; text-decoration: none; border-bottom: 1px solid var(--leo-border); }
+.leo-bell__item:hover, .leo-bell__item:focus-visible { background: var(--leo-green-tint); }
+.leo-bell__item.is-unread { background: #fdf9ec; }
+.leo-bell__title { display: block; font-size: 0.9rem; line-height: 1.3; overflow-wrap: anywhere; }
+.leo-bell__item.is-unread .leo-bell__title { font-weight: 600; }
+.leo-bell__time { display: block; font-size: 0.75rem; color: var(--leo-text-muted); }
+.leo-bell__empty { padding: 1rem; color: var(--leo-text-muted); text-align: center; }
+.leo-bell__all { display: block; padding: 0.65rem 1rem; text-align: center; font-weight: 600; }
+/* Room for the bell beside the cart and menu button on phones (public navbar). */
+@media (max-width: 991.98px) {
+  .leo-navbar--bell .navbar-brand { max-width: calc(100% - 10.25rem); }
+}
+
+.leo-note-icon { flex-shrink: 0; width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--leo-green-tint); color: var(--leo-green); font-size: 0.95rem; }
+.leo-note-icon--success { background: #e3f3ea; color: #1e7a4c; }
+.leo-note-icon--warning { background: var(--leo-gold-tint); color: #7a5f0e; }
+.leo-note-icon--danger { background: #fbe9e7; color: #9a3b33; }
+.leo-notes { border: 1px solid var(--leo-border); border-radius: var(--leo-radius); background: var(--leo-surface); overflow: hidden; }
+.leo-note { display: flex; gap: 0.85rem; align-items: flex-start; padding: 0.9rem 1rem; border-bottom: 1px solid var(--leo-border); }
+.leo-note:last-child { border-bottom: 0; }
+.leo-note.is-unread { background: #fdf9ec; }
+.leo-note__body { flex: 1; min-width: 0; }
+.leo-note__title { display: block; color: var(--leo-text); text-decoration: none; overflow-wrap: anywhere; }
+.leo-note.is-unread .leo-note__title { font-weight: 600; }
+.leo-note__title:hover { text-decoration: underline; }
+.leo-note__message { margin: 0.15rem 0 0; color: var(--leo-text-muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.leo-note__meta { display: block; font-size: 0.78rem; color: var(--leo-text-muted); }
+.leo-note__action { flex-shrink: 0; margin: 0; }
+@media (max-width: 575.98px) {
+  .leo-note { flex-wrap: wrap; }
+  .leo-note__body { flex: 1 1 calc(100% - 3rem); }
+  .leo-note__action { margin-left: 2.85rem; }
+}
+
+.leo-alerts { display: grid; gap: 0.5rem; margin: 0; }
+.leo-alert-row { display: flex; gap: 0.85rem; align-items: center; padding: 0.7rem 0.9rem; border-radius: var(--leo-radius-sm);
+  border: 1px solid var(--leo-border); border-left-width: 4px; color: inherit; text-decoration: none; background: var(--leo-surface); }
+.leo-alert-row:hover, .leo-alert-row:focus-visible { background: var(--leo-green-tint); }
+.leo-alert-row--danger { border-left-color: #c0392b; }
+.leo-alert-row--warning { border-left-color: var(--leo-gold); }
+.leo-alert-row--info { border-left-color: var(--leo-green-3); }
+.leo-alert-row__count { min-width: 2.4rem; text-align: center; font-family: var(--leo-font-heading); font-size: 1.35rem; font-weight: 700; color: var(--leo-green); }
+.leo-sidebar__count, .leo-tabs__count { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: auto; border-radius: var(--leo-radius-pill);
+  background: var(--leo-gold); color: var(--leo-green); font-size: 0.72rem; font-weight: 700; text-align: center; line-height: 1.3rem; }
+.leo-tabs__count { margin-left: 0.25rem; }
+
+.leo-stars { color: var(--leo-gold); letter-spacing: 0.05em; white-space: nowrap; }
+.leo-rating-link { color: inherit; text-decoration: none; font-size: 0.9rem; }
+.leo-rating-link:hover { text-decoration: underline; }
+.leo-wish { color: var(--leo-green); font-weight: 600; text-decoration: none; display: inline-flex; gap: 0.4rem; align-items: center; min-height: 44px; }
+.leo-wish.is-on, .leo-wish.is-on .bi { color: #b5564d; }
+.leo-reviews { display: grid; gap: 0.75rem; margin: 0; }
+.leo-review { border-bottom: 1px solid var(--leo-border); padding-bottom: 0.75rem; overflow-wrap: anywhere; }
+.leo-wish-row { display: flex; gap: 1rem; align-items: center; justify-content: space-between; padding: 0.9rem 1rem; }
+.leo-wish-row + .leo-wish-row { border-top: 1px solid var(--leo-border); }
+.leo-wish-row__main { min-width: 0; overflow-wrap: anywhere; }

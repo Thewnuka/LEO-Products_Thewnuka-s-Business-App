@@ -21,6 +21,7 @@ from django.db import transaction
 from django.utils import timezone
 from PIL import Image, UnidentifiedImageError
 
+from apps.notifications import events
 from apps.orders.models import Order
 
 from .gateways import GatewayNotConfigured, InvalidNotification, get_gateway
@@ -161,6 +162,7 @@ def submit_bank_transfer(order, user, reference, evidence):
         payment.save(update_fields=["evidence", "updated_at"])
     log(payment, "bank_transfer_submitted", user, reference=payment.bank_reference)
     sync_order_payment_status(order)
+    events.transfer_to_verify(payment)
     return payment
 
 
@@ -224,6 +226,7 @@ def record_cash_payment(order, staff, note=""):
         raise PaymentError("Cash for this order has already been recorded.")
     log(payment, "cash_received", staff, amount=str(payment.amount))
     sync_order_payment_status(order)
+    events.customer_order_event(order, "cash_received", payment=payment)
     return payment
 
 
@@ -320,6 +323,7 @@ def apply_gateway_notification(gateway_name, data):
             order = Order.objects.get(pk=payment.order_id)
             sync_order_payment_status(order)
             _notify(order, "payment_approved", payment=payment)
+            events.online_payment_received(payment)
             return "paid"
         if note.outcome in ("failed", "cancelled"):
             _transition(payment, [S.PENDING], S.FAILED, gateway_status=note.gateway_status)

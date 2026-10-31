@@ -27,6 +27,7 @@
       <div class="col-12 col-md-6">
         <p class="leo-eyebrow mb-1">{{ product.subcategory.name|default:product.category.name }}</p>
         <h1 class="h2 mb-2">{{ product.name }}</h1>
+        {% if rating.count %}<p class="mb-2"><a href="#reviews" class="leo-rating-link">{% include "shop/partials/_stars.html" with value=rating.average %} {{ rating.average }} · {{ rating.count }} review{{ rating.count|pluralize }}</a></p>{% endif %}
         <p class="leo-product-price mb-1" id="shopPrice" aria-live="polite">{% if selected %}{{ selected.selling_price|money }}{% else %}—{% endif %}</p>
         <p class="mb-3" id="shopAvailability" aria-live="polite">
           {% if selected %}<span class="leo-avail {% if selected.is_low %}leo-avail--low{% endif %}"><i class="bi bi-check-circle" aria-hidden="true"></i>{{ selected.availability }}</span>
@@ -68,6 +69,14 @@
         </form>
         {% endif %}
 
+        {% if not user.is_authenticated or user.is_customer %}
+        <form method="post" action="{% url 'shop:wishlist_toggle' product.slug %}" class="mt-2">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-link px-0 leo-wish{% if wishlisted %} is-on{% endif %}" aria-pressed="{% if wishlisted %}true{% else %}false{% endif %}">
+            <i class="bi bi-heart{% if wishlisted %}-fill{% endif %}" aria-hidden="true"></i>{% if wishlisted %}Saved to your wishlist{% else %}Save to wishlist{% endif %}</button>
+        </form>
+        {% endif %}
+
         {% if product.description %}
         <div class="leo-product-desc mt-4">
           <h2 class="h6">About this product</h2>
@@ -77,6 +86,30 @@
         <p class="small text-body-secondary mt-3 mb-0"><i class="bi bi-info-circle" aria-hidden="true"></i> Adding to your cart does not reserve stock; stock is confirmed when you place your order.</p>
       </div>
     </div>
+
+    <section class="mt-5" id="reviews" aria-labelledby="reviewsTitle">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0" id="reviewsTitle">Customer reviews{% if rating.count %} <span class="h6 text-body-secondary">{{ rating.average }} / 5 from {{ rating.count }}</span>{% endif %}</h2>
+        {% if can_review %}<a href="{% url 'shop:review' product.slug %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i>{% if my_review %}Edit your review{% else %}Write a review{% endif %}</a>{% endif %}
+      </div>
+      {% if my_review and my_review.status != "APPROVED" %}
+        {% if my_review.status == "PENDING" %}{% include "partials/_alert.html" with level="info" text="Thank you for your review. It will appear here once we've checked it." %}
+        {% else %}{% include "partials/_alert.html" with level="warning" text="Your review wasn't published: "|add:my_review.moderation_note %}{% endif %}
+      {% endif %}
+      {% if reviews %}
+      <ul class="list-unstyled leo-reviews">
+        {% for r in reviews %}
+        <li class="leo-review">
+          <div class="d-flex flex-wrap gap-2 align-items-center">{% include "shop/partials/_stars.html" with value=r.rating %}<strong>{{ r.title }}</strong></div>
+          <p class="mb-1 mt-1">{{ r.body|linebreaksbr }}</p>
+          <span class="small text-body-secondary">{{ r.display_name }} · {{ r.submitted_at|date:"j M Y" }} · <i class="bi bi-patch-check" aria-hidden="true"></i> Verified purchase</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-body-secondary">No reviews yet.{% if not can_review %} Customers who have bought this product can review it.{% endif %}</p>
+      {% endif %}
+    </section>
 
     {% if related %}
     <section class="mt-5" aria-labelledby="relatedTitle">

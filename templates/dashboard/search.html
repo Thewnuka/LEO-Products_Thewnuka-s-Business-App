@@ -1,0 +1,40 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Search — {{ brand.name }}{% endblock %}
+{% block page_title %}Search{% endblock %}
+
+{% block page_content %}
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body d-flex flex-column flex-sm-row gap-2">
+    <label class="visually-hidden" for="globalSearch">Search</label>
+    <input type="search" name="q" id="globalSearch" value="{{ q }}" class="form-control form-control-lg" minlength="2" maxlength="100"
+           placeholder="Order or receipt no., name, phone, SKU, supplier, reference…" autofocus>
+    <button type="submit" class="btn btn-leo-primary btn-lg"><i class="bi bi-search" aria-hidden="true"></i>Search</button>
+  </div>
+</form>
+{% if q|length >= 2 %}
+  {% if groups %}
+  <div class="row g-4">
+    {% for g in groups %}
+    <div class="col-12 col-lg-6">
+      <article class="leo-card leo-card--auto h-100"><div class="leo-card__body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0"><i class="bi bi-{{ g.icon }} me-2" aria-hidden="true"></i>{{ g.title }} <span class="text-body-secondary">({{ g.results|length }}{% if g.results|length == 8 %}+{% endif %})</span></h2>
+          {% if g.more_url %}<a href="{{ g.more_url }}" class="small">Open list</a>{% endif %}
+        </div>
+        <ul class="list-unstyled leo-mini-list mb-0">
+          {% for title, detail, url in g.results %}<li><span><a href="{{ url }}" class="fw-semibold">{{ title }}</a><span class="d-block small text-body-secondary">{{ detail }}</span></span></li>{% endfor %}
+        </ul>
+      </div></article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="leo-empty"><i class="bi bi-search" aria-hidden="true"></i><p class="mb-0">Nothing found for “{{ q }}” in the areas you can see.</p></div>
+  {% endif %}
+{% elif q %}
+  <p class="text-body-secondary">Type at least 2 characters.</p>
+{% else %}
+  <p class="text-body-secondary">Searches only the areas your role can open.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Business alerts — {{ brand.name }}{% endblock %}
+{% block page_title %}Business alerts{% endblock %}
+{% block page_actions %}{% if can.MANAGE_BUSINESS_SETTINGS %}<a href="{% url 'notifications:alert_settings' %}" class="btn btn-leo-outline btn-sm"><i class="bi bi-sliders" aria-hidden="true"></i><span class="d-none d-sm-inline">Alert settings</span></a>{% endif %}{% endblock %}
+
+{% block page_content %}
+<p class="text-body-secondary">Live: worked out each time this page opens, for the areas your role looks after.</p>
+<article class="leo-card leo-card--auto"><div class="leo-card__body">{% include "notifications/_alerts_panel.html" %}</div></article>
+{% endblock %}

@@ -28,7 +28,11 @@ SUBJECTS = {
 
 
 def notify_customer(order, kind, **context):
-    if not order.email or kind not in SUBJECTS:
+    """In-app notification (Phase 09) plus email, unless the customer turned order emails off."""
+    from apps.notifications.events import customer_order_event
+
+    customer_order_event(order, kind, payment=context.get("payment"))
+    if not order.email or kind not in SUBJECTS or not _wants_email(order):
         return
 
     def send():
@@ -40,3 +44,12 @@ def notify_customer(order, kind, **context):
             logger.exception("Could not send %s notification for order %s", kind, order.number)
 
     transaction.on_commit(send)
+
+
+def _wants_email(order):
+    from apps.notifications.models import NotificationPreference
+
+    if order.customer_id is None:
+        return True
+    pref = NotificationPreference.objects.filter(user_id=order.customer_id).first()
+    return pref is None or pref.email_order_updates

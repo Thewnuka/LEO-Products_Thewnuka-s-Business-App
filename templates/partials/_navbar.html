@@ -1,19 +1,22 @@
 {% url 'core:home' as home_url %}{% url 'shop:home' as shop_url %}{% url 'shop:cart' as cart_url %}
 <header class="leo-site-header">
-  <nav class="navbar navbar-expand-lg leo-navbar" aria-label="Main navigation">
+  <nav class="navbar navbar-expand-lg leo-navbar{% if user.is_authenticated %} leo-navbar--bell{% endif %}" aria-label="Main navigation">
     <div class="container">
       <span class="navbar-brand p-0 me-2">{% include "partials/_logo.html" with size="sm" %}</span>
 
+      {% if user.is_authenticated %}
+      <div class="ms-auto ms-lg-2 me-1 me-lg-0 order-lg-last">{% include "notifications/_bell.html" with variant="navbar" %}</div>
+      {% endif %}
       {% if show_cart %}
       {# Always visible (outside the collapsing menu); last on wide screens. #}
-      <a href="{{ cart_url }}" class="leo-cart-link ms-auto ms-lg-2 me-2 me-lg-0 order-lg-last{% if request.path == cart_url %} active{% endif %}"
+      <a href="{{ cart_url }}" class="leo-cart-link{% if not user.is_authenticated %} ms-auto{% endif %} ms-lg-2 me-2 me-lg-0 order-lg-last{% if request.path == cart_url %} active{% endif %}"
          aria-label="Cart, {{ cart_count }} item{{ cart_count|pluralize }}">
         <i class="bi bi-bag" aria-hidden="true"></i>
         {% if cart_count %}<span class="leo-cart-link__count">{{ cart_count }}</span>{% endif %}
       </a>
       {% endif %}
 
-      <button class="navbar-toggler{% if not show_cart %} ms-auto{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#leoMainNav"
+      <button class="navbar-toggler{% if not show_cart and not user.is_authenticated %} ms-auto{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#leoMainNav"
               aria-controls="leoMainNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>

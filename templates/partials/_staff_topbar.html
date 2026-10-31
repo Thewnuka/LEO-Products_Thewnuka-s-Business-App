@@ -5,6 +5,8 @@
         {% include "partials/_logo.html" with size="sm" show_text=False %}
         <span class="leo-topbar__title">Staff portal</span>
       </span>
+      <div class="d-flex align-items-center gap-2">
+      {% include "notifications/_bell.html" with variant="topbar" %}
       <div class="dropdown">
         <button class="btn leo-topbar__user dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-person-circle" aria-hidden="true"></i>
@@ -18,11 +20,13 @@
           </li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item" href="{% url 'accounts:staff_profile' %}"><i class="bi bi-person-badge" aria-hidden="true"></i>My profile</a></li>
+          <li><a class="dropdown-item" href="{% url 'notifications:preferences' %}"><i class="bi bi-bell" aria-hidden="true"></i>Notification preferences</a></li>
           <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}"><i class="bi bi-key" aria-hidden="true"></i>Change password</a></li>
           <li><a class="dropdown-item" href="{% url 'core:home' %}"><i class="bi bi-globe2" aria-hidden="true"></i>Public website</a></li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sign out</a></li>
         </ul>
+      </div>
       </div>
     </div>
   </nav>

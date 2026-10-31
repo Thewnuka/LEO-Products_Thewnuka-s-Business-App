@@ -5,11 +5,13 @@ Each describes the role's responsibilities and links only to features that
 exist. Dashboards that cover the till also show today's real POS figures
 (limited to what the user may see). OWNER may open every dashboard.
 """
+from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import TemplateView
 
-from apps.accounts.permissions import RoleRequiredMixin, StaffRequiredMixin
+from apps.accounts.models import User
+from apps.accounts.permissions import CapabilityRequiredMixin, RoleRequiredMixin, StaffRequiredMixin
 from apps.accounts.roles import Capability, Role, has_capability
 from apps.accounts.routing import home_url_for
 
@@ -30,6 +32,11 @@ class RoleDashboardView(RoleRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         user = self.request.user
+        from apps.notifications.alerts import business_alerts
+        from apps.notifications.services import inbox
+
+        kwargs["alerts"] = business_alerts(user)
+        kwargs["recent_notifications"] = inbox(user)[:5]
         if self.shows_pos and (has_capability(user, Capability.VIEW_POS_SALES)
                                or has_capability(user, Capability.PROCESS_SALES)):
             from apps.pos.services import current_shift, today_summary
@@ -108,3 +115,43 @@ class CashierDashboardView(RoleDashboardView):
         "View your own transactions",
     )
     shows_pos = True
+
+
+class SearchView(StaffRequiredMixin, TemplateView):
+    """One search box over everything the user's role may see."""
+
+    template_name = "dashboard/search.html"
+
+    def get_context_data(self, **kwargs):
+        from .search import search_everything
+
+        q = (self.request.GET.get("q") or "").strip()[:100]
+        return super().get_context_data(q=q, groups=search_everything(self.request.user, q), **kwargs)
+
+
+class ActivityView(CapabilityRequiredMixin, TemplateView):
+    """Business activity history from the existing audit records (filters: dates, area, person, text)."""
+
+    required_capability = Capability.VIEW_ACTIVITY
+    template_name = "dashboard/activity.html"
+
+    def get_context_data(self, **kwargs):
+        from apps.finance.forms import PeriodForm
+        from apps.finance.services import period_from
+
+        from .activity import SOURCES, activity, allowed_sources
+
+        params = self.request.GET
+        period = period_from(params, default="week")
+        allowed = allowed_sources(self.request.user)
+        source = params.get("source") if params.get("source") in allowed else ""
+        staff = User.objects.exclude(role=Role.CUSTOMER).order_by("first_name", "username")
+        actor = staff.filter(pk=params.get("actor")).first() if (params.get("actor") or "").isdigit() else None
+        q = (params.get("q") or "").strip()[:100]
+        entries = activity(self.request.user, period, source, actor, q)
+        query = params.copy()
+        query.pop("page", None)
+        return super().get_context_data(
+            period=period, period_form=PeriodForm(params or {"period": period.preset}), q=q, source=source,
+            sources=[(k, label) for k, label in SOURCES if k in allowed], staff=staff, actor=actor,
+            page_obj=Paginator(entries, 50).get_page(params.get("page")), querystring=query.urlencode(), **kwargs)

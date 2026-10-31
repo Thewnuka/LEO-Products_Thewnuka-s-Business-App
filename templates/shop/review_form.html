@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Review {{ product.name }} — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="leo-breadcrumb"><ol class="breadcrumb mb-2"><li class="breadcrumb-item"><a href="{% url 'shop:product' product.slug %}">{{ product.name }}</a></li><li class="breadcrumb-item active" aria-current="page">Review</li></ol></nav>
+    <h1 class="h2 mb-3">{% if review %}Edit your review{% else %}Review {{ product.name }}{% endif %}</h1>
+    <form method="post" novalidate class="leo-card leo-card--auto leo-form-card" data-once>
+      <div class="leo-card__body">
+        {% csrf_token %}
+        <p class="small text-body-secondary">Your first name and last initial are shown with your review, never your email. Reviews are checked before they appear{% if review %}; editing sends it for checking again{% endif %}.</p>
+        {% include "partials/_form_errors.html" %}
+        {% include "partials/_form_field.html" with field=form.rating %}
+        {% include "partials/_form_field.html" with field=form.title %}
+        {% include "partials/_form_field.html" with field=form.body %}
+        <div class="d-flex flex-column flex-sm-row gap-2">
+          <button type="submit" class="btn btn-leo-primary"><i class="bi bi-send" aria-hidden="true"></i>Submit review</button>
+          <a href="{% url 'shop:product' product.slug %}" class="btn btn-leo-outline">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

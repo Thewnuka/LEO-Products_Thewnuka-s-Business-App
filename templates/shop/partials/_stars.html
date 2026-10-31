@@ -1,0 +1,2 @@
+{% comment %}Star rating 0–5 (value may be a decimal). Screen readers get the number.{% endcomment %}
+<span class="leo-stars" role="img" aria-label="{{ value }} out of 5 stars">{% for i in "12345" %}<i class="bi bi-star{% if value >= forloop.counter %}-fill{% elif value > forloop.counter0 %}-half{% endif %}" aria-hidden="true"></i>{% endfor %}</span>

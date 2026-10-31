@@ -25,6 +25,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from apps.inventory.models import Purchase, Supplier
+from apps.notifications import events
 from apps.inventory.services import set_item_cost
 from apps.orders.models import Order, OrderItem
 from apps.payments.models import Payment
@@ -251,6 +252,7 @@ def record_expense(user, token, *, category, expense_date, amount, payment_metho
             expense.receipt = receipt
         expense.save()
         log("expense_recorded", user, expense.reference, amount=expense.amount, category=category.name)
+        events.expense_recorded(expense, user)
         return expense
 
     return _create_once(Expense, token, build)

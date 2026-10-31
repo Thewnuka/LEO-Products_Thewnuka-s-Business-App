@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<section class="leo-section leo-account">
+  <div class="container">
+    <span class="leo-eyebrow">My account</span>
+    <h1 class="h2 mt-1 mb-3">Notifications</h1>
+    {% include "accounts/customer/_nav.html" %}
+    <div class="mt-4">{% include "notifications/_list_body.html" %}</div>
+  </div>
+</section>
+{% endblock %}

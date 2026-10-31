@@ -1,0 +1,44 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Customer reviews — {{ brand.name }}{% endblock %}
+{% block page_title %}Customer reviews{% endblock %}
+
+{% block page_content %}
+<nav class="leo-tabs mb-3" aria-label="Review status">
+  {% for value, label in statuses %}<a class="leo-tabs__link{% if status == value %} active{% endif %}" href="?status={{ value }}">{{ label }}{% if value == "PENDING" and pending %} ({{ pending }}){% endif %}</a>{% endfor %}
+  <a class="leo-tabs__link{% if status == 'ALL' %} active{% endif %}" href="?status=ALL">All</a>
+</nav>
+<form method="get" class="leo-card leo-card--auto mb-3" role="search">
+  <div class="leo-card__body row g-2 align-items-end">
+    <input type="hidden" name="status" value="{{ status }}">
+    <div class="col-12 col-md-6 leo-field"><label class="form-label" for="rvQ">Product or text</label><input type="search" id="rvQ" name="q" value="{{ q }}" class="form-control"></div>
+    <div class="col-8 col-md-4 leo-field"><label class="form-label" for="rvRating">Rating</label>
+      <select id="rvRating" name="rating" class="form-select"><option value="">Any</option>{% for r in "54321" %}<option value="{{ r }}"{% if rating == r %} selected{% endif %}>{{ r }} star{{ r|pluralize }}</option>{% endfor %}</select></div>
+    <div class="col-4 col-md-2 d-grid leo-field"><button type="submit" class="btn btn-leo-primary">Filter</button></div>
+  </div>
+</form>
+{% if page_obj.object_list %}
+<ul class="list-unstyled">
+  {% for r in page_obj %}
+  <li class="leo-card leo-card--auto p-3 mb-3">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <span>{% include "shop/partials/_stars.html" with value=r.rating %} <strong>{{ r.title }}</strong></span>
+      <span class="leo-badge{% if r.status == 'APPROVED' %} leo-paystatus--paid{% elif r.status == 'REJECTED' %} leo-ostatus--cancelled{% else %} leo-badge--gold{% endif %}">{{ r.get_status_display }}</span>
+    </div>
+    <p class="mb-1 mt-2">{{ r.body|linebreaksbr }}</p>
+    <p class="small text-body-secondary mb-2"><a href="{% url 'shop:product' r.product.slug %}">{{ r.product.name }}</a> · {{ r.display_name }} · {{ r.submitted_at|date:"j M Y, H:i" }}
+      {% if r.moderated_by %}· {{ r.get_status_display|lower }} by {{ r.moderated_by.get_full_name|default:r.moderated_by.username }}{% if r.moderation_note %} (“{{ r.moderation_note }}”){% endif %}{% endif %}</p>
+    <form method="post" action="{% url 'shop:review_moderate' r.pk %}" class="d-flex flex-column flex-md-row gap-2">
+      {% csrf_token %}<input type="hidden" name="back" value="{{ request.get_full_path }}">
+      <input type="text" name="note" class="form-control form-control-sm" maxlength="300" placeholder="Reason (required to reject; shown to the customer)">
+      {% if r.status != "APPROVED" %}<button type="submit" name="decision" value="approve" class="btn btn-leo-primary btn-sm">Publish</button>{% endif %}
+      {% if r.status != "REJECTED" %}<button type="submit" name="decision" value="reject" class="btn btn-outline-danger btn-sm">Don’t publish</button>{% endif %}
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% include "partials/_pager.html" %}
+{% else %}
+<div class="leo-empty"><i class="bi bi-star" aria-hidden="true"></i><p class="mb-0">No reviews here.</p></div>
+{% endif %}
+{% endblock %}

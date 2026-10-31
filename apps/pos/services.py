@@ -27,6 +27,7 @@ from django.utils import timezone
 
 from apps.accounts.roles import Capability, has_capability
 from apps.catalog.models import ProductVariation
+from apps.notifications import events
 from apps.orders import services as orders
 from apps.orders.models import Order, OrderStatusEvent
 from apps.payments import services as payments
@@ -154,6 +155,7 @@ def close_shift(shift, user, counted_cash, note=""):
         status=CashierShift.Status.CLOSED, closed_at=now, closed_by=user, expected_cash=expected,
         counted_cash=counted_cash, difference=difference, closing_note=note.strip(), updated_at=now)
     shift.refresh_from_db()
+    events.shift_closed_with_difference(shift, user)
     return shift
 
 
@@ -339,6 +341,7 @@ def _create_sale(cashier, raw_lines, payment_method, token, cash_tendered, bank_
         payment = payments.create_payment(order, status=PAY.PENDING_VERIFICATION, bank_reference=bank_reference,
                                           submitted_at=now)
         payments.log(payment, "bank_transfer_submitted", cashier, reference=bank_reference)
+        events.transfer_to_verify(payment)
     payments.sync_order_payment_status(order)
     OrderStatusEvent.objects.create(
         order=order, to_status=order.status, created_by=cashier,
@@ -384,6 +387,7 @@ def refund_sale(order, user, reason, drawer_shift=None):
             CashMovement.objects.create(shift=drawer_shift, kind=CashMovement.Kind.REFUND, amount=paid.amount,
                                         reason=f"Refund {order.number}: {reason.strip()}"[:200], order=order,
                                         created_by=user)
+        events.pos_sale_refunded(order, user)
     order.refresh_from_db()
     return order
 

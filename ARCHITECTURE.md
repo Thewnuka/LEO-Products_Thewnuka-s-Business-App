@@ -60,7 +60,7 @@ own phase (`python manage.py startapp <name> apps/<name>`), which avoids empty c
 | `payments` | **Created** (Phase 06) | Payment records, cash, bank transfer, refunds, online gateway adapters (see §16) |
 | `pos` | **Created** (Phase 07) | Till, cashier shifts, cash drawer movements, receipts, POS settings; sales are `orders.Order` rows (see §17) |
 | `finance` | **Created** (Phase 08) | Expenses, supplier payments, reports, profit & loss, exports, audit log (see §18) |
-| `notifications` | Planned | Email and in-app notifications |
+| `notifications` | **Created** (Phase 09) | In-app notifications, preferences, business alerts, alert settings (see §19) |
 | `reports` | Planned | Business reports and exports |
 
 ### Inside each app (convention for future phases)
@@ -738,3 +738,27 @@ Orders, order lines and status events are never deleted (`PROTECT` foreign keys 
 - **Access:** `VIEW_FINANCE` (Owner) for money reports, dashboard, balances, audit; `VIEW_OPERATIONAL_REPORTS`
   (Owner, Manager) for sales/stock/purchase/expense reports; `RECORD_EXPENSES` (Owner, Manager);
   `MANAGE_FINANCE` (Owner) for voids, supplier payments, stock costs, categories.
+
+---
+
+## 19. Notifications, alerts and advanced features
+
+- **Delivery** (`notifications/services.py`): `notify(users, category, title, ..., key)` queues creation with
+  `transaction.on_commit`, skips muted categories and bulk-inserts with `ignore_conflicts`; the unique constraint
+  `(recipient, dedupe_key)` makes every event once-only per person. `notify_capability` picks staff by capability
+  (`users_with`), optionally excluding the actor. Links are kept only if they are relative to this site.
+- **Events** (`notifications/events.py`) are called from existing services: `orders.notifications.notify_customer`
+  (now also in-app, and honouring the customer's email switch), `orders.services` (new order, customer cancel),
+  `payments.services` (transfer submitted, cash, online paid), `pos.services` (till transfer, void, shift closed),
+  `inventory.services.record_movement` (reorder level / out of stock crossing) and `receive_purchase`,
+  `finance.services.record_expense`, `shop.reviews`.
+- **Alerts** (`notifications/alerts.py`): computed per request from live data and the user's capabilities; never stored.
+  `send_business_alerts` turns them into daily notifications (key includes the date).
+- **UI:** `notifications.context_processors.notifications` (lazy unread count and newest five) feeds
+  `templates/notifications/_bell.html` in the staff top bar and public navbar.
+- **Shop:** `WishlistItem`, `ProductReview` (`shop/reviews.py`: verified purchase check, save/edit, moderation),
+  `shop/review_views.py`.
+- **Search and activity** (`dashboard/search.py`, `dashboard/activity.py`): permission-scoped search groups, and a
+  timeline built from `OrderStatusEvent`, `PaymentEvent`, `StockMovement`, `CashierShift`, `CashMovement`, `ReceiptPrint`,
+  `ProductReview`, `FinanceEvent`, `ItemCostChange` and `AccountAuditLog` (no duplicated audit tables).
+- **Capabilities added:** `VIEW_ACTIVITY`, `MODERATE_REVIEWS`.

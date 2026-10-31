@@ -1,0 +1,17 @@
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    <p class="text-body-secondary">Choose what appears in your notifications.{% if form.email_order_updates %} Order emails are separate and can be switched off below.{% endif %}</p>
+    {% include "partials/_form_errors.html" %}
+    <fieldset class="leo-fieldset"><legend>{{ form.categories.label }}</legend>
+      {% for box in form.categories %}<div class="form-check">{{ box.tag }}<label class="form-check-label" for="{{ box.id_for_label }}">{{ box.choice_label }}</label></div>{% endfor %}
+    </fieldset>
+    {% if form.email_order_updates %}
+    <fieldset class="leo-fieldset"><legend>Email</legend>{% include "partials/_form_field.html" with field=form.email_order_updates %}</fieldset>
+    {% endif %}
+    <div class="d-flex flex-column flex-sm-row gap-2">
+      <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save preferences</button>
+      <a href="{% url 'notifications:list' %}" class="btn btn-leo-outline">Back to notifications</a>
+    </div>
+  </div>
+</form>

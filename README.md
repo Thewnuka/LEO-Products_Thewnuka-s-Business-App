@@ -6,8 +6,8 @@ Business management system and e-commerce platform for LEO PRODUCTS, built with
 Django. One backend and one database will serve the website, a Windows desktop
 app (Tauri) and an installable mobile app (PWA).
 
-**Current status:** Phase 08 (finance and reports) is complete.
-Phases 01–07 (foundation, authentication and roles, product catalogue, inventory, storefront and cart, orders and payments, point of sale) are done. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
+**Current status:** Phase 09 (notifications, alerts, wishlist, reviews, search and activity history) is complete.
+Phases 01–08 (foundation, authentication and roles, product catalogue, inventory, storefront and cart, orders and payments, point of sale, finance and reports) are done. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ---
 
@@ -57,6 +57,8 @@ Then open <http://127.0.0.1:8000/> in your browser.
 | <http://127.0.0.1:8000/cart/> | Shopping cart (guests and customers) |
 | <http://127.0.0.1:8000/account/orders/> | A customer's own orders |
 | <http://127.0.0.1:8000/staff/orders/> | **Customer orders**: status, payments, bank-transfer verification (Owner, Manager, Cashier) |
+| <http://127.0.0.1:8000/notifications/> | Your notifications (everyone signed in); business alerts at `/staff/alerts/` |
+| <http://127.0.0.1:8000/staff/dashboard/search/> | Staff search; activity history at `/staff/dashboard/activity/` (Owner, Manager) |
 | <http://127.0.0.1:8000/staff/finance/> | **Finance overview** (Owner); reports at `/staff/finance/reports/` (Owner, Manager) |
 | <http://127.0.0.1:8000/staff/pos/> | **Point of sale** till (Cashier, Owner); sales, shifts and POS settings under the same menu |
 | <http://127.0.0.1:8000/staff/orders/settings/> | Delivery areas and fees, pickup, cash and bank details (Owner) |
@@ -129,7 +131,8 @@ LEO PRODUCTS SYSTEM/
 │   ├── orders/              Checkout, orders, status workflow, delivery settings
 │   ├── payments/            Payment records, cash, bank transfer, refunds, online gateway (PayHere)
 │   ├── pos/                 Point of sale: cashier shifts, cash drawer, receipts, POS settings
-│   └── finance/             Expenses, supplier payments, reports, profit & loss, exports, finance audit log
+│   ├── finance/             Expenses, supplier payments, reports, profit & loss, exports, finance audit log
+│   └── notifications/       In-app notifications, preferences, business alerts, alert settings
 ├── templates/
 │   ├── base.html            Master layout every page extends
 │   ├── layouts/             sidebar.html, staff.html (staff portal), auth.html (sign-in pages)

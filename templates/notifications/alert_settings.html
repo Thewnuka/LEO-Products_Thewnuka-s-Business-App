@@ -1,0 +1,23 @@
+{% extends "layouts/staff.html" %}
+
+{% block title %}Alert settings — {{ brand.name }}{% endblock %}
+{% block page_title %}Alert settings{% endblock %}
+
+{% block page_content %}
+<form method="post" novalidate class="leo-card leo-card--auto leo-form-card">
+  <div class="leo-card__body">
+    {% csrf_token %}
+    {% include "partials/_form_errors.html" %}
+    <fieldset class="leo-fieldset"><legend>Business alerts</legend>
+      {% include "partials/_form_field.html" with field=form.pending_order_hours %}
+      {% include "partials/_form_field.html" with field=form.unpaid_order_days %}
+      {% include "partials/_form_field.html" with field=form.open_shift_hours %}
+      <p class="small text-body-secondary">Low and out-of-stock alerts follow each stock item's reorder level (Inventory).</p>
+    </fieldset>
+    <fieldset class="leo-fieldset"><legend>Customer reviews</legend>
+      {% include "partials/_form_field.html" with field=form.reviews_need_approval %}
+    </fieldset>
+    <button type="submit" class="btn btn-leo-primary"><i class="bi bi-check2" aria-hidden="true"></i>Save settings</button>
+  </div>
+</form>
+{% endblock %}

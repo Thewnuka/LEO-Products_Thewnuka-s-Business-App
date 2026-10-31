@@ -1,7 +1,72 @@
 # LEO PRODUCTS: Project Status
 
 **Last updated:** 2026-10-31
-**Current phase:** Phase 08 (Finance & Reports): **COMPLETE**. Waiting for approval before Phase 09.
+**Current phase:** Phase 09 (Notifications & Advanced Features): **COMPLETE**. Waiting for approval before Phase 10.
+
+---
+
+## Phase 09: Notifications & Advanced Features ✅
+
+### Delivered
+
+- [x] New `notifications` app: `Notification` (read/unread, category, level, internal link), `NotificationPreference`
+      (muted categories; customers' order-email switch), `AlertSettings` (Owner thresholds and review approval)
+- [x] **No duplicates:** each event has a key, and a database rule allows one notification per key and person; they are
+      created after the database change commits (nothing for rolled-back work); a notification problem never breaks the action
+- [x] **Hooked into existing services** (no business logic rewritten): new orders, customer cancellations, status changes,
+      payment approved/rejected/cash/online, transfers to verify (online and till), stock crossing reorder level or running out,
+      purchases received, expenses, POS voids, shifts closed short/over, reviews
+- [x] **Role-based delivery** by capability; actors aren't notified about their own action; messages contain no costs or
+      profit; customers only receive notifications about their own orders and reviews
+- [x] **Bell** with unread badge and dropdown (five newest, mark all read) in the staff top bar and the public navbar for
+      signed-in users (navbar stays one row, 68px, from 320 to 1366px); full history with filters, mark read/unread;
+      sidebar and account-tab badges
+- [x] **Preferences** per category (only categories the role can receive); customers can switch off order emails
+- [x] **Business alerts** (live, by role): out of stock, low stock, transfers to verify, pending orders (flagged after N hours),
+      long-unpaid orders, refunds due, open POS shifts (own shift for cashiers), products without cost, reviews to check;
+      on every staff dashboard ("Needs attention") and an alerts page; `send_business_alerts` command for a daily digest
+- [x] **Wishlist** (customers): save/remove on the product page, wishlist page
+- [x] **Reviews:** verified purchasers only (paid, not cancelled), one per product, editable (re-checked), moderated by
+      Owner/Manager with a reason shown to the customer, optional auto-publish; average rating and reviews on the product page;
+      reviewer shown as first name + initial
+- [x] **Staff search** across orders, payments, till sales, products, stock, suppliers, purchases, expenses, customers and
+      staff, limited to what the role may open
+- [x] **Activity history** combining the existing audit records (order events, payment events, stock ledger, POS shifts,
+      cash movements, reprints, review decisions; finance and account entries for the Owner), with filters
+- [x] Dashboards: "Needs attention" and "Latest notifications" panels; customer account tabs for Notifications and Wishlist
+- [x] New capabilities `VIEW_ACTIVITY`, `MODERATE_REVIEWS` (Owner, Manager)
+- [x] Docs: DEVELOPMENT_GUIDE §13, test table, README, ARCHITECTURE §19, this file
+- [x] Development database backed up to `backup-before-phase09.sqlite3` before migrating
+
+### Database changes
+
+| Migration | Change |
+|---|---|
+| `notifications.0001` | `Notification` (unique per recipient and event key), `NotificationPreference`, `AlertSettings` |
+| `shop.0002` | `WishlistItem` (one per customer and product), `ProductReview` (one per customer and product, rating 1–5) |
+
+### Verification performed (2026-10-31)
+
+| Check | Result |
+|---|---|
+| `python manage.py test` | **517 tests, all passed** (33 new Phase 09 tests + all Phase 01–08 tests) |
+| `check`, `makemigrations --check` | Clean; migrations applied to the dev DB |
+| Horizontal overflow (headless Edge), customer, owner, manager and cashier, 16 pages × 5 widths | 80/80 OK, all HTTP 200 |
+| Public navbar height with bell, guest/customer/staff, 320–1366px | 68px everywhere (one row) |
+
+**Issues found and fixed during Phase 09:**
+- The brand tagline ran under the new bell on phones; it now shortens with "…"
+- On phones the "Mark read" button squeezed notification text; it now wraps below
+
+### Known limitations (Phase 09)
+
+- In-app notifications appear when a page is opened or refreshed (no live push); there are no SMS or mobile push messages.
+- Staff don't get emails for notifications (customers keep their order emails).
+- The daily alert digest needs `send_business_alerts` to be scheduled (Windows Task Scheduler); it doesn't run by itself.
+- Notification history is kept indefinitely; there is no automatic clean-up yet.
+- Activity history reads up to 300 recent entries per area for the chosen period; very busy periods should be narrowed by dates.
+- No public product search by rating, no review photos, no "helpful" votes; wishlist has no price-drop or back-in-stock alerts.
+- Search is a simple text match (no fuzzy matching).
 
 ---
 
@@ -630,9 +695,10 @@ meta, mobile menu and responsive CSS present. No changes required.
 | 06 | Checkout, orders and payments (cash, bank transfer, online gateway) | ✅ Complete |
 | 07 | Point of sale (POS) and cashier shift management | ✅ Complete |
 | 08 | Finance and reports (expenses, supplier balances, profit & loss, exports, charts) | ✅ Complete |
-| 09+ | Notifications, Business Settings (logo upload), technical settings, security log viewer | Planned |
-| 09+ | PWA (manifest, service worker, icons) | Planned |
-| 09+ | Tauri Windows desktop app and production deployment | Planned |
+| 09 | Notifications, business alerts, wishlist, reviews, search, activity history | ✅ Complete |
+| 10+ | Business Settings (logo upload), technical settings, security log viewer | Planned |
+| 10+ | PWA (manifest, service worker, icons) | Planned |
+| 10+ | Tauri Windows desktop app and production deployment | Planned |
 
-The roadmap is a proposal and can be reordered; phases after 08 will be numbered as they are approved. The home page shows a simplified version
+The roadmap is a proposal and can be reordered; phases after 09 will be numbered as they are approved. The home page shows a simplified version
 (`templates/core/home.html`).

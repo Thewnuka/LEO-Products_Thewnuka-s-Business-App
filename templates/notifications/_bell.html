@@ -1,0 +1,30 @@
+{% comment %}
+  Notification bell with an unread badge and the five newest notifications.
+  `variant`: "topbar" (staff portal) or "navbar" (public site, customers).
+{% endcomment %}
+<div class="dropdown leo-bell leo-bell--{{ variant }}">
+  <button class="btn leo-bell__btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+          aria-label="Notifications{% if notification_unread %}, {{ notification_unread }} unread{% endif %}">
+    <i class="bi bi-bell{% if notification_unread %}-fill{% endif %}" aria-hidden="true"></i>
+    {% if notification_unread %}<span class="leo-bell__count">{% if notification_unread > 99 %}99+{% else %}{{ notification_unread }}{% endif %}</span>{% endif %}
+  </button>
+  <div class="dropdown-menu dropdown-menu-end leo-dropdown leo-bell__menu">
+    <div class="leo-bell__head">
+      <span class="fw-semibold">Notifications</span>
+      {% if notification_unread %}
+      <form method="post" action="{% url 'notifications:read_all' %}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-link btn-sm p-0">Mark all read</button></form>
+      {% endif %}
+    </div>
+    <ul class="list-unstyled mb-0">
+      {% for n in notification_latest %}
+      <li><a class="leo-bell__item{% if not n.is_read %} is-unread{% endif %}" href="{% url 'notifications:open' n.pk %}">
+        <i class="bi bi-{{ n.icon }} leo-note-icon leo-note-icon--{{ n.level }}" aria-hidden="true"></i>
+        <span><span class="leo-bell__title">{{ n.title }}</span><span class="leo-bell__time">{{ n.created_at|timesince }} ago</span></span>
+      </a></li>
+      {% empty %}<li class="leo-bell__empty">You're all caught up.</li>{% endfor %}
+    </ul>
+    <a class="leo-bell__all" href="{% url 'notifications:list' %}">See all notifications</a>
+  </div>
+</div>
